@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from src.models.models import User
+from src.models.models import User, Transaction
 from src.common.serializers import ThumbnailerJSONSerializer
 
 
@@ -46,3 +46,12 @@ class CreateUserSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('tokens',)
         extra_kwargs = {'password': {'write_only': True}}
+
+# transaction  serializer
+class Transaction_serializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = "__all__"
+
+    def create(self, validated_data):
+        return super().create(validated_data)

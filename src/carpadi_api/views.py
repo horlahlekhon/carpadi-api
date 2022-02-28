@@ -1,30 +1,26 @@
-from urllib import response
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import status
+from rest_framework import permissions
 
-from src.carpadi_api.serializers import TransactionSerializer
+from src.models.serializers import TransactionSerializer
 
-from .models import Transaction
+from src.models.models import Transaction
 
 # Create your views here.
-class TransactionsCRUD(viewsets.ModelViewSet):
+class Transactionsviewset(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     handles basic CRUD functionalities for transaction model
     """
     
-    serializer_class = TransactionSerializer
     queryset = Transaction.object.all()
+    serializer_class = TransactionSerializer
+    permissions = {'default': (permissions.IsAuthenticated,)}
 
-    def create(self, request):
+    def create(self, request, *args, **kwargs):
         """ create functions"""
-
-        transaction = self.get_object()
-        serializer = TransactionSerializer(data=request.data)
-
-        if serializer.is_valid():
-            return response(serializer.data)
+        return super().create(request, *args, **kwargs)
 
     def list(self, request):
         return Response(self.queryset)
@@ -32,6 +28,3 @@ class TransactionsCRUD(viewsets.ModelViewSet):
     def retrieve(self, request, pk=None):
         transaction = get_object_or_404(self.queryset, pk=pk)
         return Response(transaction)
-        
-    def update(self, request, pk=None):
-        """ nothng to write"""
