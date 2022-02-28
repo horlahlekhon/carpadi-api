@@ -11,4 +11,4 @@ def social_user(backend, uid, user=None, *args, **kwargs):
 
 
 def login_user(strategy, backend, user=None, *args, **kwargs):
-    login(backend.strategy.request, user, backend='src.users.backends.EmailOrUsernameModelBackend')
+    login(backend.strategy.request, user, backend='src.models.backends.EmailOrUsernameModelBackend')

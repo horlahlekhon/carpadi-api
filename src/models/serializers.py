@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
-from src.users.models import User
+from src.models.models import User
 from src.common.serializers import ThumbnailerJSONSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_picture = ThumbnailerJSONSerializer(required=False, allow_null=True, alias_target='src.users')
+    profile_picture = ThumbnailerJSONSerializer(required=False, allow_null=True, alias_target='src.models')
 
     class Meta:
         model = User
@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    profile_picture = ThumbnailerJSONSerializer(required=False, allow_null=True, alias_target='src.users')
+    profile_picture = ThumbnailerJSONSerializer(required=False, allow_null=True, alias_target='src.models')
     tokens = serializers.SerializerMethodField()
 
     def get_tokens(self, user):

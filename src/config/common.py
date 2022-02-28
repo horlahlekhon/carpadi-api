@@ -48,7 +48,7 @@ INSTALLED_APPS = (
     'health_check.contrib.celery_ping',  # requires celery
     # Your apps
     'src.notifications',
-    'src.users',
+    'src.models',
     'src.social',
     'src.files',
     'src.common',
@@ -227,13 +227,13 @@ LOGGING = {
 }
 
 # Custom user app
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'models.User'
 
 # Social login
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.facebook.FacebookOAuth2',
     'social_core.backends.twitter.TwitterOAuth',
-    'src.users.backends.EmailOrUsernameModelBackend',
+    'src.models.backends.EmailOrUsernameModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 for key in ['GOOGLE_OAUTH2_KEY', 'GOOGLE_OAUTH2_SECRET', 'FACEBOOK_KEY', 'FACEBOOK_SECRET', 'TWITTER_KEY', 'TWITTER_SECRET']:
@@ -283,7 +283,7 @@ SOCIAL_AUTH_TWITTER_PIPELINE = (
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/complete/twitter/'
 
 THUMBNAIL_ALIASES = {
-    'src.users': {
+    'src.models': {
         'thumbnail': {'size': (100, 100), 'crop': True},
         'medium_square_crop': {'size': (400, 400), 'crop': True},
         'small_square_crop': {'size': (50, 50), 'crop': True},

@@ -4,9 +4,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
-from src.users.models import User
-from src.users.permissions import IsUserOrReadOnly
-from src.users.serializers import CreateUserSerializer, UserSerializer
+from src.models.models import User
+from src.models.permissions import IsUserOrReadOnly
+from src.models.serializers import CreateUserSerializer, UserSerializer
 
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):

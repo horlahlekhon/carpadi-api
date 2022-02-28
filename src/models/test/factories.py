@@ -3,7 +3,7 @@ import factory
 
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = 'users.User'
+        model = 'models.User'
         django_get_or_create = ('username',)
 
     id = factory.Faker('uuid4')
