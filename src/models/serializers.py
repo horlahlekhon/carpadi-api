@@ -48,9 +48,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 # transaction  serializer
-class Transactions_serializer(serializers.ModelSerializer):
+class Transactions_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Transactions
-        fields = "__all__"
-        read_only_fields = "__all__"
+        fields = ('id', 'ts_created', 'wallet', 'amount',)
+        read_only_fields = ('id','ts_created', 'wallet', 'amount',)
 

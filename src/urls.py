@@ -17,7 +17,6 @@ from src.files.urls import files_router
 from src.carpadi_admin.urls import admin_users_router
 from src.carpadi_api.urls import investment_users_router, transactions_router
 
-
 schema_view = get_schema_view(
     openapi.Info(title="Carpadi API", default_version='v1'),
     public=True,

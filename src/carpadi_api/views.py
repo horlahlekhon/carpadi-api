@@ -3,10 +3,11 @@ from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import status
 from rest_framework import permissions
+from django_filters import rest_framework as filters
 
 from src.models.serializers import Transactions_Serializer
 
-from src.models.models import Transaction
+from src.models.models import Transactions
 
 # Create your views here.
 class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -16,7 +17,9 @@ class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
     
     permissions = {'default': (permissions.IsAuthenticated, permissions.IsAdminUser)}
     serializer_class = Transactions_Serializer
-    queryset = Transaction.object.all()
+    queryset = Transactions.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+
 
     def list(self, request):
         serialize = Transactions_Serializer(self.queryset, many=True)
