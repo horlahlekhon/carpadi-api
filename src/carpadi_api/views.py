@@ -5,8 +5,8 @@ from rest_framework.views import status
 from rest_framework import permissions
 from django_filters import rest_framework as filters
 
+from src.carpadi_api.filters import TransactionsFilter
 from src.models.serializers import Transactions_Serializer
-
 from src.models.models import Transactions
 
 # Create your views here.
@@ -15,10 +15,11 @@ class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
     handles basic CRUD functionalities for transaction model
     """
     
-    permissions = {'default': (permissions.IsAuthenticated, permissions.IsAdminUser)}
+    permissions = {'default': (permissions.IsAuthenticated)}
     serializer_class = Transactions_Serializer
     queryset = Transactions.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = TransactionsFilter
 
 
     def list(self, request):
