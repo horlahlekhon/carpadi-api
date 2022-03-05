@@ -57,7 +57,7 @@ class User(AbstractUser, Base):
 saved_file.connect(generate_aliases_global)
 
 # Transactions
-class Transaction(Base):
+class Transactions(Base):
     wallet = models.UUIDField(foreign_key=True, default=uuid.uuid4, editable=False)
     amount = models.DecimalField(decimal_places=6, editable=False)
 
