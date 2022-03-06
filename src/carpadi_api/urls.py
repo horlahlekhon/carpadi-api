@@ -1,7 +1,8 @@
-from rest_framework.routers import SimpleRouter
+from rest_framework.routers import SimpleRouter, DefaultRouter
 
+from src.carpadi_api.views import CarMerchantViewSet
 from src.models.views import UserViewSet
 
-investment_users_router = SimpleRouter()
-
-investment_users_router.register(r'investments', UserViewSet)
+router = DefaultRouter()
+router.register(r'merchants', CarMerchantViewSet)
+# router.register(r"merchants/merchants", )

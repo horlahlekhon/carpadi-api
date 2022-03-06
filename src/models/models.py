@@ -8,9 +8,11 @@ from django.urls import reverse
 from django_rest_passwordreset.signals import reset_password_token_created
 from easy_thumbnails.signals import saved_file
 from easy_thumbnails.signal_handlers import generate_aliases_global
+from model_utils.models import UUIDModel, TimeStampedModel
 
 from src.common.helpers import build_absolute_uri
 from src.notifications.services import notify, ACTIVITY_USER_RESETS_PASS
+from django.contrib.auth import get_user_model
 
 
 @receiver(reset_password_token_created)
@@ -29,18 +31,21 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
     notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
 
 
-class Base(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    ts_created = models.DateTimeField(auto_created=True, auto_now_add=True)
-    ts_updated = models.DateTimeField(auto_now=True)
+class Base(UUIDModel, TimeStampedModel):
+    pass
 
     class Meta:
         abstract = True
 
 
+class UserTypes(models.TextChoices):
+    Admin = "admin", "admin"
+    CarMerchant = "merchant", "merchant"
+
+
 class User(AbstractUser, Base):
-    # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     profile_picture = ThumbnailerImageField('ProfilePicture', upload_to='profile_pictures/', blank=True, null=True)
+    user_type = models.CharField(choices=UserTypes.choices, max_length=20, default=UserTypes.CarMerchant)
 
     def get_tokens(self):
         refresh = RefreshToken.for_user(self)
@@ -57,4 +62,17 @@ class User(AbstractUser, Base):
 saved_file.connect(generate_aliases_global)
 
 
-# class Car(Base):
+class CarMerchant(Base):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
+    bvn = models.CharField(max_length=14)
+
+    # class Meta:
+
+
+class BankAccount(Base):
+    name = models.CharField(max_length=100)
+    bank_name = models.CharField(max_length=50)
+    account_number = models.CharField(max_length=10)
+    merchant = models.ForeignKey(
+        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts", help_text="Bank account to remit merchant money to"
+    )

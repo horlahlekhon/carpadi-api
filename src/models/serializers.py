@@ -46,3 +46,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('tokens',)
         extra_kwargs = {'password': {'write_only': True}}
+
+
+class CarBrandSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ("id", "name", "model", "ts_created")
