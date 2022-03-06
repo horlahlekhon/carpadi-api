@@ -1,3 +1,4 @@
+from statistics import mode
 import uuid
 from django.db import models
 from django.dispatch import receiver
@@ -58,3 +59,25 @@ saved_file.connect(generate_aliases_global)
 
 
 # class Car(Base):
+
+class CarBrand(Base):
+    name = models.TextField(max_length=80)
+    year = models.IntegerField()
+    model = models.TextField(max_length=80)
+
+    def __str__(self):
+        return self.name + " " + self.model
+
+
+class Car(Base):
+    type = models.TextField(max_length=80)
+    brand = models.ForeignKey(CarBrand)
+    status = models.enums
+    vin = models.TextField(max_length=80)
+    costOfCar = models.FloatField()
+    projectedSalePrice = models.FloatField()
+    sharesAvailable = models.IntegerField()
+    sharesPurchased = models.IntegerField()
+
+    def __str__(self):
+        return self.brand

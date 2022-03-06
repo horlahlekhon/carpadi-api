@@ -4,9 +4,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
-from src.models.models import User
+from src.models.models import User, CarBrand, Car
 from src.models.permissions import IsUserOrReadOnly
-from src.models.serializers import CreateUserSerializer, UserSerializer
+from src.models.serializers import CreateUserSerializer, UserSerializer, CarBrandSerializer, CreateCarBrandSerializer, CarSerializer, CreateCarSerializer
 
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -31,3 +31,11 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             return Response(UserSerializer(self.request.user, context={'request': self.request}).data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': 'Wrong auth token' + e}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CarViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+    query = Car.objects.all()
+    
+    def get_serializer_class(self):
+        return self.serializers.get(self.action, self.serializers['default'])
+
