@@ -1,37 +1,31 @@
-from urllib import response
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import status
+from rest_framework import permissions
+from django_filters import rest_framework as filters
 
-from src.carpadi_api.serializers import TransactionSerializer
-
-from .models import Transaction
+from src.carpadi_api.filters import TransactionsFilter
+from src.models.serializers import Transactions_Serializer
+from src.models.models import Transactions
 
 # Create your views here.
-class TransactionsCRUD(viewsets.ModelViewSet):
+class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
     handles basic CRUD functionalities for transaction model
     """
-    
-    serializer_class = TransactionSerializer
-    queryset = Transaction.object.all()
 
-    def create(self, request):
-        """ create functions"""
-
-        transaction = self.get_object()
-        serializer = TransactionSerializer(data=request.data)
-
-        if serializer.is_valid():
-            return response(serializer.data)
+    permissions = {'default': (permissions.IsAuthenticated)}
+    serializer_class = Transactions_Serializer
+    queryset = Transactions.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = TransactionsFilter
 
     def list(self, request):
-        return Response(self.queryset)
+        serialize = Transactions_Serializer(self.queryset, many=True)
+        return Response(serialize.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None):
         transaction = get_object_or_404(self.queryset, pk=pk)
-        return Response(transaction)
-        
-    def update(self, request, pk=None):
-        """ nothng to write"""
+        serialize = Transactions_Serializer(transaction)
+        return Response(serialize.data, status=status.HTTP_200_OK)

@@ -14,9 +14,8 @@ from drf_yasg import openapi
 
 from src.social.views import exchange_token, complete_twitter_login
 from src.files.urls import files_router
-from src.carpadi_admin.urls import admin_users_router
-from src.carpadi_api.urls import investment_users_router
-
+from src.carpadi_admin.urls import admin_users_router, transactions_router_admin
+from src.carpadi_api.urls import investment_users_router, transactions_router
 
 schema_view = get_schema_view(
     openapi.Info(title="Carpadi API", default_version='v1'),
@@ -27,6 +26,8 @@ router = DefaultRouter()
 
 router.registry.extend(admin_users_router.registry)
 router.registry.extend(investment_users_router.registry)
+router.registry.extend(transactions_router.registry)
+router.registry.extend(transactions_router_admin.registry)
 router.registry.extend(files_router.registry)
 
 urlpatterns = [

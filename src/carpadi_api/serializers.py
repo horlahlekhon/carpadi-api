@@ -13,12 +13,3 @@ class SocialSerializer(serializers.Serializer):
         allow_blank=False,
         trim_whitespace=True,
     )
-
-class TransactionSerializer(serializers.ModelSerializer):
-   class Meta:
-       model =  Transaction
-       fields = '__all__'
-
-#    def create(validated_data):
-#         return Transaction.objects.create(validated_data)
-

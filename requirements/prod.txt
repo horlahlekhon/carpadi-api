@@ -8,10 +8,6 @@ django-3-jet==1.0.8
 celery==4.4.7
 
 # For the persistence stores
-<<<<<<< Updated upstream
-=======
-#psycopg2==2.8.6
->>>>>>> Stashed changes
 psycopg2-binary==2.8.6
 redis==3.5.3
 
