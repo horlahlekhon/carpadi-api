@@ -14,13 +14,12 @@ class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
     """
     handles basic CRUD functionalities for transaction model
     """
-    
+
     permissions = {'default': (permissions.IsAuthenticated)}
     serializer_class = Transactions_Serializer
     queryset = Transactions.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = TransactionsFilter
-
 
     def list(self, request):
         serialize = Transactions_Serializer(self.queryset, many=True)

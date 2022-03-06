@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from src.models.models import User, Transactions
+from src.models.models import User, Transactions, Wallets
 from src.common.serializers import ThumbnailerJSONSerializer
 
 
@@ -47,10 +47,28 @@ class CreateUserSerializer(serializers.ModelSerializer):
         read_only_fields = ('tokens',)
         extra_kwargs = {'password': {'write_only': True}}
 
+
 # transaction  serializer
 class Transactions_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Transactions
-        fields = ('id', 'ts_created', 'wallet', 'amount',)
-        read_only_fields = ('id','ts_created', 'wallet', 'amount',)
+        fields = (
+            'id',
+            'ts_created',
+            'wallet',
+            'amount',
+        )
+        read_only_fields = (
+            'id',
+            'ts_created',
+            'wallet',
+            'amount',
+        )
 
+
+# wallet serialer
+class Wallet_serializer(serializers.ModelSerializer):
+    class Meta:
+        model = Wallets
+        fields = "__all__"
+        read_only_fields = 'ts_created'

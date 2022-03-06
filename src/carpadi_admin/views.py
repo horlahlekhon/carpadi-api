@@ -21,7 +21,6 @@ class TransactionsViewSetAdmin(mixins.ListModelMixin, mixins.RetrieveModelMixin,
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = TransactionsFilterAdmin
 
-
     def list(self, request):
         serialize = Transactions_Serializer(self.queryset, many=True)
         return Response(serialize.data, status=status.HTTP_200_OK)

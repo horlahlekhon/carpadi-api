@@ -12,6 +12,7 @@ from easy_thumbnails.signal_handlers import generate_aliases_global
 from src.common.helpers import build_absolute_uri
 from src.notifications.services import notify, ACTIVITY_USER_RESETS_PASS
 
+
 @receiver(reset_password_token_created)
 def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
     """
@@ -60,6 +61,11 @@ class Transactions(Base):
     wallet = models.UUIDField(default=uuid.uuid4, editable=False)
     amount = models.DecimalField(decimal_places=10, max_digits=10, editable=False)
 
+
+# Wallet
+class Wallets(Base):
+    merchant = models.UUIDField(default=uuid.uuid4, editable=False)
+    balance = models.DecimalField(decimal_places=6, max_digits=16, editable=True)
 
 
 # class Car(Base):
