@@ -17,17 +17,6 @@ class SocialSerializer(serializers.Serializer):
     )
 
 
-#
-# class TransactionSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Transaction
-#         fields = '__all__'
-
-
-#    def create(validated_data):
-#         return Transaction.objects.create(validated_data)
-
-
 class CarMerchantSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarMerchant
