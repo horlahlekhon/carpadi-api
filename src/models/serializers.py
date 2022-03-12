@@ -51,6 +51,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
 class CarBrandSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("id", "name", "model", "created")
+
+
 # transaction  serializer
 class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -74,4 +76,4 @@ class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = "__all__"
-        read_only_fields = ('created', 'id', 'merchant' )
+        read_only_fields = ('created', 'id', 'merchant')

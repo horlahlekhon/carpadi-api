@@ -7,6 +7,7 @@ from rest_framework.routers import SimpleRouter
 from src.carpadi_admin.views import TransactionsViewSetAdmin
 
 from src.models.views import UserViewSet
+
 router = SimpleRouter()
 transactions_router_admin = SimpleRouter()
 

@@ -77,11 +77,14 @@ class BankAccount(Base):
         CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts", help_text="Bank account to remit merchant money to"
     )
 
+
 class Wallet(Base):
     merchant = models.ForeignKey(CarMerchant, on_delete=models.PROTECT, help_text='the merchant that owns the wallet')
     balance = models.DecimalField(decimal_places=6, max_digits=16, editable=True)
 
 
 class Transactions(Base):
-    wallet = models.ForeignKey(Wallet,on_delete=models.PROTECT, help_text='the wallet which is used to carryout the transactions')
+    wallet = models.ForeignKey(
+        Wallet, on_delete=models.PROTECT, help_text='the wallet which is used to carryout the transactions'
+    )
     amount = models.DecimalField(decimal_places=6, max_digits=16, editable=False)
