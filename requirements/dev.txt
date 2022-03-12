@@ -1,4 +1,4 @@
-.m-r prod.txt
+-r prod.txt
 
 # Developer Tools
 ipdb==0.13.8
