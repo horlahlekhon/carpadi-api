@@ -61,17 +61,6 @@ class User(AbstractUser, Base):
 
 saved_file.connect(generate_aliases_global)
 
-# Transactions
-class Transactions(Base):
-    wallet = models.UUIDField(default=uuid.uuid4, editable=False)
-    amount = models.DecimalField(decimal_places=10, max_digits=10, editable=False)
-
-
-# Wallet
-class Wallets(Base):
-    merchant = models.UUIDField(default=uuid.uuid4, editable=False)
-    balance = models.DecimalField(decimal_places=6, max_digits=16, editable=True)
-
 
 class CarMerchant(Base):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
@@ -87,3 +76,12 @@ class BankAccount(Base):
     merchant = models.ForeignKey(
         CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts", help_text="Bank account to remit merchant money to"
     )
+
+class Wallet(Base):
+    merchant = models.ForeignKey(CarMerchant, on_delete=models.PROTECT, help_text='the merchant that owns the wallet')
+    balance = models.DecimalField(decimal_places=6, max_digits=16, editable=True)
+
+
+class Transactions(Base):
+    wallet = models.ForeignKey(Wallet,on_delete=models.PROTECT, help_text='the wallet which is used to carryout the transactions')
+    amount = models.DecimalField(decimal_places=6, max_digits=16, editable=False)

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from src.models.models import User, Transactions, Wallets
+from src.models.models import User, Transactions, Wallet
 from src.common.serializers import ThumbnailerJSONSerializer
 
 
@@ -52,7 +52,7 @@ class CarBrandSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("id", "name", "model", "created")
 # transaction  serializer
-class Transactions_Serializer(serializers.ModelSerializer):
+class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transactions
         fields = (
@@ -70,8 +70,8 @@ class Transactions_Serializer(serializers.ModelSerializer):
 
 
 # wallet serialer
-class Wallet_serializer(serializers.ModelSerializer):
+class WalletSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Wallets
+        model = Wallet
         fields = "__all__"
-        read_only_fields = 'created'
+        read_only_fields = ('created', 'id', 'merchant' )
