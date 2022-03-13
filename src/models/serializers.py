@@ -53,23 +53,6 @@ class CarBrandSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "model", "created")
 
 
-# transaction  serializer
-class TransactionsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Transactions
-        fields = (
-            'id',
-            'created',
-            'wallet',
-            'amount',
-        )
-        read_only_fields = (
-            'id',
-            'created',
-            'wallet',
-            'amount',
-        )
-
 
 # wallet serialer
 class WalletSerializer(serializers.ModelSerializer):
@@ -77,3 +60,13 @@ class WalletSerializer(serializers.ModelSerializer):
         model = Wallet
         fields = "__all__"
         read_only_fields = ('created', 'id', 'merchant')
+
+
+# transaction  serializer
+class TransactionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transactions
+        fields = ('id', 'created', 'wallet', 'amount')
+        read_only_fields = ('id', 'created', 'wallet','amount')
+
+

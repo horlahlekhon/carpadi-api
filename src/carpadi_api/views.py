@@ -2,17 +2,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import status
-from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated
 from django_filters import rest_framework as filters
+
 from src.carpadi_api.filters import TransactionsFilter
 from src.models.serializers import TransactionsSerializer, WalletSerializer
 from src.models.models import Transactions, CarMerchant, Wallet
 
 from src.carpadi_api.serializers import CarMerchantSerializer
-
-# from .models import Transaction
-
-# Create your views here
 
 
 class CarMerchantViewSet(viewsets.ModelViewSet):
@@ -23,12 +20,12 @@ class CarMerchantViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class WalletViewSet(viewsets.RetrieveModelMixin):
+class WalletViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
     handles wallet operation for a particular merchant
     """
 
-    permissions = {'default': permissions.IsAuthenticated}
+    permissions = {'default': IsAuthenticated}
     serializer_class = WalletSerializer
     queryset = Wallet.objects.all()
     filter_backends = filters.DjangoFilterBackend
@@ -44,7 +41,7 @@ class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
     handles basic CRUD functionalities for transaction model
     """
 
-    permissions = {'default': permissions.IsAuthenticated}
+    permissions = {'default': IsAuthenticated}
     serializer_class = TransactionsSerializer
     queryset = Transactions.objects.all()
     filter_backends = filters.DjangoFilterBackend

@@ -2,16 +2,16 @@ from rest_framework.routers import SimpleRouter, DefaultRouter
 
 from src.models.views import UserViewSet
 
-admin_users_router = DefaultRouter()
-from rest_framework.routers import SimpleRouter
-from src.carpadi_admin.views import TransactionsViewSetAdmin
+from src.carpadi_admin.views import TransactionsViewSetAdmin, WalletViewSetAdmin
 
-from src.models.views import UserViewSet
+
+admin_users_router = DefaultRouter()
 
 router = SimpleRouter()
 transactions_router_admin = SimpleRouter()
+wallet_router_admin = SimpleRouter()
 
 admin_users_router.register(r'admins', UserViewSet)
 
 transactions_router_admin.register(r'admins/transactions', TransactionsViewSetAdmin)
-urlpatterns = transactions_router_admin.urls
+wallet_router_admin.register(r'admins/wallets', WalletViewSetAdmin)
