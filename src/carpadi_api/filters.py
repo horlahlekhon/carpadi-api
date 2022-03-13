@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from src.models.models import Transactions
+from src.models.models import Transactions, Car
 
 
 class TransactionsFilter(filters.FilterSet):
@@ -13,3 +13,12 @@ class TransactionsFilter(filters.FilterSet):
     class Meta:
         model = Transactions
         fields = ['amount', 'created']
+
+
+class CarsFilter(filters.FilterSet):
+    status = filters.ChoiceFilter(field_name="status", lookup_expr="iexact")
+    brand__name = filters.CharFilter(lookup_expr="iexact")
+
+    class Meta:
+        model = Car
+        fields = ["status", "brand__name"]

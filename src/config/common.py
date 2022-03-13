@@ -57,6 +57,7 @@ INSTALLED_APPS = (
     # Third party optional apps
     # app must be placed somewhere after all the apps that are going to be generating activities
     # 'actstream',                  # activity stream
+
 )
 
 # https://docs.djangoproject.com/en/2.0/topics/http/middleware/

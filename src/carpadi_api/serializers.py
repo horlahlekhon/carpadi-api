@@ -3,7 +3,7 @@ from celery import uuid
 from rest_framework import serializers
 
 # from .models import Transaction
-from ..models.models import CarMerchant
+from ..models.models import CarMerchant, Car
 
 
 class SocialSerializer(serializers.Serializer):
@@ -17,7 +17,8 @@ class SocialSerializer(serializers.Serializer):
     )
 
 
-class CarMerchantSerializer(serializers.ModelSerializer):
+class CarSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CarMerchant
+        model = Car
         fields = "__all__"
+        ref_name = "car_serializer"

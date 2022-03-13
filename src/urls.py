@@ -14,8 +14,9 @@ from drf_yasg import openapi
 
 from src.social.views import exchange_token, complete_twitter_login
 from src.files.urls import files_router
-from src.carpadi_admin.urls import admin_users_router
+from src.carpadi_admin.urls import router as admin_router
 from src.carpadi_api.urls import router as api_router
+from src.models.urls import model_router
 
 
 schema_view = get_schema_view(
@@ -23,12 +24,14 @@ schema_view = get_schema_view(
     public=True,
 )
 
-router = DefaultRouter()
+admin_router_set = DefaultRouter()
+admin_router_set.registry.extend(admin_router.registry)
+api_router_set = DefaultRouter()
+api_router_set.registry.extend(api_router.registry)
+api_router_set.registry.extend(files_router.registry)
 
-router.registry.extend(admin_users_router.registry)
-router.registry.extend(api_router.registry)
-router.registry.extend(files_router.registry)
-
+generic_router = DefaultRouter()
+generic_router.registry.extend(model_router.registry)
 urlpatterns = [
     # admin panel
     path('admin/', admin.site.urls),
@@ -36,7 +39,9 @@ urlpatterns = [
     # summernote editor
     path('summernote/', include('django_summernote.urls')),
     # api
-    path('api/v1/', include(router.urls)),
+    path('api/v1/', include(generic_router.urls)),
+    path('api/v1/merchants/', include(api_router_set.urls)),
+    path('api/v1/admins/', include(admin_router_set.urls)),
     url(r'^api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     # auth
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),

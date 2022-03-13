@@ -13,3 +13,7 @@ class TransactionsFilterAdmin(filters.FilterSet):
     class Meta:
         model = Transactions
         fields = ['wallet', 'amount', 'created']
+
+
+# class CarMerchantFilerAdmin(filters.FilterSet):
+#     ...
