@@ -81,15 +81,12 @@ class CarMerchantSerializer(serializers.ModelSerializer):
 
 
 class BankAccountSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = BankAccount
         fields = "__all__"
 
 
 class CarBrandSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CarBrand
         fields = "__all__"
-

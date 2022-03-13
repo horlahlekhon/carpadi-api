@@ -6,14 +6,14 @@ from rest_framework import permissions
 from django_filters import rest_framework as filters
 from src.carpadi_api.filters import TransactionsFilter, CarsFilter
 from src.carpadi_api.serializers import CarSerializer
-from src.models.serializers import TransactionsSerializer, CarMerchantSerializer, BankAccountSerializer, \
-    CarBrandSerializer
+from src.models.serializers import TransactionsSerializer, CarMerchantSerializer, BankAccountSerializer, CarBrandSerializer
 from src.models.models import Transactions, CarMerchant, BankAccount, CarBrand, Car
 
 
 # from .models import Transaction
 
 # Create your views here
+
 
 class CarMerchantViewSet(viewsets.ModelViewSet):
     serializer_class = CarMerchantSerializer
@@ -22,13 +22,14 @@ class CarMerchantViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+
 # Create your views here.
 class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
     handles basic CRUD functionalities for transaction model
     """
 
-    permissions = {'default': (permissions.IsAuthenticated, )}
+    permissions = {'default': (permissions.IsAuthenticated,)}
     serializer_class = TransactionsSerializer
     queryset = Transactions.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
@@ -62,5 +63,3 @@ class CarViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gene
     queryset = Car.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = CarsFilter
-
-
