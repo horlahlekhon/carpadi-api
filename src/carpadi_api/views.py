@@ -20,15 +20,20 @@ class CarMerchantViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class WalletViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class WalletViewSet(mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     handles wallet operation for a particular merchant
     """
 
     permissions = {'default': IsAuthenticated}
-    serializer_class = WalletSerializer
     queryset = Wallet.objects.all()
     filter_backends = filters.DjangoFilterBackend
+
+    def create(self, request):
+        serialize = WalletSerializer(data=request.data)
+        if serialize.is_valid():
+            serialize.save()
+            return Response(serialize.validated_data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
         wallet = get_object_or_404(self.queryset, pk=pk)
@@ -42,7 +47,6 @@ class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
     """
 
     permissions = {'default': IsAuthenticated}
-    serializer_class = TransactionsSerializer
     queryset = Transactions.objects.all()
     filter_backends = filters.DjangoFilterBackend
     filter_class = TransactionsFilter

@@ -7,4 +7,3 @@ router.register(r'merchants', CarMerchantViewSet)
 # router.register(r"merchants/merchants", )
 router.register(r'wallets', WalletViewSet)
 router.register(r'transactions', TransactionsViewSet)
-

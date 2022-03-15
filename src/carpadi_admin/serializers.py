@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from src.models.models import Wallet
 
+
 class SocialSerializer(serializers.Serializer):
     """
     Serializer which accepts an OAuth2 access token.
@@ -14,9 +15,10 @@ class SocialSerializer(serializers.Serializer):
         trim_whitespace=True,
     )
 
+
 class WalletSerializerAdmin(serializers.Serializer):
     """
-    Wallet Serializer for an admin 
+    Wallet Serializer for an admin
     """
 
     class Meta:

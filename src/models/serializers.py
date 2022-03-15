@@ -53,7 +53,6 @@ class CarBrandSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "model", "created")
 
 
-
 # wallet serialer
 class WalletSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,6 +66,4 @@ class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transactions
         fields = ('id', 'created', 'wallet', 'amount')
-        read_only_fields = ('id', 'created', 'wallet','amount')
-
-
+        read_only_fields = ('id', 'created', 'wallet', 'amount')

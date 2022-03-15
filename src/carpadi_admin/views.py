@@ -14,7 +14,7 @@ from src.models.models import Transactions, Wallet
 
 class WalletViewSetAdmin(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
-     handles Wallet for admin
+    handles Wallet for admin
     """
 
     permissions = {'default': IsAdminUser}

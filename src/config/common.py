@@ -113,6 +113,10 @@ DATABASES = {
     }
 }
 
+if 'test' in sys.argv or 'test\_coverage' in sys.argv:  # Covers regular testing and django-coverage
+    DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+    DATABASES['default']['NAME'] = ':memory:'
+
 # General
 APPEND_SLASH = True
 TIME_ZONE = 'UTC'
