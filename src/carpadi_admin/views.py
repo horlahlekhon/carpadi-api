@@ -12,7 +12,7 @@ from src.models.serializers import TransactionsSerializer
 from src.models.models import Transactions, Wallet
 
 
-class WalletViewSetAdmin(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class WalletViewSetAdmin(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
     handles Wallet for admin
     """
@@ -20,16 +20,16 @@ class WalletViewSetAdmin(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     permissions = {'default': IsAdminUser}
     serializer_class = WalletSerializerAdmin
     queryset = Wallet.objects.all()
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend)
     filter_class = WalletFilterAdmin
 
     def list(self, request):
-        serialize = WalletSerializerAdmin(self.queryset, many=True)
+        serialize = self.serializer_class(self.queryset, many=True)
         return Response(serialize.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None):
         wallet = get_object_or_404(self.queryset, pk=pk)
-        serialize = WalletSerializerAdmin(wallet)
+        serialize =self.serializer_class(wallet)
         return Response(serialize.data, status=status.HTTP_200_OK)
 
 
@@ -41,14 +41,14 @@ class TransactionsViewSetAdmin(mixins.ListModelMixin, mixins.RetrieveModelMixin,
     permissions = {'default': IsAdminUser}
     serializer_class = TransactionsSerializer
     queryset = Transactions.objects.all()
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend)
     filter_class = TransactionsFilterAdmin
 
     def list(self, request):
-        serialize = TransactionsSerializer(self.queryset, many=True)
+        serialize = self.serializer_class(self.queryset, many=True)
         return Response(serialize.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None):
         transaction = get_object_or_404(self.queryset, pk=pk)
-        serialize = TransactionsSerializer(transaction)
+        serialize = self.serializer_class(transaction)
         return Response(serialize.data, status=status.HTTP_200_OK)

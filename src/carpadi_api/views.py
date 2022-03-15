@@ -1,3 +1,4 @@
+from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
@@ -26,6 +27,7 @@ class WalletViewSet(mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets
     """
 
     permissions = {'default': IsAuthenticated}
+    serializer_class = WalletSerializer
     queryset = Wallet.objects.all()
     filter_backends = filters.DjangoFilterBackend
 
@@ -54,6 +56,7 @@ class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
     def list(self, request):
         serialize = TransactionsSerializer(self.queryset, many=True)
         return Response(serialize.data, status=status.HTTP_200_OK)
+
 
     def retrieve(self, request, pk=None):
         transaction = get_object_or_404(self.queryset, pk=pk)
