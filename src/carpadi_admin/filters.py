@@ -33,3 +33,5 @@ class WalletFilterAdmin(filters.FilterSet):
     class Meta:
         model = Wallet
         fields = ['created', 'modified', 'balance', 'merchant']
+# class CarMerchantFilerAdmin(filters.FilterSet):
+#     ...

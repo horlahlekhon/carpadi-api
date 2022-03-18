@@ -1,14 +1,21 @@
-from rest_framework.routers import SimpleRouter, DefaultRouter
+from rest_framework.routers import DefaultRouter
+
+from src.models.views import UserViewSet
+from src.carpadi_admin.views import (
+    TransactionsViewSetAdmin, 
+    CarMerchantsViewSetAdmin, 
+    CarBrandSerializerViewSet, 
+    CarViewSet, WalletViewSetAdmin,
+)
 
 from src.models.views import UserViewSet
 
-from src.carpadi_admin.views import TransactionsViewSetAdmin, WalletViewSetAdmin
+router = DefaultRouter()
+router.register('users', UserViewSet)
+router.register(r'merchants', CarMerchantsViewSetAdmin)
+router.register(r'wallets', WalletViewSetAdmin)
+router.register(r'transactions', TransactionsViewSetAdmin)
+router.register(r'car-brands', CarBrandSerializerViewSet)
+router.register(r'cars', CarViewSet)
 
-
-admin_users_router = DefaultRouter()
-
-admin_users_router.register(r'admins', UserViewSet)
-admin_users_router.register(r'admins/wallets', WalletViewSetAdmin)
-admin_users_router.register(r'admins/transactions', TransactionsViewSetAdmin)
-
-urlpatterns = admin_users_router.urls
+# urlpatterns = transactions_router_admin.urls

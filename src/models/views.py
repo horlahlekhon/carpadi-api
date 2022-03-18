@@ -1,12 +1,15 @@
 from rest_framework import viewsets, mixins
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-from src.models.models import User
+from src.carpadi_api.serializers import TransactionPinSerializers
+from src.models.models import User, TransactionPinStatus, TransactionPin
 from src.models.permissions import IsUserOrReadOnly
-from src.models.serializers import CreateUserSerializer, UserSerializer
+from src.models.serializers import CreateUserSerializer, UserSerializer, PhoneVerificationSerializer
+from rest_framework.serializers import ValidationError
 
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -16,7 +19,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
 
     queryset = User.objects.all()
     serializers = {'default': UserSerializer, 'create': CreateUserSerializer}
-    permissions = {'default': (IsUserOrReadOnly,), 'create': (AllowAny,)}
+    permissions = {'default': (IsUserOrReadOnly,), 'create': (AllowAny,), 'verify_phone': (AllowAny,)}
 
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
@@ -31,3 +34,14 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             return Response(UserSerializer(self.request.user, context={'request': self.request}).data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': 'Wrong auth token' + e}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'], url_path='verify-phone', url_name='verify_phone')
+    def verify_phone(self, instance):
+        try:
+            ser = PhoneVerificationSerializer(data=instance.data)
+            ser.is_valid(raise_exception=True)
+            return Response(status=status.HTTP_200_OK)
+        except ValidationError as reason:
+            return Response(reason.args[0], status=400)
+        except Exception as reason:
+            return Response({'error': str(reason)}, status=status.HTTP_400_BAD_REQUEST)

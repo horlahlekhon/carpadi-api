@@ -2,8 +2,7 @@ from dataclasses import field
 from pyexpat import model
 from rest_framework import serializers
 
-from src.models.models import Wallet
-
+from src.models.models import CarMerchant, Car, Wallet
 
 class SocialSerializer(serializers.Serializer):
     """
@@ -25,3 +24,16 @@ class WalletSerializerAdmin(serializers.Serializer):
         model = Wallet
         fields = "__all__"
         read_only_fields = ('created', 'modified', 'id', 'merchant', 'balance')
+
+        
+# class CarMerchantSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = CarMerchant
+#         fields = "__all__"
+
+
+class CarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Car
+        fields = "__all__"
+        ref_name = "car_serializer_admin"
