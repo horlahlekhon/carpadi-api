@@ -6,12 +6,18 @@ from src.notifications.channels.email import EmailChannel
 logger = logging.getLogger(__name__)
 
 ACTIVITY_USER_RESETS_PASS = 'started password reset process'
-
+USER_PHONE_VERIFICATION = "VERIFY PHONE"
 NOTIFICATIONS = {
     ACTIVITY_USER_RESETS_PASS: {
         'email': {
             'email_subject': 'Password Reset',
             'email_html_template': 'emails/user_reset_password.html',
+        }
+    },
+    USER_PHONE_VERIFICATION: {
+        'email': {
+            'email_subject': 'Verify phone',
+            'email_html_template': 'emails/verify_phone.html',
         }
     }
 }
