@@ -44,8 +44,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
         # the password will be stored in plain text.
         try:
             validated_data["is_active"] = False
-            validated_data['username'] = str(validated_data['username']).lower() if validated_data.get("username") \
-                else validated_data.get("email")
+            validated_data['username'] = (
+                str(validated_data['username']).lower() if validated_data.get("username") else validated_data.get("email")
+            )
             user = User.objects.create_user(**validated_data)
         except IntegrityError as reason:
             raise exceptions.ValidationError("phone or email already exists", 400)
@@ -64,7 +65,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'profile_picture',
             "phone",
             'birth_date',
-            'user_type'
+            'user_type',
         )
         read_only_fields = ('tokens',)
         extra_kwargs = {'password': {'write_only': True}}
@@ -85,7 +86,7 @@ class PhoneVerificationSerializer(serializers.Serializer):
         user = User.objects.get(phone=attrs["phone"])
         if user:
             otp = user.otps.latest()
-            if otp.expiry > now() and otp.otp == attrs["token"] :
+            if otp.expiry > now() and otp.otp == attrs["token"]:
                 return attrs
             elif otp.expiry < now() and otp.otp == attrs["token"]:
                 raise serializers.ValidationError("Otp has expired", 400)
@@ -134,7 +135,6 @@ class CarMerchantSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarMerchant
         fields = "__all__"
-
 
 
 class BankAccountSerializer(serializers.ModelSerializer):

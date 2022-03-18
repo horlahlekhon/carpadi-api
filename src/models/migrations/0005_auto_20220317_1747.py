@@ -29,19 +29,45 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='otp',
             name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='otps', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name='otps', to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.CreateModel(
             name='TransactionPin',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('device_serial_number', models.CharField(editable=False, max_length=20, unique=True)),
                 ('device_platform', models.CharField(editable=False, max_length=20, unique=True)),
-                ('status', models.CharField(choices=[('expired', 'User already deleted device from device management'), ('active', 'Transaction pin is still active')], max_length=10)),
+                (
+                    'status',
+                    models.CharField(
+                        choices=[
+                            ('expired', 'User already deleted device from device management'),
+                            ('active', 'Transaction pin is still active'),
+                        ],
+                        max_length=10,
+                    ),
+                ),
                 ('pin', models.CharField(max_length=4)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transaction_pins', to=settings.AUTH_USER_MODEL)),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name='transaction_pins', to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
             options={
                 'abstract': False,

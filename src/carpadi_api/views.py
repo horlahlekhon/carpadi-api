@@ -5,18 +5,21 @@ from rest_framework.views import status
 from rest_framework import permissions
 from django_filters import rest_framework as filters
 from src.carpadi_api.filters import TransactionsFilter, CarsFilter
-from src.carpadi_api.serializers import CarSerializer, TransactionPinSerializers, UpdateTransactionPinSerializers, \
-    CarMerchantUpdateSerializer
+from src.carpadi_api.serializers import (
+    CarSerializer,
+    TransactionPinSerializers,
+    UpdateTransactionPinSerializers,
+    CarMerchantUpdateSerializer,
+)
 from src.models.permissions import IsCarMerchantAndAuthed
-from src.models.serializers import TransactionsSerializer, CarMerchantSerializer, BankAccountSerializer, \
-    CarBrandSerializer
-from src.models.models import Transactions, CarMerchant, BankAccount, CarBrand, Car, TransactionPin, \
-    TransactionPinStatus
+from src.models.serializers import TransactionsSerializer, CarMerchantSerializer, BankAccountSerializer, CarBrandSerializer
+from src.models.models import Transactions, CarMerchant, BankAccount, CarBrand, Car, TransactionPin, TransactionPinStatus
 
 
 # from .models import Transaction
 
 # Create your views here
+
 
 class DefaultApiModelViewset(viewsets.ModelViewSet):
     permissions = {'default': (IsCarMerchantAndAuthed,)}
@@ -40,11 +43,10 @@ class DefaultGenericViewset(viewsets.GenericViewSet):
         serializer.save(user=self.request.user)
 
 
-class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-                         viewsets.GenericViewSet):
+class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = CarMerchant.objects.all()
     serializers = {"default": CarMerchantSerializer, "partial_update": CarMerchantUpdateSerializer}
-    permission_classes = (IsCarMerchantAndAuthed, )
+    permission_classes = (IsCarMerchantAndAuthed,)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -87,7 +89,7 @@ class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
     queryset = Transactions.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = TransactionsFilter
-    permission_classes = (IsCarMerchantAndAuthed, )
+    permission_classes = (IsCarMerchantAndAuthed,)
 
     def list(self, request):
         serialize = TransactionsSerializer(self.queryset, many=True)
@@ -119,7 +121,7 @@ class CarViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gene
     queryset = Car.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = CarsFilter
-    permission_classes = (IsCarMerchantAndAuthed, )
+    permission_classes = (IsCarMerchantAndAuthed,)
 
 
 class TransactionPinsViewSet(viewsets.ModelViewSet):

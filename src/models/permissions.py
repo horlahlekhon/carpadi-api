@@ -16,9 +16,6 @@ class IsUserOrReadOnly(permissions.BasePermission):
 
 
 class IsCarMerchantAndAuthed(permissions.BasePermission):
-
     def has_permission(self, request, view):
         dd = request.user.is_staff and request.user.is_superuser and request.user.user_type == UserTypes.Admin
         return not dd and request.user.is_authenticated
-
-

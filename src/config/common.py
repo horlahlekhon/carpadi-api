@@ -361,4 +361,4 @@ SUMMERNOTE_CONFIG = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-OTP_EXPIRY=20
+OTP_EXPIRY = 20

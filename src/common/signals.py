@@ -57,4 +57,3 @@ def complete_user_registeration(sender, **kwargs):
             print(f"otppp: {ot.otp}")
             # notify(USER_PHONE_VERIFICATION, context=context, email_to=[user.email, ])
             CarMerchant.objects.create(user=user)
-

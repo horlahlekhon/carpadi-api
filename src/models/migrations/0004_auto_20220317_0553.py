@@ -19,11 +19,15 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='user',
             name='user_type',
-            field=models.CharField(choices=[('admin', 'admin'), ('merchant', 'merchant')], default='merchant', max_length=20, unique=True),
+            field=models.CharField(
+                choices=[('admin', 'admin'), ('merchant', 'merchant')], default='merchant', max_length=20, unique=True
+            ),
         ),
         migrations.AlterField(
             model_name='user',
             name='username',
-            field=models.CharField(max_length=50, null=True, unique=True, validators=[django.contrib.auth.validators.UnicodeUsernameValidator()]),
+            field=models.CharField(
+                max_length=50, null=True, unique=True, validators=[django.contrib.auth.validators.UnicodeUsernameValidator()]
+            ),
         ),
     ]

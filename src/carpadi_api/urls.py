@@ -1,7 +1,12 @@
 from rest_framework.routers import SimpleRouter, DefaultRouter
 
-from src.carpadi_api.views import CarMerchantViewSet, BankAccountViewSet, CarBrandSerializerViewSet, CarViewSet, \
-    TransactionPinsViewSet
+from src.carpadi_api.views import (
+    CarMerchantViewSet,
+    BankAccountViewSet,
+    CarBrandSerializerViewSet,
+    CarViewSet,
+    TransactionPinsViewSet,
+)
 from src.models.views import UserViewSet
 from src.carpadi_api.views import TransactionsViewSet
 

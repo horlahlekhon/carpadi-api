@@ -62,8 +62,6 @@ class User(AbstractUser, Base):
             'access': str(refresh.access_token),
         }
 
-
-
     def __str__(self):
         return self.username
 
@@ -82,9 +80,12 @@ class Otp(Base):
     otp = models.CharField(max_length=6, editable=False)
     expiry = models.DateTimeField(editable=False, default=timezone.now() + datetime.timedelta(minutes=OTP_EXPIRY))
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="otps")
-    status = models.CharField(choices=OtpStatus.choices, max_length=20, default=OtpStatus.Pending,
-                              help_text="Keep track of weather "
-                                        "the otp was later verified or expired or failed")
+    status = models.CharField(
+        choices=OtpStatus.choices,
+        max_length=20,
+        default=OtpStatus.Pending,
+        help_text="Keep track of weather " "the otp was later verified or expired or failed",
+    )
 
     class Meta:
         get_latest_by = 'created'
@@ -127,8 +128,7 @@ class BankAccount(Base):
     bank_name = models.CharField(max_length=50)
     account_number = models.CharField(max_length=10)
     merchant = models.ForeignKey(
-        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts",
-        help_text="Bank account to remit merchant money to"
+        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts", help_text="Bank account to remit merchant money to"
     )
 
 

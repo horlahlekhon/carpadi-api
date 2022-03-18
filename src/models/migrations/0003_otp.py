@@ -18,12 +18,35 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Otp',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('otp', models.CharField(editable=False, max_length=6)),
                 ('expiry', models.DateTimeField(editable=False)),
-                ('status', models.CharField(choices=[('verified', 'Otp verified by user successfully'), ('failed', 'User entered wrong otp until disabled'), ('expired', 'Otp was not entered before it expired'), ('pending', 'Otp is yet to expire or has expired and no one sent a verification request for it')], default='pending', help_text='Keep track of weather the otp was later verified or expired or failed', max_length=20)),
+                (
+                    'status',
+                    models.CharField(
+                        choices=[
+                            ('verified', 'Otp verified by user successfully'),
+                            ('failed', 'User entered wrong otp until disabled'),
+                            ('expired', 'Otp was not entered before it expired'),
+                            ('pending', 'Otp is yet to expire or has expired and no one sent a verification request for it'),
+                        ],
+                        default='pending',
+                        help_text='Keep track of weather the otp was later verified or expired or failed',
+                        max_length=20,
+                    ),
+                ),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={

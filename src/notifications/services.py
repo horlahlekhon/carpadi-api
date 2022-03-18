@@ -19,7 +19,7 @@ NOTIFICATIONS = {
             'email_subject': 'Verify phone',
             'email_html_template': 'emails/verify_phone.html',
         }
-    }
+    },
 }
 
 

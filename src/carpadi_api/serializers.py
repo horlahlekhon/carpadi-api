@@ -1,6 +1,7 @@
 from email.policy import default
 from celery import uuid
 from rest_framework import serializers, exceptions
+
 # from .models import Transaction
 from ..models.models import CarMerchant, Car, TransactionPin, User, TransactionPinStatus
 
@@ -41,8 +42,9 @@ class TransactionPinSerializers(serializers.ModelSerializer):
         user: User = validated_data["user"]
         active_pins = user.transaction_pins.filter(status=TransactionPinStatus.Active).count()
         if active_pins >= 3:
-            raise exceptions.NotAcceptable("User is already logged in on 3 devices,"
-                                           " please delete one of the logged in sessions.")
+            raise exceptions.NotAcceptable(
+                "User is already logged in on 3 devices," " please delete one of the logged in sessions."
+            )
         validated_data["pin"] = make_password(validated_data["pin"])
         validated_data["status"] = TransactionPinStatus.Active
         return TransactionPin.objects.create(**validated_data)
