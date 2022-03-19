@@ -95,6 +95,13 @@ class PhoneVerificationSerializer(serializers.Serializer):
         else:
             raise serializers.ValidationError(f"User with the phone {attrs['phone']} does not exist")
 
+    def create(self, validated_data):
+        user: User = User.objects.get(phone=validated_data["phone"])
+        user.is_active = True
+        user.save(update_fields=["is_active"])
+        user.refresh_from_db()
+        return user
+
     class Meta:
         fields = ('token',)
 

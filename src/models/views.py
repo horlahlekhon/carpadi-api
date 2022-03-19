@@ -40,6 +40,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         try:
             ser = PhoneVerificationSerializer(data=instance.data)
             ser.is_valid(raise_exception=True)
+            ser.save()
             return Response(status=status.HTTP_200_OK)
         except ValidationError as reason:
             return Response(reason.args[0], status=400)
