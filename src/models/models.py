@@ -79,7 +79,7 @@ class OtpStatus(models.TextChoices):
 class Otp(Base):
     otp = models.CharField(max_length=6, editable=False)
     expiry = models.DateTimeField(editable=False, default=timezone.now() + datetime.timedelta(minutes=OTP_EXPIRY))
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="otps")
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="otps")
     status = models.CharField(
         choices=OtpStatus.choices,
         max_length=20,
@@ -118,7 +118,7 @@ class Wallets(Base):
 
 class CarMerchant(Base):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
-    bvn = models.CharField(max_length=14, null=True, blank=False)
+    bvn = models.CharField(max_length=14, null=True, blank=False, default=None)
 
     # class Meta:
 

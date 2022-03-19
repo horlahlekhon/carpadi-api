@@ -7,7 +7,7 @@ from datetime import timedelta
 from sentry_sdk.integrations.django import DjangoIntegration
 from os.path import join
 
-TESTING = sys.argv[1:2] == ['test']
+TESTING = True
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -83,6 +83,11 @@ EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.Email
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
 EMAIL_PORT = os.getenv('EMAIL_PORT', 1025)
 EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
+EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_USER="emailapikey"
+EMAIL_HOST_PASSWORD="wSsVR60k8kT4XK99mmarJLs+nlpVU17zFE990VHw73StH6+T9sdqxUDGBAX2G6QeQ2NrEDJArL1/nhdUhDYHi9wlmQlSACiF9mqRe1U4J3x17qnvhDzNV2VVlxKML4IAzw5tmmVhFMEj+g=="
 
 # Celery
 BROKER_URL = os.getenv('BROKER_URL', 'redis://redis:6379')

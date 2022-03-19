@@ -54,6 +54,6 @@ def complete_user_registeration(sender, **kwargs):
             expiry = datetime.datetime.now() + datetime.timedelta(minutes=10)
             ot = Otp.objects.create(otp=otp, expiry=expiry, user=user)
             context = dict(username=user.username, otp=ot.otp)
-            print(f"otppp: {ot.otp}")
-            # notify(USER_PHONE_VERIFICATION, context=context, email_to=[user.email, ])
             CarMerchant.objects.create(user=user)
+            notify(USER_PHONE_VERIFICATION, context=context, email_to=[user.email, ])
+
