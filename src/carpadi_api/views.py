@@ -168,8 +168,6 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
 class WalletViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Wallet.objects.all()
     serializer_class = WalletSerializer
-    # filter_backends = (filters.DjangoFilterBackend,)
-    # filter_class = TransactionsFilter
     permission_classes = (IsCarMerchantAndAuthed,)
 
     def retrieve(self, request, pk=None):
