@@ -4,8 +4,11 @@ from src.models.views import UserViewSet
 
 from rest_framework.routers import SimpleRouter
 from src.carpadi_admin.views import (
-    TransactionsViewSetAdmin, CarMerchantsViewSetAdmin,
-    CarBrandSerializerViewSet, CarViewSet, WalletViewSetAdmin
+    TransactionsViewSetAdmin,
+    CarMerchantsViewSetAdmin,
+    CarBrandSerializerViewSet,
+    CarViewSet,
+    WalletViewSetAdmin,
 )
 
 from src.models.views import UserViewSet

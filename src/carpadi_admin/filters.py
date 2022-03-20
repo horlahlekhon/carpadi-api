@@ -15,6 +15,7 @@ class TransactionsFilterAdmin(filters.FilterSet):
         model = Transaction
         fields = ['wallet', 'amount', 'created']
 
+
 class WalletFilterAdmin(filters.FilterSet):
     min_balance = filters.NumberFilter(field_name="balance", lookup_expr='gte')
     max_balance = filters.NumberFilter(field_name="balance", lookup_expr='lte')
@@ -33,6 +34,7 @@ class WalletFilterAdmin(filters.FilterSet):
     class Meta:
         model = Wallet
         fields = ['created', 'modified', 'balance', 'merchant']
+
 
 # class CarMerchantFilerAdmin(filters.FilterSet):
 #     ...

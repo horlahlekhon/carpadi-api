@@ -26,8 +26,8 @@ class CarSerializer(serializers.ModelSerializer):
         fields = "__all__"
         ref_name = "car_serializer_admin"
 
+
 class WalletSerializerAdmin(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = "__all__"
-        

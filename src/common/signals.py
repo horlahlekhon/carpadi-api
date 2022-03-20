@@ -55,5 +55,10 @@ def complete_user_registeration(sender, **kwargs):
             ot = Otp.objects.create(otp=otp, expiry=expiry, user=user)
             context = dict(username=user.username, otp=ot.otp)
             CarMerchant.objects.create(user=user)
-            notify(USER_PHONE_VERIFICATION, context=context, email_to=[user.email, ])
-
+            notify(
+                USER_PHONE_VERIFICATION,
+                context=context,
+                email_to=[
+                    user.email,
+                ],
+            )

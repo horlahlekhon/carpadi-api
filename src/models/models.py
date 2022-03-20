@@ -103,6 +103,7 @@ class TransactionPin(Base):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transaction_pins")
     pin = models.CharField(max_length=200)
 
+
 class CarMerchant(Base):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
     bvn = models.CharField(max_length=14, null=True, blank=False, default=None)
@@ -113,12 +114,20 @@ class CarMerchant(Base):
 # Wallet
 class Wallet(Base):
     balance = models.DecimalField(decimal_places=10, max_digits=16, editable=True)
-    merchant = models.ForeignKey(CarMerchant, on_delete=models.CASCADE, related_name="merchant_wallet", help_text="merchant user wallet that holds monetary balances")
+    merchant = models.ForeignKey(
+        CarMerchant,
+        on_delete=models.CASCADE,
+        related_name="merchant_wallet",
+        help_text="merchant user wallet that holds monetary balances",
+    )
+
 
 # Transactions
 class Transaction(Base):
     amount = models.DecimalField(decimal_places=10, max_digits=10, editable=False)
-    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="merchant_transactions", help_text="transactions carried out by merchant")
+    wallet = models.ForeignKey(
+        Wallet, on_delete=models.CASCADE, related_name="merchant_transactions", help_text="transactions carried out by merchant"
+    )
 
 
 class BankAccount(Base):

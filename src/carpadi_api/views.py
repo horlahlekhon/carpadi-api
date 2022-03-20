@@ -5,17 +5,20 @@ from rest_framework.views import status
 from django_filters import rest_framework as filters
 from src.carpadi_api.filters import TransactionsFilter, CarsFilter
 from src.carpadi_api.serializers import (
-    CarSerializer, TransactionPinSerializers,
+    CarSerializer,
+    TransactionPinSerializers,
     UpdateTransactionPinSerializers,
     CarMerchantUpdateSerializer,
 )
 from src.models.permissions import IsCarMerchantAndAuthed
 from src.models.serializers import (
-    TransactionSerializer, CarMerchantSerializer,
-    BankAccountSerializer, CarBrandSerializer, WalletSerializer,
+    TransactionSerializer,
+    CarMerchantSerializer,
+    BankAccountSerializer,
+    CarBrandSerializer,
+    WalletSerializer,
 )
 from src.models.models import Transaction, CarMerchant, BankAccount, CarBrand, Car, TransactionPin, TransactionPinStatus, Wallet
-
 
 
 class DefaultApiModelViewset(viewsets.ModelViewSet):
