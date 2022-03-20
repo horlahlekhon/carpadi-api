@@ -3,13 +3,16 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenViewBase
 
 from src.carpadi_api.serializers import TransactionPinSerializers
 from src.models.models import User, TransactionPinStatus, TransactionPin
 from src.models.permissions import IsUserOrReadOnly
-from src.models.serializers import CreateUserSerializer, UserSerializer, PhoneVerificationSerializer
+from src.models.serializers import CreateUserSerializer, UserSerializer, PhoneVerificationSerializer, \
+    TokenObtainModSerializer
 from rest_framework.serializers import ValidationError
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -31,7 +34,8 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
     @action(detail=False, methods=['get'], url_path='me', url_name='me')
     def get_user_data(self, instance):
         try:
-            return Response(UserSerializer(self.request.user, context={'request': self.request}).data, status=status.HTTP_200_OK)
+            return Response(UserSerializer(self.request.user, context={'request': self.request}).data,
+                            status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': 'Wrong auth token' + e}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -46,3 +50,11 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             return Response(reason.args[0], status=400)
         except Exception as reason:
             return Response({'error': str(reason)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TokenObtainPairViewMod(TokenViewBase):
+    """
+    Takes a set of user credentials and returns an access and refresh JSON web
+    token pair to prove the authentication of those credentials.
+    """
+    serializer_class = TokenObtainModSerializer

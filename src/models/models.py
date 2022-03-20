@@ -47,6 +47,9 @@ class UserTypes(models.TextChoices):
     CarMerchant = "merchant", "merchant"
 
 
+
+
+
 class User(AbstractUser, Base):
     username_validator = UnicodeUsernameValidator()
     profile_picture = ThumbnailerImageField('ProfilePicture', upload_to='profile_pictures/', blank=True, null=True)
@@ -65,8 +68,24 @@ class User(AbstractUser, Base):
     def __str__(self):
         return self.username
 
+    @staticmethod
+    def update_last_login(user, **kwargs):
+        """
+        A signal receiver which updates the last_login date for
+        the user logging in.
+        """
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+        LoginSessions.objects.create(device_imei=kwargs.get("device_imei"), user=user)
+
+
 
 saved_file.connect(generate_aliases_global)
+
+
+class LoginSessions(Base):
+    device_imei = models.CharField(max_length=20)
+    user = models.ForeignKey(get_user_model(), models.CASCADE)
 
 
 class OtpStatus(models.TextChoices):
@@ -102,6 +121,7 @@ class TransactionPin(Base):
     status = models.CharField(max_length=10, choices=TransactionPinStatus.choices)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transaction_pins")
     pin = models.CharField(max_length=200)
+    device_name = models.CharField(max_length=50, help_text="The name of the device i.e Iphone x")
 
 
 # Transactions
@@ -256,3 +276,12 @@ class Car(Base):
         help_text="The profit that was made from car " "after sales in percentage of the total cost",
     )
     car_type = models.CharField(choices=CarTypes.choices, max_length=30, null=False, blank=False)
+
+class SpareParts(Base):
+    pass
+
+
+# TODO add device_imei as part of login
+# TODO add merchant id to registeration response
+# update /me to include merchant details
+# TODO change reset password to send otp
