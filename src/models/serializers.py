@@ -2,7 +2,7 @@ import re
 
 from rest_framework import serializers, exceptions
 
-from src.models.models import Transactions, Wallets, CarMerchant, BankAccount, CarBrand, Car, UserTypes
+from src.models.models import Transaction, Wallet, CarMerchant, BankAccount, CarBrand, Car, UserTypes
 from src.common.serializers import ThumbnailerJSONSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.db.utils import IntegrityError
@@ -100,9 +100,9 @@ class PhoneVerificationSerializer(serializers.Serializer):
 
 
 # transaction  serializer
-class TransactionsSerializer(serializers.ModelSerializer):
+class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Transactions
+        model = Transaction
         fields = (
             'id',
             'created',
@@ -118,9 +118,9 @@ class TransactionsSerializer(serializers.ModelSerializer):
 
 
 # wallet serialer
-class Wallet_serializer(serializers.ModelSerializer):
+class WalletSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Wallets
+        model = Wallet
         fields = "__all__"
         read_only_fields = 'created'
 

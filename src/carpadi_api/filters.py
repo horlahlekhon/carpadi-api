@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from src.models.models import Transactions, Car
+from src.models.models import Transaction, Car
 
 
 class TransactionsFilter(filters.FilterSet):
@@ -11,7 +11,7 @@ class TransactionsFilter(filters.FilterSet):
     transaction_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
 
     class Meta:
-        model = Transactions
+        model = Transaction
         fields = ['amount', 'created']
 
 
