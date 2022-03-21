@@ -1,7 +1,9 @@
+import datetime
 import re
 
 from rest_framework import serializers, exceptions
 
+from src.config.common import OTP_EXPIRY
 from src.models.models import (
     Transactions,
     Wallets,
@@ -11,7 +13,7 @@ from src.models.models import (
     Car,
     UserTypes,
     TransactionPinStatus,
-    TransactionPin,
+    TransactionPin, Otp,
 )
 from src.common.serializers import ThumbnailerJSONSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, PasswordField
@@ -20,6 +22,8 @@ from django.contrib.auth import get_user_model, authenticate
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
+
+from src.notifications.services import USER_PHONE_VERIFICATION, notify
 
 User = get_user_model()
 
@@ -61,7 +65,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
         # the password will be stored in plain text.
         try:
             validated_data['username'] = (
-                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get("email")
+                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get(
+                    "email")
             )
             validated_data["is_active"] = False
             if validated_data.get("user_type") == UserTypes.CarMerchant:
@@ -106,6 +111,9 @@ def is_valid_phone(phone):
 class PhoneVerificationSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=6, required=True)
     phone = serializers.CharField(validators=(is_valid_phone,), max_length=15)
+
+    def get_tokens(self, user):
+        return user.get_tokens()
 
     def validate(self, attrs):
         user = User.objects.get(phone=attrs["phone"])
@@ -240,3 +248,41 @@ class TokenObtainModSerializer(serializers.Serializer):
     @classmethod
     def get_token(cls, user):
         return RefreshToken.for_user(user)
+
+
+class OtpSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        username = attrs["username"]
+        if username and re.search(r'[^@\s]+@[^@\s]+\.[^@\s]+', username):
+            kwargs = {'email': username}
+        elif username and re.search(r'\+?[\d]{3}[\d]{10}', username):
+            kwargs = {'phone': username}
+        else:
+            kwargs = {'username': username}
+        return kwargs
+
+    def create(self, validated_data):
+        users = User.objects.filter(**validated_data)
+        if len(users) > 0:
+            user = users[0]
+            expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
+            otp = "123456"
+            context = dict(username=user.username, otp=otp)
+            # notify(
+            #     USER_PHONE_VERIFICATION,
+            #     context=context,
+            #     email_to=[
+            #         user.email,
+            #     ],
+            # )
+            return Otp.objects.create(user=user, expiry=expiry, otp=otp)
+        else:
+            key = list(validated_data.keys())[0]
+            raise serializers.ValidationError(f"user with {key} {validated_data[key]} does not exist")
+
+
+from rest_framework.renderers import JSONRenderer
+
+

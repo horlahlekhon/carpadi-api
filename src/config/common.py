@@ -365,7 +365,7 @@ SUMMERNOTE_CONFIG = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-OTP_EXPIRY = 20
+OTP_EXPIRY = 30
 DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
     "CLASS": "django_rest_passwordreset.tokens.RandomNumberTokenGenerator",
     "OPTIONS": {"min_number": 100000, "max_number": 999999},

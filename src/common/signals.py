@@ -7,7 +7,7 @@ from src.common.helpers import build_absolute_uri
 from src.models.models import User, Otp, CarMerchant, UserTypes
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
 from django_rest_passwordreset.models import ResetPasswordToken
-
+from src.config.common import OTP_EXPIRY
 
 class DisableSignals(object):
     """
@@ -56,7 +56,7 @@ def complete_user_registeration(sender, **kwargs):
     if kwargs.get("created"):
         if user.user_type == UserTypes.CarMerchant:
             # otp = RandomNumberTokenGenerator(min_number=100000, max_number=999999).generate_token()
-            expiry = datetime.datetime.now() + datetime.timedelta(minutes=10)
+            expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
             ot = Otp.objects.create(otp="123456", expiry=expiry, user=user)
             context = dict(username=user.username, otp=ot.otp)
             # notify(

@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenViewBase
-
+from rest_framework import serializers
 from src.carpadi_api.serializers import TransactionPinSerializers
 from src.models.models import User, TransactionPinStatus, TransactionPin, UserTypes
 from src.models.permissions import IsUserOrReadOnly
@@ -13,7 +13,7 @@ from src.models.serializers import (
     UserSerializer,
     PhoneVerificationSerializer,
     TokenObtainModSerializer,
-    CarMerchantSerializer,
+    CarMerchantSerializer, OtpSerializer,
 )
 from rest_framework.serializers import ValidationError
 
@@ -53,12 +53,26 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         try:
             ser = PhoneVerificationSerializer(data=instance.data)
             ser.is_valid(raise_exception=True)
-            ser.save()
-            return Response(status=status.HTTP_200_OK)
+            user = ser.save()
+            return Response(ser.get_tokens(user), status=status.HTTP_200_OK)
         except ValidationError as reason:
             return Response(reason.args[0], status=400)
         except Exception as reason:
             return Response({'error': str(reason)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'], url_path='generate-otp', url_name='generate_otp')
+    def generate_otp(self, instance):
+        try:
+            ser = OtpSerializer(data=instance.data)
+            ser.is_valid(raise_exception=True)
+            ser.save()
+            return Response(status=status.HTTP_200_OK)
+        except ValidationError as reason:
+
+            return Response(serializers.as_serializer_error(reason), status=400)
+        except Exception as reason:
+            return Response(reason.args, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class TokenObtainPairViewMod(TokenViewBase):
