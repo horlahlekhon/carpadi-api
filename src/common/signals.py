@@ -55,17 +55,17 @@ def complete_user_registeration(sender, **kwargs):
     user: User = kwargs.get("instance")
     if kwargs.get("created"):
         if user.user_type == UserTypes.CarMerchant:
-            otp = RandomNumberTokenGenerator(min_number=100000, max_number=999999).generate_token()
+            # otp = RandomNumberTokenGenerator(min_number=100000, max_number=999999).generate_token()
             expiry = datetime.datetime.now() + datetime.timedelta(minutes=10)
-            ot = Otp.objects.create(otp=otp, expiry=expiry, user=user)
+            ot = Otp.objects.create(otp="123456", expiry=expiry, user=user)
             context = dict(username=user.username, otp=ot.otp)
-            notify(
-                USER_PHONE_VERIFICATION,
-                context=context,
-                email_to=[
-                    user.email,
-                ],
-            )
+            # notify(
+            #     USER_PHONE_VERIFICATION,
+            #     context=context,
+            #     email_to=[
+            #         user.email,
+            #     ],
+            # )
 
 
 # def send_reset_password_token(sender, **kwargs):
