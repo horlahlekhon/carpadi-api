@@ -22,7 +22,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='carmerchant',
             name='user',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='merchant', to=settings.AUTH_USER_MODEL),
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE, related_name='merchant', to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AlterField(
             model_name='otp',

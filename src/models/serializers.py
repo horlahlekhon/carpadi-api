@@ -2,12 +2,24 @@ import re
 
 from rest_framework import serializers, exceptions
 
-from src.models.models import Transactions, Wallets, CarMerchant, BankAccount, CarBrand, Car, UserTypes
+from src.models.models import (
+    Transactions,
+    Wallets,
+    CarMerchant,
+    BankAccount,
+    CarBrand,
+    Car,
+    UserTypes,
+    TransactionPinStatus,
+    TransactionPin,
+)
 from src.common.serializers import ThumbnailerJSONSerializer
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, PasswordField
 from django.db.utils import IntegrityError
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
+from django.db import transaction
 
 User = get_user_model()
 
@@ -29,25 +41,37 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CreateUserSerializer(serializers.ModelSerializer):
     profile_picture = ThumbnailerJSONSerializer(required=False, allow_null=True, alias_target='src.models')
-    tokens = serializers.SerializerMethodField()
+    # tokens = serializers.SerializerMethodField()
     phone = serializers.CharField(max_length=15, required=True)
     email = serializers.EmailField(required=True)
     birth_date = serializers.DateField(required=False)
     username = serializers.CharField(required=False)
     user_type = serializers.ChoiceField(required=False, choices=UserTypes.choices)
+    merchant_id = serializers.SerializerMethodField()
+
+    def get_merchant_id(self, user: User):
+        return user.merchant.id
 
     def get_tokens(self, user):
         return user.get_tokens()
 
+    @transaction.atomic()
     def create(self, validated_data):
         # call create_user on user object. Without this
         # the password will be stored in plain text.
         try:
-            validated_data["is_active"] = False
             validated_data['username'] = (
-                str(validated_data['username']).lower() if validated_data.get("username") else validated_data.get("email")
+                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get("email")
             )
-            user = User.objects.create_user(**validated_data)
+            validated_data["is_active"] = False
+            if validated_data.get("user_type") == UserTypes.CarMerchant:
+                user = User.objects.create_user(**validated_data)
+                user.eligible_for_reset()
+                CarMerchant.objects.create(user=user)
+            elif validated_data.get("user_type") == UserTypes.Admin:
+                user = User.objects.create_superuser(**validated_data)
+            else:
+                raise exceptions.ValidationError("Invalid user type")
         except IntegrityError as reason:
             raise exceptions.ValidationError("phone or email already exists", 400)
         return user
@@ -61,13 +85,14 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'email',
-            'tokens',
+            # 'tokens',
             'profile_picture',
             "phone",
             'birth_date',
             'user_type',
+            'merchant_id',
         )
-        read_only_fields = ('tokens',)
+        read_only_fields = ('merchant_id',)
         extra_kwargs = {'password': {'write_only': True}}
 
 
@@ -154,3 +179,64 @@ class CarBrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarBrand
         fields = "__all__"
+
+
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+class TokenObtainModSerializer(serializers.Serializer):
+    username_field = get_user_model().USERNAME_FIELD
+
+    default_error_messages = {
+        'no_active_account': _('No active account found with the given credentials'),
+        'new_device_detected': _(
+            'You are logging in to this device for the first time,' ' kindly create a new transaction pin for this device'
+        ),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields[self.username_field] = serializers.CharField()
+        self.fields['password'] = PasswordField()
+        self.fields['device_imei'] = serializers.CharField()
+        self.fields['skip_pin'] = serializers.BooleanField(required=False)
+
+    def validate(self, attrs):
+        authenticate_kwargs = {
+            self.username_field: attrs[self.username_field],
+            'password': attrs['password'],
+        }
+        try:
+            authenticate_kwargs['request'] = self.context['request']
+        except KeyError:
+            pass
+
+        self.user: User = authenticate(**authenticate_kwargs)
+
+        if not api_settings.USER_AUTHENTICATION_RULE(self.user):
+            raise exceptions.AuthenticationFailed(
+                self.error_messages['no_active_account'],
+                'no_active_account',
+            )
+
+        device_logins = self.user.transaction_pins.filter(
+            device_serial_number=attrs.get('device_imei'), status__in=(TransactionPinStatus.Active,)
+        ).count()
+        skip_pin = attrs.get("skip_pin", False)
+        if device_logins < 1 and not skip_pin:
+            raise exceptions.AuthenticationFailed(
+                self.error_messages['new_device_detected'],
+                'new_device_detected',
+            )
+        User.update_last_login(self.user, **dict(device_imei=attrs.get("device_imei")))
+
+        refresh = self.get_token(self.user)
+        car_merch = CarMerchantSerializer(instance=self.user.merchant)
+        data = {'refresh': str(refresh), 'access': str(refresh.access_token), "merchant": car_merch.data}
+        return data
+
+    @classmethod
+    def get_token(cls, user):
+        return RefreshToken.for_user(user)

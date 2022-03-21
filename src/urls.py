@@ -12,6 +12,7 @@ from rest_framework_simplejwt.views import (
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from src.models.views import TokenObtainPairViewMod
 from src.social.views import exchange_token, complete_twitter_login
 from src.files.urls import files_router
 from src.carpadi_admin.urls import router as admin_router
@@ -45,7 +46,8 @@ urlpatterns = [
     url(r'^api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     # auth
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('api/v1/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/v1/auth/login/', TokenObtainPairViewMod.as_view(), name='token_obtain_pair'),
+    # path('api/v1/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/v1/auth/token-refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # social login
     url('', include('social_django.urls', namespace='social')),
