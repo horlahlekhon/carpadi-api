@@ -6,10 +6,15 @@ from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenViewBase
 
 from src.carpadi_api.serializers import TransactionPinSerializers
-from src.models.models import User, TransactionPinStatus, TransactionPin
+from src.models.models import User, TransactionPinStatus, TransactionPin, UserTypes
 from src.models.permissions import IsUserOrReadOnly
-from src.models.serializers import CreateUserSerializer, UserSerializer, PhoneVerificationSerializer, \
-    TokenObtainModSerializer
+from src.models.serializers import (
+    CreateUserSerializer,
+    UserSerializer,
+    PhoneVerificationSerializer,
+    TokenObtainModSerializer,
+    CarMerchantSerializer,
+)
 from rest_framework.serializers import ValidationError
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -34,8 +39,12 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
     @action(detail=False, methods=['get'], url_path='me', url_name='me')
     def get_user_data(self, instance):
         try:
-            return Response(UserSerializer(self.request.user, context={'request': self.request}).data,
-                            status=status.HTTP_200_OK)
+            user = self.request.user
+            if user.user_type == UserTypes.CarMerchant and user.merchant:
+                data = CarMerchantSerializer(instance=user.merchant).data
+            else:
+                data = UserSerializer(self.request.user, context={'request': self.request}).data
+            return Response(data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': 'Wrong auth token' + e}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -57,4 +66,5 @@ class TokenObtainPairViewMod(TokenViewBase):
     Takes a set of user credentials and returns an access and refresh JSON web
     token pair to prove the authentication of those credentials.
     """
+
     serializer_class = TokenObtainModSerializer

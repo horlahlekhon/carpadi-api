@@ -7,6 +7,8 @@ from ..models.models import CarMerchant, Car, TransactionPin, User, TransactionP
 
 from django.contrib.auth.hashers import make_password, check_password
 
+from ..models.serializers import UserSerializer
+
 
 class SocialSerializer(serializers.Serializer):
     """
@@ -76,3 +78,15 @@ class CarMerchantUpdateSerializer(serializers.Serializer):
         merch.bvn = validated_data.get("bvn")
         merch.save(update_fields=["bvn"])
         return merch
+
+
+class CarMerchantSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    def get_user(self, merchant: CarMerchant):
+        user_ser = UserSerializer(instance=merchant.user)
+        return user_ser.data
+
+    class Meta:
+        model = CarMerchant
+        fields = "__all__"

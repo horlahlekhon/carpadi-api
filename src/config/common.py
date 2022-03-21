@@ -18,7 +18,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
 
-
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -86,8 +85,8 @@ EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
 EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 # EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_USER="emailapikey"
-EMAIL_HOST_PASSWORD="wSsVR60k8kT4XK99mmarJLs+nlpVU17zFE990VHw73StH6+T9sdqxUDGBAX2G6QeQ2NrEDJArL1/nhdUhDYHi9wlmQlSACiF9mqRe1U4J3x17qnvhDzNV2VVlxKML4IAzw5tmmVhFMEj+g=="
+EMAIL_HOST_USER = "emailapikey"
+EMAIL_HOST_PASSWORD = "wSsVR60k8kT4XK99mmarJLs+nlpVU17zFE990VHw73StH6+T9sdqxUDGBAX2G6QeQ2NrEDJArL1/nhdUhDYHi9wlmQlSACiF9mqRe1U4J3x17qnvhDzNV2VVlxKML4IAzw5tmmVhFMEj+g=="
 
 # Celery
 BROKER_URL = os.getenv('BROKER_URL', 'redis://redis:6379')
@@ -367,3 +366,7 @@ SUMMERNOTE_CONFIG = {
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 OTP_EXPIRY = 20
+DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
+    "CLASS": "django_rest_passwordreset.tokens.RandomNumberTokenGenerator",
+    "OPTIONS": {"min_number": 100000, "max_number": 999999},
+}
