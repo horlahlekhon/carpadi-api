@@ -33,7 +33,7 @@ class UserTypes(models.TextChoices):
 
 class User(AbstractUser, Base):
     username_validator = UnicodeUsernameValidator()
-    profile_picture = ThumbnailerImageField('ProfilePicture', upload_to='profile_pictures/', blank=True, null=True)
+    profile_picture = models.URLField(blank=True, null=True)
     user_type = models.CharField(choices=UserTypes.choices, max_length=20)
     phone = models.CharField(max_length=15, unique=True, help_text="International format phone number")
     username = models.CharField(max_length=50, validators=[username_validator], unique=True, null=True)
@@ -260,4 +260,18 @@ class Car(Base):
 
 
 class SpareParts(Base):
-    pass
+    name = models.CharField(max_length=100)
+    car_brand = models.ForeignKey(CarBrand, on_delete=models.CASCADE)
+    estimated_price = models.DecimalField(max_digits=10, decimal_places=10)
+
+
+class CarMaintainanceTypes(models.TextChoices):
+    SparePart = "spare_part", _("Car spare parts i.e brake.")
+    Expense = "expense", _("other expenses made on the car that doesnt directly relate to a physical parts.")
+
+
+class CarMaintainance(Base):
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="maintanances")
+    type = models.CharField(choices=CarMaintainanceTypes.choices, max_length=20)
+
+

@@ -24,12 +24,14 @@ from django.utils.translation import gettext_lazy as _
 from django.db import transaction
 
 from src.notifications.services import USER_PHONE_VERIFICATION, notify
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_picture = ThumbnailerJSONSerializer(required=False, allow_null=True, alias_target='src.models')
+    profile_picture = serializers.URLField(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -44,7 +46,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    profile_picture = ThumbnailerJSONSerializer(required=False, allow_null=True, alias_target='src.models')
+    profile_picture = serializers.URLField(required=False)
     # tokens = serializers.SerializerMethodField()
     phone = serializers.CharField(max_length=15, required=True)
     email = serializers.EmailField(required=True)
@@ -189,8 +191,6 @@ class CarBrandSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-from rest_framework_simplejwt.settings import api_settings
-from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class TokenObtainModSerializer(serializers.Serializer):
@@ -199,7 +199,8 @@ class TokenObtainModSerializer(serializers.Serializer):
     default_error_messages = {
         'no_active_account': _('No active account found with the given credentials'),
         'new_device_detected': _(
-            'You are logging in to this device for the first time,' ' kindly create a new transaction pin for this device'
+            'You are logging in to this device for the first time,' 
+            'kindly create a new transaction pin for this device '
         ),
     }
 

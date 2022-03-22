@@ -36,8 +36,8 @@ class TransactionPinSerializers(serializers.ModelSerializer):
         extra_kwargs = {'pin': {'write_only': True}}
 
     def validate_pin(self, pin):
-        if not str.isdigit(pin) or len(pin) != 4:
-            raise serializers.ValidationError("Pin should be exactly 4 digits long")
+        if not str.isdigit(pin) or len(pin) != 6:
+            raise serializers.ValidationError("Pin should be exactly 6 digits long")
         return pin
 
     def create(self, validated_data):

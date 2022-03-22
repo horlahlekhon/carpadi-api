@@ -16,9 +16,9 @@ from src.models.serializers import (
     CarMerchantSerializer, OtpSerializer,
 )
 from rest_framework.serializers import ValidationError
-
+from django.http.response import Http404
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
+from rest_framework.exceptions import NotAcceptable
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
@@ -27,7 +27,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
 
     queryset = User.objects.all()
     serializers = {'default': UserSerializer, 'create': CreateUserSerializer}
-    permissions = {'default': (IsUserOrReadOnly,), 'create': (AllowAny,), 'verify_phone': (AllowAny,)}
+    permissions = {'default': (IsUserOrReadOnly,), 'create': (AllowAny,), 'verify_phone': (AllowAny,), }
 
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
@@ -72,7 +72,18 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             return Response(serializers.as_serializer_error(reason), status=400)
         except Exception as reason:
             return Response(reason.args, status=status.HTTP_400_BAD_REQUEST)
+        
+    def get_object(self):
+        user = self.request.user
+        if user.is_anonymous or not user.is_authenticated or not user.is_active:
+            raise Http404('No user matches the given query.')
+        if user.is_superuser or user.is_staff:
+            raise NotAcceptable("Admin user cannot login on the merchant app")
+        return user
 
+    @action(detail=False, methods=['patch'], url_path='update', url_name='patch_user')
+    def patch_user(self, request, *args, **kwargs):
+        return super(UserViewSet, self).update(request, *args, **kwargs)
 
 
 class TokenObtainPairViewMod(TokenViewBase):
