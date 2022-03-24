@@ -110,17 +110,7 @@ class CarMerchant(Base):
     bvn = models.CharField(max_length=14, null=True, blank=False, default=None)
 
     # class Meta:
-# Transactions
-class Transaction(Base):
-    amount = models.DecimalField(decimal_places=10, max_digits=10, editable=False)
-    wallet = models.ForeignKey(
-        Wallet, on_delete=models.CASCADE,
-        related_name="merchant_transactions",
-        help_text="transactions carried out by merchant"
-    )
 
-
-# Wallet
 class Wallet(Base):
     balance = models.DecimalField(decimal_places=10, max_digits=16, editable=True)
     merchant = models.ForeignKey(
@@ -130,12 +120,13 @@ class Wallet(Base):
         help_text="merchant user wallet that holds monetary balances",
     )
 
-
 # Transactions
 class Transaction(Base):
     amount = models.DecimalField(decimal_places=10, max_digits=10, editable=False)
     wallet = models.ForeignKey(
-        Wallet, on_delete=models.CASCADE, related_name="merchant_transactions", help_text="transactions carried out by merchant"
+        Wallet, on_delete=models.CASCADE,
+        related_name="merchant_transactions",
+        help_text="transactions carried out by merchant"
     )
 
 
