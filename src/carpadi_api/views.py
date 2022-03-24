@@ -2,7 +2,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import status
-from rest_framework import permissions
 from django_filters import rest_framework as filters
 from src.carpadi_api.filters import TransactionsFilter, CarsFilter
 from src.carpadi_api.serializers import (
@@ -12,13 +11,14 @@ from src.carpadi_api.serializers import (
     CarMerchantUpdateSerializer,
 )
 from src.models.permissions import IsCarMerchantAndAuthed
-from src.models.serializers import TransactionsSerializer, CarMerchantSerializer, BankAccountSerializer, CarBrandSerializer
-from src.models.models import Transactions, CarMerchant, BankAccount, CarBrand, Car, TransactionPin, TransactionPinStatus
-
-
-# from .models import Transaction
-
-# Create your views here
+from src.models.serializers import (
+    TransactionSerializer,
+    CarMerchantSerializer,
+    BankAccountSerializer,
+    CarBrandSerializer,
+    WalletSerializer,
+)
+from src.models.models import Transaction, CarMerchant, BankAccount, CarBrand, Car, TransactionPin, TransactionPinStatus, Wallet
 
 
 class DefaultApiModelViewset(viewsets.ModelViewSet):
@@ -79,25 +79,24 @@ class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         return Response(ser.data)
 
 
-# Create your views here.
-class TransactionsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
     handles basic CRUD functionalities for transaction model
     """
 
-    serializer_class = TransactionsSerializer
-    queryset = Transactions.objects.all()
+    serializer_class = TransactionSerializer
+    queryset = Transaction.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = TransactionsFilter
     permission_classes = (IsCarMerchantAndAuthed,)
 
     def list(self, request):
-        serialize = TransactionsSerializer(self.queryset, many=True)
+        serialize = self.serializer_class(self.queryset, many=True)
         return Response(serialize.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None):
         transaction = get_object_or_404(self.queryset, pk=pk)
-        serialize = TransactionsSerializer(transaction)
+        serialize = self.serializer_class(transaction)
         return Response(serialize.data, status=status.HTTP_200_OK)
 
 
@@ -164,3 +163,14 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_200_OK)
+
+
+class WalletViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = Wallet.objects.all()
+    serializer_class = WalletSerializer
+    permission_classes = (IsCarMerchantAndAuthed,)
+
+    def retrieve(self, request, pk=None):
+        wallet = get_object_or_404(self.queryset, pk=pk)
+        serialize = self.serializer_class(wallet)
+        return Response(serialize.data, status=status.HTTP_200_OK)

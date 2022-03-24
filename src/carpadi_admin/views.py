@@ -2,13 +2,13 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import status
-from rest_framework import permissions
+from rest_framework.permissions import IsAdminUser
 from django_filters import rest_framework as filters
 
-from src.carpadi_admin.filters import TransactionsFilterAdmin
-from src.carpadi_admin.serializers import CarSerializer
-from src.models.serializers import TransactionsSerializer, CarBrandSerializer, CarMerchantSerializer
-from src.models.models import Transactions, CarBrand, Car, CarMerchant
+from src.carpadi_admin.filters import TransactionsFilterAdmin, WalletFilterAdmin
+from src.carpadi_admin.serializers import CarSerializer, WalletSerializerAdmin
+from src.models.serializers import TransactionSerializer, CarBrandSerializer, CarMerchantSerializer
+from src.models.models import Transaction, CarBrand, Car, CarMerchant, Wallet
 
 
 # Create your views here.
@@ -17,15 +17,15 @@ class TransactionsViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     handles basic CRUD functionalities for transaction model for admin
     """
 
-    permissions = {'default': (permissions.IsAdminUser,)}
-    serializer_class = TransactionsSerializer
-    queryset = Transactions.objects.all()
+    permissions = {'default': (IsAdminUser,)}
+    serializer_class = TransactionSerializer
+    queryset = Transaction.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = TransactionsFilterAdmin
 
 
 class CarMerchantsViewSetAdmin(viewsets.ReadOnlyModelViewSet):
-    permissions = {'default': (permissions.IsAdminUser,)}
+    permissions = {'default': (IsAdminUser,)}
     serializer_class = CarMerchantSerializer
     queryset = CarMerchant.objects.all()
 
@@ -42,10 +42,18 @@ class CarMerchantsViewSetAdmin(viewsets.ReadOnlyModelViewSet):
 class CarBrandSerializerViewSet(viewsets.ModelViewSet):
     serializer_class = CarBrandSerializer
     queryset = CarBrand.objects.all()
-    permissions = {'default': (permissions.IsAdminUser,)}
+    permissions = {'default': (IsAdminUser,)}
 
 
 class CarViewSet(viewsets.ModelViewSet):
     serializer_class = CarSerializer
-    permissions = {'default': (permissions.IsAdminUser,)}
+    permissions = {'default': (IsAdminUser,)}
     queryset = Car.objects.all()
+
+
+class WalletViewSetAdmin(viewsets.ReadOnlyModelViewSet):
+    permissions = {'default': (IsAdminUser,)}
+    serializer_class = WalletSerializerAdmin
+    queryset = Wallet.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = WalletFilterAdmin

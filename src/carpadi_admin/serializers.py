@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from src.models.models import CarMerchant, Car
+from src.models.models import CarMerchant, Car, Wallet
 
 
 class SocialSerializer(serializers.Serializer):
@@ -25,3 +25,9 @@ class CarSerializer(serializers.ModelSerializer):
         model = Car
         fields = "__all__"
         ref_name = "car_serializer_admin"
+
+
+class WalletSerializerAdmin(serializers.ModelSerializer):
+    class Meta:
+        model = Wallet
+        fields = "__all__"

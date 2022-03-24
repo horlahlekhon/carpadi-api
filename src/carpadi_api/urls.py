@@ -6,16 +6,19 @@ from src.carpadi_api.views import (
     CarBrandSerializerViewSet,
     CarViewSet,
     TransactionPinsViewSet,
+    TransactionViewSet,
+    WalletViewSet,
 )
 from src.models.views import UserViewSet
-from src.carpadi_api.views import TransactionsViewSet
+
 
 router = DefaultRouter()
 router.register(r'merchants', CarMerchantViewSet)
 # router.register(r"merchants/merchants", )
-router.register(r'transactions', TransactionsViewSet)
+router.register(r'transactions', TransactionViewSet)
 router.register(r'bank-accounts', BankAccountViewSet)
 router.register(r'car-brands', CarBrandSerializerViewSet)
 router.register(r'cars', CarViewSet)
 router.register('pins', TransactionPinsViewSet)
+router.register('wallets', WalletViewSet)
 # urlpatterns = router.urls
