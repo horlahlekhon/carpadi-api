@@ -13,7 +13,8 @@ from src.models.models import (
     Car,
     UserTypes,
     TransactionPinStatus,
-    TransactionPin, Otp,
+    TransactionPin,
+    Otp,
 )
 from src.common.serializers import ThumbnailerJSONSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, PasswordField
@@ -67,8 +68,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         # the password will be stored in plain text.
         try:
             validated_data['username'] = (
-                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get(
-                    "email")
+                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get("email")
             )
             validated_data["is_active"] = False
             if validated_data.get("user_type") == UserTypes.CarMerchant:
@@ -191,16 +191,13 @@ class CarBrandSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
-
 class TokenObtainModSerializer(serializers.Serializer):
     username_field = get_user_model().USERNAME_FIELD
 
     default_error_messages = {
         'no_active_account': _('No active account found with the given credentials'),
         'new_device_detected': _(
-            'You are logging in to this device for the first time,' 
-            'kindly create a new transaction pin for this device '
+            'You are logging in to this device for the first time,' 'kindly create a new transaction pin for this device '
         ),
     }
 
@@ -285,5 +282,3 @@ class OtpSerializer(serializers.Serializer):
 
 
 from rest_framework.renderers import JSONRenderer
-
-

@@ -13,12 +13,14 @@ from src.models.serializers import (
     UserSerializer,
     PhoneVerificationSerializer,
     TokenObtainModSerializer,
-    CarMerchantSerializer, OtpSerializer,
+    CarMerchantSerializer,
+    OtpSerializer,
 )
 from rest_framework.serializers import ValidationError
 from django.http.response import Http404
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.exceptions import NotAcceptable
+
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
@@ -27,7 +29,11 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
 
     queryset = User.objects.all()
     serializers = {'default': UserSerializer, 'create': CreateUserSerializer}
-    permissions = {'default': (IsUserOrReadOnly,), 'create': (AllowAny,), 'verify_phone': (AllowAny,), }
+    permissions = {
+        'default': (IsUserOrReadOnly,),
+        'create': (AllowAny,),
+        'verify_phone': (AllowAny,),
+    }
 
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
@@ -72,7 +78,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             return Response(serializers.as_serializer_error(reason), status=400)
         except Exception as reason:
             return Response(reason.args, status=status.HTTP_400_BAD_REQUEST)
-        
+
     def get_object(self):
         user = self.request.user
         if user.is_anonymous or not user.is_authenticated or not user.is_active:

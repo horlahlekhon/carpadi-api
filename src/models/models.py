@@ -280,5 +280,3 @@ class CarMaintainanceTypes(models.TextChoices):
 class CarMaintainance(Base):
     car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="maintanances")
     type = models.CharField(choices=CarMaintainanceTypes.choices, max_length=20)
-
-
