@@ -1,4 +1,5 @@
 import datetime
+from pyexpat import model
 import re
 
 from rest_framework import serializers, exceptions
@@ -15,6 +16,7 @@ from src.models.models import (
     TransactionPinStatus,
     TransactionPin,
     Otp,
+    Trade,
 )
 from src.common.serializers import ThumbnailerJSONSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, PasswordField
@@ -280,5 +282,10 @@ class OtpSerializer(serializers.Serializer):
             key = list(validated_data.keys())[0]
             raise serializers.ValidationError(f"user with {key} {validated_data[key]} does not exist")
 
+class TradeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trade
+        fields = ('created', 'share_percentage', 'id', 'merchant', 'car')
+        read_only_fields = ('created', 'share_percentage', 'id', 'merchant', 'car')
 
 from rest_framework.renderers import JSONRenderer

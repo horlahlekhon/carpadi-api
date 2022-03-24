@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from src.models.models import Transaction, Wallet
+from src.models.models import Transaction, Wallet, Trade
 
 
 class TransactionsFilterAdmin(filters.FilterSet):
@@ -34,6 +34,24 @@ class WalletFilterAdmin(filters.FilterSet):
     class Meta:
         model = Wallet
         fields = ['created', 'modified', 'balance', 'merchant']
+
+
+class TradesFilterAdmin(filters.FilterSet):
+    trade_date_lte = filters.DateTimeFilter(field_name="created", lookup_expr='day_lte')
+    trade_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day_gte')
+    trade_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
+
+    share_percentage_lte = filters.NumberFilter(field_name="share_percentage", lookup_expr="lte")
+    share_percentage_gte = filters.NumberFilter(field_name="share_percentage", lookup_expr="gte")
+
+    merchant = filters.UUIDFilter(field_name="merchant")
+
+    car = filters.UUIDFilter(field_name="car")
+    # car = filters.UUIDFilter(field_name="car") Todo Filter on Car brand
+
+    class Meta:
+        model = Trade
+        fields = ["created", "share_percentage", "merchant", "car"]
 
 
 # class CarMerchantFilerAdmin(filters.FilterSet):

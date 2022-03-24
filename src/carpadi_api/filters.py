@@ -1,6 +1,7 @@
+from dataclasses import fields
 from django_filters import rest_framework as filters
 
-from src.models.models import Transaction, Car
+from src.models.models import Transaction, Car, Trade
 
 
 class TransactionsFilter(filters.FilterSet):
@@ -22,3 +23,14 @@ class CarsFilter(filters.FilterSet):
     class Meta:
         model = Car
         fields = ["status", "brand__name"]
+
+class TradesFilter(filters.FilterSet):
+    trade_date_lte = filters.DateTimeFilter(field_name="created", lookup_expr='day_lte')
+    trade_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day_gte')
+    trade_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
+    share_percentage_lte = filters.NumberFilter(field_name="share_percentage", lookup_expr="lte")
+    share_percentage_gte = filters.NumberFilter(field_name="share_percentage", lookup_expr="gte")
+
+    class Meta:
+        model = Trade
+        fields = ["created", "share_percentage"]

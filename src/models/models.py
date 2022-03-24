@@ -280,3 +280,11 @@ class CarMaintainanceTypes(models.TextChoices):
 class CarMaintainance(Base):
     car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="maintanances")
     type = models.CharField(choices=CarMaintainanceTypes.choices, max_length=20)
+
+class Trade(Base):
+    share_percentage = models.FloatField(editable=False)
+    merchant = models.ForeignKey(
+        CarMerchant, on_delete=models.CASCADE, related_name="trade", help_text="trade on a vehicle which a merchant own part of"
+    )
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="trade", help_text="car involved in the trade")
+     

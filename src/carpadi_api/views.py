@@ -3,7 +3,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import status
 from django_filters import rest_framework as filters
-from src.carpadi_api.filters import TransactionsFilter, CarsFilter
+from src.carpadi_api.filters import TransactionsFilter, CarsFilter, TradesFilter
 from src.carpadi_api.serializers import (
     CarSerializer,
     TransactionPinSerializers,
@@ -17,8 +17,14 @@ from src.models.serializers import (
     BankAccountSerializer,
     CarBrandSerializer,
     WalletSerializer,
+    TradeSerializer,
 )
-from src.models.models import Transaction, CarMerchant, BankAccount, CarBrand, Car, TransactionPin, TransactionPinStatus, Wallet
+from src.models.models import (
+    Transaction, CarMerchant,
+    BankAccount, CarBrand, Car,
+    TransactionPin, TransactionPinStatus,
+    Wallet, Trade,
+)
 
 
 class DefaultApiModelViewset(viewsets.ModelViewSet):
@@ -173,4 +179,20 @@ class WalletViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     def retrieve(self, request, pk=None):
         wallet = get_object_or_404(self.queryset, pk=pk)
         serialize = self.serializer_class(wallet)
+        return Response(serialize.data, status=status.HTTP_200_OK)
+
+class TradeViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = Trade.objects.all()
+    serializer_class = TradeSerializer
+    permission_classes = (IsCarMerchantAndAuthed,)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = TradesFilter
+
+    def list(self, request):
+        serialize = self.serializer_class(self.queryset, many=True)
+        return Response(serialize.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        trade = get_object_or_404(self.queryset, pk=pk)
+        serialize = self.serializer_class(trade)
         return Response(serialize.data, status=status.HTTP_200_OK)
