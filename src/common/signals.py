@@ -89,6 +89,8 @@ def password_reset_token_created(sender, instance, reset_password_token: ResetPa
     # reset_password_token.save(update_fields=["key"])
     # reset_password_token.refresh_from_db()
     reset_password_path = reverse('password_reset:reset-password-confirm')
+    reset_password_token.key = "123456" # TOdo remeber to remove this coder abeg.
+    reset_password_token.save(update_fields=["key"])
     context = {
         'username': reset_password_token.user.username,
         'email': reset_password_token.user.email,

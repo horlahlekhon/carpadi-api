@@ -97,7 +97,7 @@ class TransactionPinStatus(models.TextChoices):
 
 
 class TransactionPin(Base):
-    device_serial_number = models.CharField(max_length=20, unique=True)
+    device_serial_number = models.CharField(max_length=50, unique=True)
     device_platform = models.CharField(max_length=20)
     status = models.CharField(max_length=10, choices=TransactionPinStatus.choices)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transaction_pins")
@@ -122,6 +122,14 @@ class CarMerchant(Base):
     bvn = models.CharField(max_length=14, null=True, blank=False, default=None)
 
     # class Meta:
+# Transactions
+class Transaction(Base):
+    amount = models.DecimalField(decimal_places=10, max_digits=10, editable=False)
+    wallet = models.ForeignKey(
+        Wallet, on_delete=models.CASCADE,
+        related_name="merchant_transactions",
+        help_text="transactions carried out by merchant"
+    )
 
 
 class BankAccount(Base):
@@ -129,7 +137,8 @@ class BankAccount(Base):
     bank_name = models.CharField(max_length=50)
     account_number = models.CharField(max_length=10)
     merchant = models.ForeignKey(
-        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts", help_text="Bank account to remit merchant money to"
+        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts",
+        help_text="Bank account to remit merchant money to"
     )
 
 
