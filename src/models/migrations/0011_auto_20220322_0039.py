@@ -44,7 +44,14 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='transactionpin',
             name='status',
-            field=models.CharField(choices=[('expired', 'User already deleted device from device management'), ('active', 'Transaction pin is still active'), ('deleted', 'Transaction pin has been deleted')], max_length=10),
+            field=models.CharField(
+                choices=[
+                    ('expired', 'User already deleted device from device management'),
+                    ('active', 'Transaction pin is still active'),
+                    ('deleted', 'Transaction pin has been deleted'),
+                ],
+                max_length=10,
+            ),
         ),
         migrations.AlterField(
             model_name='user',
@@ -54,11 +61,33 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CarMaintainance',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('type', models.CharField(choices=[('spare_part', 'Car spare parts i.e brake.'), ('expense', 'other expenses made on the car that doesnt directly relate to a physical parts.')], max_length=20)),
-                ('car', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='maintanances', to='models.car')),
+                (
+                    'type',
+                    models.CharField(
+                        choices=[
+                            ('spare_part', 'Car spare parts i.e brake.'),
+                            ('expense', 'other expenses made on the car that doesnt directly relate to a physical parts.'),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    'car',
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='maintanances', to='models.car'),
+                ),
             ],
             options={
                 'abstract': False,

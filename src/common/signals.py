@@ -9,6 +9,7 @@ from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY
 from django_rest_passwordreset.models import ResetPasswordToken
 from src.config.common import OTP_EXPIRY
 
+
 class DisableSignals(object):
     """
     A class used to disable signals on the enclosed block of code.

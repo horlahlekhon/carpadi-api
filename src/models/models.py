@@ -105,18 +105,6 @@ class TransactionPin(Base):
     device_name = models.CharField(max_length=50, help_text="The name of the device i.e Iphone x")
 
 
-# Transactions
-class Transactions(Base):
-    wallet = models.UUIDField(default=uuid.uuid4, editable=False)
-    amount = models.DecimalField(decimal_places=10, max_digits=10, editable=False)
-
-
-# Wallet
-class Wallets(Base):
-    merchant = models.UUIDField(default=uuid.uuid4, editable=False)
-    balance = models.DecimalField(decimal_places=10, max_digits=16, editable=True)
-
-
 class CarMerchant(Base):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
     bvn = models.CharField(max_length=14, null=True, blank=False, default=None)
@@ -129,6 +117,25 @@ class Transaction(Base):
         Wallet, on_delete=models.CASCADE,
         related_name="merchant_transactions",
         help_text="transactions carried out by merchant"
+    )
+
+
+# Wallet
+class Wallet(Base):
+    balance = models.DecimalField(decimal_places=10, max_digits=16, editable=True)
+    merchant = models.ForeignKey(
+        CarMerchant,
+        on_delete=models.CASCADE,
+        related_name="merchant_wallet",
+        help_text="merchant user wallet that holds monetary balances",
+    )
+
+
+# Transactions
+class Transaction(Base):
+    amount = models.DecimalField(decimal_places=10, max_digits=10, editable=False)
+    wallet = models.ForeignKey(
+        Wallet, on_delete=models.CASCADE, related_name="merchant_transactions", help_text="transactions carried out by merchant"
     )
 
 
@@ -282,5 +289,3 @@ class CarMaintainanceTypes(models.TextChoices):
 class CarMaintainance(Base):
     car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="maintanances")
     type = models.CharField(choices=CarMaintainanceTypes.choices, max_length=20)
-
-
