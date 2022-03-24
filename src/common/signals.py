@@ -3,9 +3,11 @@ import random
 from collections import defaultdict
 from django.db.models import signals
 
+from src.common.helpers import build_absolute_uri
 from src.models.models import User, Otp, CarMerchant, UserTypes
-from src.notifications.services import notify, USER_PHONE_VERIFICATION
-
+from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
+from django_rest_passwordreset.models import ResetPasswordToken
+from src.config.common import OTP_EXPIRY
 
 class DisableSignals(object):
     """
@@ -46,19 +48,52 @@ class DisableSignals(object):
         del self.stashed_signals[signal]
 
 
+from django_rest_passwordreset.tokens import RandomNumberTokenGenerator
+
+
 def complete_user_registeration(sender, **kwargs):
     user: User = kwargs.get("instance")
     if kwargs.get("created"):
         if user.user_type == UserTypes.CarMerchant:
-            otp = random.randrange(100000, 999999)
-            expiry = datetime.datetime.now() + datetime.timedelta(minutes=10)
-            ot = Otp.objects.create(otp=otp, expiry=expiry, user=user)
+            # otp = RandomNumberTokenGenerator(min_number=100000, max_number=999999).generate_token()
+            expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
+            ot = Otp.objects.create(otp="123456", expiry=expiry, user=user)
             context = dict(username=user.username, otp=ot.otp)
-            CarMerchant.objects.create(user=user)
-            notify(
-                USER_PHONE_VERIFICATION,
-                context=context,
-                email_to=[
-                    user.email,
-                ],
-            )
+            # notify(
+            #     USER_PHONE_VERIFICATION,
+            #     context=context,
+            #     email_to=[
+            #         user.email,
+            #     ],
+            # )
+
+
+# def send_reset_password_token(sender, **kwargs):
+#     token: ResetPasswordToken = kwargs.get("reset_password_token")
+#     if token:
+#         otp = random.randrange(100000, 999999)
+#         token.key = otp
+#         token.save(update_fields=["key"])
+#         context = dict(username=user.username, otp=ot.otp)
+#         notify(PASSWORD_RESET_TOKEEN, context=context, email_to=[user.email, ])
+from django.urls import reverse
+
+
+def password_reset_token_created(sender, instance, reset_password_token: ResetPasswordToken, *args, **kwargs):
+    """
+    Handles password reset tokens
+    When a token is created, an e-mail needs to be sent to the user
+    """
+    # otp = random.randrange(100000, 999999)
+    # reset_password_token.key = otp
+    # reset_password_token.save(update_fields=["key"])
+    # reset_password_token.refresh_from_db()
+    reset_password_path = reverse('password_reset:reset-password-confirm')
+    context = {
+        'username': reset_password_token.user.username,
+        'email': reset_password_token.user.email,
+        'reset_password_url': build_absolute_uri(f'{reset_password_path}?token={reset_password_token.key}'),
+        'token': reset_password_token.key,
+    }
+
+    notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])

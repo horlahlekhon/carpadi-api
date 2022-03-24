@@ -7,6 +7,8 @@ from ..models.models import CarMerchant, Car, TransactionPin, User, TransactionP
 
 from django.contrib.auth.hashers import make_password, check_password
 
+from ..models.serializers import UserSerializer
+
 
 class SocialSerializer(serializers.Serializer):
     """
@@ -34,8 +36,8 @@ class TransactionPinSerializers(serializers.ModelSerializer):
         extra_kwargs = {'pin': {'write_only': True}}
 
     def validate_pin(self, pin):
-        if not str.isdigit(pin) or len(pin) != 4:
-            raise serializers.ValidationError("Pin should be exactly 4 digits long")
+        if not str.isdigit(pin) or len(pin) != 6:
+            raise serializers.ValidationError("Pin should be exactly 6 digits long")
         return pin
 
     def create(self, validated_data):
@@ -76,3 +78,15 @@ class CarMerchantUpdateSerializer(serializers.Serializer):
         merch.bvn = validated_data.get("bvn")
         merch.save(update_fields=["bvn"])
         return merch
+
+
+class CarMerchantSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    def get_user(self, merchant: CarMerchant):
+        user_ser = UserSerializer(instance=merchant.user)
+        return user_ser.data
+
+    class Meta:
+        model = CarMerchant
+        fields = "__all__"

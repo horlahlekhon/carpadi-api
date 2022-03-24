@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 ACTIVITY_USER_RESETS_PASS = 'started password reset process'
 USER_PHONE_VERIFICATION = "VERIFY PHONE"
+# PASSWORD_RESET_TOKEEN = "RESEET"
 NOTIFICATIONS = {
     ACTIVITY_USER_RESETS_PASS: {
         'email': {
@@ -20,6 +21,7 @@ NOTIFICATIONS = {
             'email_html_template': 'emails/verify_phone.html',
         }
     },
+    # PASSWORD_RESET_TOKEEN
 }
 
 

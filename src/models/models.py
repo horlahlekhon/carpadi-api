@@ -19,22 +19,6 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
 
-@receiver(reset_password_token_created)
-def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
-    """
-    Handles password reset tokens
-    When a token is created, an e-mail needs to be sent to the user
-    """
-    reset_password_path = reverse('password_reset:reset-password-confirm')
-    context = {
-        'username': reset_password_token.user.username,
-        'email': reset_password_token.user.email,
-        'reset_password_url': build_absolute_uri(f'{reset_password_path}?token={reset_password_token.key}'),
-    }
-
-    notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
-
-
 class Base(UUIDModel, TimeStampedModel):
     pass
 
@@ -49,7 +33,7 @@ class UserTypes(models.TextChoices):
 
 class User(AbstractUser, Base):
     username_validator = UnicodeUsernameValidator()
-    profile_picture = ThumbnailerImageField('ProfilePicture', upload_to='profile_pictures/', blank=True, null=True)
+    profile_picture = models.URLField(blank=True, null=True)
     user_type = models.CharField(choices=UserTypes.choices, max_length=20)
     phone = models.CharField(max_length=15, unique=True, help_text="International format phone number")
     username = models.CharField(max_length=50, validators=[username_validator], unique=True, null=True)
@@ -65,8 +49,23 @@ class User(AbstractUser, Base):
     def __str__(self):
         return self.username
 
+    @staticmethod
+    def update_last_login(user, **kwargs):
+        """
+        A signal receiver which updates the last_login date for
+        the user logging in.
+        """
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+        LoginSessions.objects.create(device_imei=kwargs.get("device_imei"), user=user)
+
 
 saved_file.connect(generate_aliases_global)
+
+
+class LoginSessions(Base):
+    device_imei = models.CharField(max_length=20)
+    user = models.ForeignKey(get_user_model(), models.CASCADE)
 
 
 class OtpStatus(models.TextChoices):
@@ -94,6 +93,7 @@ class Otp(Base):
 class TransactionPinStatus(models.TextChoices):
     Expired = "expired", _("User already deleted device from device management")
     Active = "active", _("Transaction pin is still active")
+    Deleted = "deleted", _("Transaction pin has been deleted")
 
 
 class TransactionPin(Base):
@@ -102,6 +102,7 @@ class TransactionPin(Base):
     status = models.CharField(max_length=10, choices=TransactionPinStatus.choices)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transaction_pins")
     pin = models.CharField(max_length=200)
+    device_name = models.CharField(max_length=50, help_text="The name of the device i.e Iphone x")
 
 
 class CarMerchant(Base):
@@ -263,3 +264,21 @@ class Car(Base):
         help_text="The profit that was made from car " "after sales in percentage of the total cost",
     )
     car_type = models.CharField(choices=CarTypes.choices, max_length=30, null=False, blank=False)
+
+
+class SpareParts(Base):
+    name = models.CharField(max_length=100)
+    car_brand = models.ForeignKey(CarBrand, on_delete=models.CASCADE)
+    estimated_price = models.DecimalField(max_digits=10, decimal_places=10)
+
+
+class CarMaintainanceTypes(models.TextChoices):
+    SparePart = "spare_part", _("Car spare parts i.e brake.")
+    Expense = "expense", _("other expenses made on the car that doesnt directly relate to a physical parts.")
+
+
+class CarMaintainance(Base):
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="maintanances")
+    type = models.CharField(choices=CarMaintainanceTypes.choices, max_length=20)
+
+
