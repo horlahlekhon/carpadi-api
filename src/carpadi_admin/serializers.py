@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from src.models.models import CarMerchant, Car, Wallet
+from src.models.models import CarMerchant, Car, Wallet, Transaction
 
 
 class SocialSerializer(serializers.Serializer):
@@ -31,3 +31,10 @@ class WalletSerializerAdmin(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = "__all__"
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = "__all__"
+        read_only_fields = "__all__"

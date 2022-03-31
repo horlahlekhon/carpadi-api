@@ -1,13 +1,17 @@
 from email.policy import default
+from uuid import uuid4
+
 from celery import uuid
 from rest_framework import serializers, exceptions
 
 # from .models import Transaction
-from ..models.models import CarMerchant, Car, TransactionPin, User, TransactionPinStatus
-
+from ..models.models import CarMerchant, Car, TransactionPin, User, TransactionPinStatus, Wallet, Transaction, \
+    TransactionKinds, TransactionStatus, TransactionTypes, Trade, TradeUnit
+from rave_python import Rave
 from django.contrib.auth.hashers import make_password, check_password
-
+import requests
 from ..models.serializers import UserSerializer
+from src.config import common
 
 
 class SocialSerializer(serializers.Serializer):
@@ -90,3 +94,113 @@ class CarMerchantSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarMerchant
         fields = "__all__"
+
+
+# wallet serialer
+class WalletSerializer(serializers.ModelSerializer):
+    withdrawable_cash = serializers.SerializerMethodField()
+    unsettled_cash = serializers.SerializerMethodField()
+    total_cash = serializers.SerializerMethodField()
+    trading_cash = serializers.SerializerMethodField()
+
+    def get_withdrawable_cash(self, wallet: Wallet):
+        return wallet.withdrawable_cash
+
+    def get_unsettled_cash(self, wallet: Wallet):
+        return wallet.unsettled_cash
+
+    def get_total_cash(self, wallet: Wallet):
+        return wallet.total_cash
+
+    def get_total_cash(self, wallet: Wallet):
+        return wallet.total_cash
+
+    def get_trading_cash(self, wallet: Wallet):
+        return wallet.trading_cash
+
+    class Meta:
+        model = Wallet
+        fields = "__all__"
+        read_only_fields = ('created', 'modified', 'user', 'balance', "withdrawable_cash",
+                            "unsettled_cash", "total_cash", "trading_cash")
+
+
+# transaction  serializer
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = (
+            'id',
+            'created',
+            'wallet',
+            'amount',
+            "transaction_type",
+            "transaction_status",
+            "transaction_reference",
+            "transaction_description",
+            "transaction_kind",
+            "transaction_payment_link"
+        )
+        read_only_fields = (
+            'id',
+            'created',
+            'wallet',
+            "transaction_payment_link",
+            "transaction_status",
+            "transaction_reference",
+            "transaction_type",
+            "transaction_payment_link")
+
+    from uuid import uuid4
+    from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
+    def create(self, validated_data):
+        # rave = Rave(common.FLW_PUBLIC_KEY, common.FLW_SECRET_KEY)
+        ref = f"CP-{uuid4()}"
+        wallet: Wallet = validated_data["merchant"].wallet
+        payload = dict(tx_ref=ref, amount=validated_data["amount"], redirect_url=common.FLW_REDIRECT_URL,
+                       customer=dict(phone=wallet.merchant.user.phone,
+                                     email=wallet.merchant.user.email),
+                       currency="NGN",
+                       )
+        headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
+        try:
+            transaction = None
+            response: requests.Response = requests.post(url=common.FLW_PAYMENT_URL, json=payload, headers=headers)
+            data = response.json()
+            if response.status_code == 200:
+                if data["status"] == "success":
+                    transaction = Transaction.objects.create(
+                        transaction_reference=ref,
+                        transaction_kind=validated_data["transaction_kind"],
+                        transaction_status=TransactionStatus.Pending,
+                        transaction_description=validated_data["transaction_description"],
+                        # noqa
+                        transaction_type=TransactionTypes.Credit if validated_data["transaction_kind"] == TransactionKinds.Deposit else TransactionTypes.Debit,
+                        amount=validated_data["amount"],
+                        wallet=wallet,
+                        transaction_payment_link=data["data"]["link"]
+                    )
+                else:
+                    raise serializers.ValidationError(data["message"])
+            else:
+                raise serializers.ValidationError(data["message"])
+            return transaction
+        except Exception as e:
+            raise exceptions.APIException(f"Error while making transaction {e}")
+
+
+class TradeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trade
+        fields = "__all__"
+        read_only_fields = "__all__"
+        # ('created', 'modified', 'slots_available', 'slots_purchased',
+        #                 "expected_return_on_trade", "return_on_trade", "traded_slots",
+        #                 "remaining_slots", "total_slots", "price_per_slot", "trade_status", "car")
+
+
+class TradeUnitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TradeUnit
+        fields = "__all__"
+        read_only_fields = ('created', 'modified', "id")

@@ -90,13 +90,20 @@ def password_reset_token_created(sender, instance, reset_password_token: ResetPa
     # reset_password_token.save(update_fields=["key"])
     # reset_password_token.refresh_from_db()
     reset_password_path = reverse('password_reset:reset-password-confirm')
-    reset_password_token.key = "123456" # TOdo remeber to remove this coder abeg.
-    reset_password_token.save(update_fields=["key"])
+    ResetPasswordToken.objects.filter(key="123456").delete() # TOdo remember to remove this coder abeg.
+    # reset_password_token.key = "123456"  # TOdo remember to remove this coder abeg.
+    # reset_password_token.save(update_fields=["key"])
+    ResetPasswordToken.objects.create( # TOdo remember to remove this coder abeg.
+        user=reset_password_token.user,
+        user_agent=reset_password_token.user_agent,
+        ip_address=reset_password_token.ip_address,
+        key="123456",
+    )
     context = {
         'username': reset_password_token.user.username,
         'email': reset_password_token.user.email,
         'reset_password_url': build_absolute_uri(f'{reset_password_path}?token={reset_password_token.key}'),
-        'token': reset_password_token.key,
+        'token': "123456"  # reset_password_token.key,
     }
 
-    notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
+    # notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])

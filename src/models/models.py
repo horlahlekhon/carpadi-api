@@ -1,22 +1,18 @@
 import datetime
-import uuid
-from django.db import models
-from django.dispatch import receiver
-from django.contrib.auth.models import AbstractUser
-from rest_framework_simplejwt.tokens import RefreshToken
-from easy_thumbnails.fields import ThumbnailerImageField
-from django.urls import reverse
-from django_rest_passwordreset.signals import reset_password_token_created
-from easy_thumbnails.signals import saved_file
-from easy_thumbnails.signal_handlers import generate_aliases_global
-from model_utils.models import UUIDModel, TimeStampedModel
-from src.config.common import OTP_EXPIRY
-from src.common.helpers import build_absolute_uri
-from src.notifications.services import notify, ACTIVITY_USER_RESETS_PASS
+
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.utils.translation import gettext_lazy as _
+from django.core.exceptions import ValidationError
+from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from easy_thumbnails.signal_handlers import generate_aliases_global
+from easy_thumbnails.signals import saved_file
+from model_utils.models import UUIDModel, TimeStampedModel
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.db import transaction
+from src.config.common import OTP_EXPIRY
 
 
 class Base(UUIDModel, TimeStampedModel):
@@ -111,23 +107,70 @@ class CarMerchant(Base):
 
     # class Meta:
 
+class TransactionTypes(models.TextChoices):
+    Debit = "debit", _("Debit")
+    Credit = "credit", _("Credit")
+
+class TransactionKinds(models.TextChoices):
+    Deposit = "deposit", _("Deposit")
+    Withdrawal = "withdrawal", _("Withdrawal")
+    Transfer = "transfer", _("Transfer")
+
 class Wallet(Base):
     balance = models.DecimalField(decimal_places=10, max_digits=16, editable=True)
-    merchant = models.ForeignKey(
+    merchant = models.OneToOneField(
         CarMerchant,
         on_delete=models.CASCADE,
-        related_name="merchant_wallet",
+        related_name="wallet",
         help_text="merchant user wallet that holds monetary balances",
     )
+    trading_cash = models.DecimalField(decimal_places=10, max_digits=16,
+                                       editable=True)  # cash accross all pending trades
+    withdrawable_cash = models.DecimalField(decimal_places=10, max_digits=16,
+                                            editable=True)  # the money you can withdraw that is unattached to any trade
+    unsettled_cash = models.DecimalField(decimal_places=10, max_digits=16,
+                                         editable=True)  # money you requested to withdraw, i.e pending credit
+    total_cash = models.DecimalField(decimal_places=10, max_digits=16, editable=True)  # accross all sections
+
+    @transaction.atomic
+    def update_balance(self, amount, transaction_type: TransactionTypes, transaction_kind: TransactionKinds):
+        if transaction_type == TransactionTypes.Debit and transaction_kind == TransactionKinds.Withdrawal:
+            self.balance -= amount
+            self.withdrawable_cash -= amount
+        elif transaction_type == TransactionTypes.Credit and transaction_kind == TransactionKinds.Deposit:
+            self.balance += amount
+            self.withdrawable_cash += amount
+        self.save(update_fields=['balance', 'withdrawable_cash'])
+
+
+
+
+class TransactionStatus(models.TextChoices):
+    Success = "success", _("Success")
+    Failed = "failed", _("Failed")
+    Pending = "pending", _("Pending")
+
+
+
+
 
 # Transactions
 class Transaction(Base):
-    amount = models.DecimalField(decimal_places=10, max_digits=10, editable=False)
+    amount = models.DecimalField(max_digits=10, decimal_places=4)
     wallet = models.ForeignKey(
         Wallet, on_delete=models.CASCADE,
         related_name="merchant_transactions",
         help_text="transactions carried out by merchant"
     )
+    transaction_type = models.CharField(max_length=10, choices=TransactionTypes.choices)
+    transaction_reference = models.CharField(max_length=50, null=False, blank=False)
+    transaction_description = models.CharField(max_length=50, null=True, blank=True)
+    transaction_status = models.CharField(max_length=10, choices=TransactionStatus.choices,
+                                          default=TransactionStatus.Pending)
+    transaction_response = models.JSONField(null=True, blank=True)
+    transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices,
+                                        default=TransactionKinds.Deposit)
+    transaction_payment_link = models.URLField(max_length=200, null=True, blank=True)
 
 
 class BankAccount(Base):
@@ -207,13 +250,23 @@ class CarStates(models.TextChoices):
     )
 
 
+def validate_inspector(value: User):
+    if not value.is_staff:
+        raise ValidationError(
+            _(f'user {value.username} is not an admin user'),
+            params={'value': value},
+        )
+
+
 class Car(Base):
     brand = models.ForeignKey(CarBrand, on_delete=models.SET_NULL, null=True)
     status = models.CharField(choices=CarStates.choices, max_length=30)
     vin = models.CharField(max_length=17)
     pictures = models.URLField(help_text="url of the folder where the images for the car is located.")
     partitions = models.IntegerField(default=10, null=False, blank=False)
-    car_inspector = models.OneToOneField(get_user_model(), on_delete=models.SET_NULL, null=True, blank=False)
+    car_inspector = models.OneToOneField(get_user_model(),
+                                         on_delete=models.SET_NULL,
+                                         null=True, blank=False, validators=[validate_inspector, ])
     cost = models.DecimalField(
         decimal_places=10,
         editable=False,
@@ -280,3 +333,29 @@ class CarMaintainanceTypes(models.TextChoices):
 class CarMaintainance(Base):
     car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="maintanances")
     type = models.CharField(choices=CarMaintainanceTypes.choices, max_length=20)
+
+
+class TradeStates(models.TextChoices):
+    Pending = "pending", _("Pending review")
+    Ongoing = "ongoing", _("Slots are yet to be fully bought")
+    Completed = "completed", _("Car has been sold and returns sorted to merchants")
+    Purchased = "purchased", _("All slots have been bought by merchants")
+
+
+class Trade(Base):
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="trades")
+    slots_available = models.IntegerField(default=0)
+    slots_purchased = models.IntegerField(default=0)
+    return_on_trade = models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)
+    expected_return_on_trade = models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)
+    traded_slots = models.IntegerField(default=0)
+    remaining_slots = models.IntegerField(default=0)
+    total_slots = models.IntegerField(default=0)
+    price_per_slot = models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)
+    trade_status = models.CharField(choices=TradeStates.choices, max_length=20)
+
+
+class TradeUnit(Base):
+    trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name="units")
+    merchant = models.ForeignKey(CarMerchant, on_delete=models.CASCADE, related_name="units")
+    share_percentage = models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)

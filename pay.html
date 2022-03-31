@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+  font-family: Sans-Serif;
+}
+
+.start-payment-button {
+    cursor: pointer;
+    position: relative;
+    background-color: blueviolet;
+    color: #fff;
+    max-width: 30%;
+    padding: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 10px;
+    border: none;
+    transition: all .1s ease-in;
+}
+
+#payment-success {
+  display: none;
+}
+
+#payment-pending {
+  display: none;
+}
+
+#payment-failed {
+  display: none;
+}
+    </style>
+</head>
+<body>
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+<div id="payment-failed">
+  Uh-oh. Please try again, or contact support if you're encountering difficulties making payment.
+</div>
+<br>
+<form>
+  <div>
+    Your order is ₦54,600
+  </div>
+  <button type="button" class="start-payment-button" onclick="makePayment()">Pay Now</button>
+</form>
+<div id="payment-success">
+  Thank you! Enjoy your awesome cruise.🚢
+</div>
+<div id="payment-pending">
+  Verifying...Setting up your cruise🚢
+</div>
+
+</body>
+
+<script>
+  function makePayment() {
+    FlutterwaveCheckout({
+      public_key: "FLWPUBK_TEST-f2b61ab7600b378ba59786b7f4bcd557-X",
+      tx_ref: "carpadi-48981487343MDI0NzMx",
+      amount: 54600,
+      currency: "NGN",
+      payment_options: "card, mobilemoneyghana, ussd",
+      callback: function(payment) {
+        // Send AJAX verification request to backend
+        verifyTransactionOnBackend(payment.id);
+      },
+      onclose: function(incomplete) {
+        if (incomplete || window.verified === false) {
+          document.querySelector("#payment-failed").style.display = 'block';
+        } else {
+          document.querySelector("form").style.display = 'none';
+          if (window.verified == true) {
+            document.querySelector("#payment-success").style.display = 'block';
+          } else {
+            document.querySelector("#payment-pending").style.display = 'block';
+          }
+        }
+      },
+      meta: {
+        consumer_id: 23,
+        consumer_mac: "92a3-912ba-1192a",
+      },
+      customer: {
+        email: "rose@unsinkableship.com",
+        phone_number: "08102909304",
+        name: "Rose DeWitt Bukater",
+      },
+      customizations: {
+        title: "The Titanic Store",
+        description: "Payment for an awesome cruise",
+        logo: "https://www.logolynx.com/images/logolynx/22/2239ca38f5505fbfce7e55bbc0604386.jpeg",
+      },
+    });
+  }
+
+  function verifyTransactionOnBackend(transactionId) {
+    // Let's just pretend the request was successful
+      console.log(transactionId);
+    setTimeout(function() {
+      window.verified = true;
+    }, 200);
+  }
+</script>
+</html>

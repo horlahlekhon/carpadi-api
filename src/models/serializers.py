@@ -1,8 +1,9 @@
 import datetime
 import re
+from decimal import Decimal
 
 from rest_framework import serializers, exceptions
-
+import requests
 from src.config.common import OTP_EXPIRY
 from src.models.models import (
     Transaction,
@@ -53,7 +54,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
     birth_date = serializers.DateField(required=False)
     username = serializers.CharField(required=False)
-    user_type = serializers.ChoiceField(required=False, choices=UserTypes.choices)
+    user_type = serializers.ChoiceField(required=True, choices=UserTypes.choices)
     merchant_id = serializers.SerializerMethodField()
 
     def get_merchant_id(self, user: User):
@@ -74,7 +75,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             if validated_data.get("user_type") == UserTypes.CarMerchant:
                 user = User.objects.create_user(**validated_data)
                 user.eligible_for_reset()
-                CarMerchant.objects.create(user=user)
+                merchant = CarMerchant.objects.create(user=user)
             elif validated_data.get("user_type") == UserTypes.Admin:
                 user = User.objects.create_superuser(**validated_data)
             else:
@@ -117,22 +118,31 @@ class PhoneVerificationSerializer(serializers.Serializer):
     def get_tokens(self, user):
         return user.get_tokens()
 
+
     def validate(self, attrs):
         user = User.objects.get(phone=attrs["phone"])
         if user:
             otp = user.otps.latest()
             if otp.expiry > now() and otp.otp == attrs["token"]:
-                return attrs
+                # if user.user_type == UserTypes.CarMerchant:
+                pass
             elif otp.expiry < now() and otp.otp == attrs["token"]:
                 raise serializers.ValidationError("Otp has expired", 400)
             else:
                 raise serializers.ValidationError("Invalid OTP", 400)
         else:
             raise serializers.ValidationError(f"User with the phone {attrs['phone']} does not exist")
+        return attrs
 
+    @transaction.atomic()
     def create(self, validated_data):
         user: User = User.objects.get(phone=validated_data["phone"])
         user.is_active = True
+        if user.user_type == UserTypes.CarMerchant:
+            # we have validated user, lets create the wallet
+            Wallet.objects.create(merchant=user.merchant, balance=Decimal(0),
+                                  trading_cash=Decimal(0),
+                                  withdrawable_cash=Decimal(0), unsettled_cash=Decimal(0), total_cash=Decimal(0))
         user.save(update_fields=["is_active"])
         user.refresh_from_db()
         return user
@@ -140,31 +150,6 @@ class PhoneVerificationSerializer(serializers.Serializer):
     class Meta:
         fields = ('token',)
 
-
-# transaction  serializer
-class TransactionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Transaction
-        fields = (
-            'id',
-            'created',
-            'wallet',
-            'amount',
-        )
-        read_only_fields = (
-            'id',
-            'created',
-            'wallet',
-            'amount',
-        )
-
-
-# wallet serialer
-class WalletSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Wallet
-        fields = "__all__"
-        read_only_fields = 'created'
 
 
 class CarMerchantSerializer(serializers.ModelSerializer):
