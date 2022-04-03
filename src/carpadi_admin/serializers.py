@@ -37,4 +37,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = "__all__"
-        read_only_fields = "__all__"
+        read_only_fields = ("amount", "transaction_type",
+                            "wallet", "transaction_reference",
+                            "transaction_description", "transaction_status",
+                            "transaction_response", "transaction_kind", "transaction_payment_link")

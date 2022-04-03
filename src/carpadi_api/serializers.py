@@ -193,10 +193,10 @@ class TradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trade
         fields = "__all__"
-        read_only_fields = "__all__"
-        # ('created', 'modified', 'slots_available', 'slots_purchased',
-        #                 "expected_return_on_trade", "return_on_trade", "traded_slots",
-        #                 "remaining_slots", "total_slots", "price_per_slot", "trade_status", "car")
+        read_only_fields = \
+        ('created', 'modified', 'slots_available', 'slots_purchased',
+                        "expected_return_on_trade", "return_on_trade", "traded_slots",
+                        "remaining_slots", "total_slots", "price_per_slot", "trade_status", "car")
 
 
 class TradeUnitSerializer(serializers.ModelSerializer):
