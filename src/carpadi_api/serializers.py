@@ -6,13 +6,15 @@ from rest_framework import serializers, exceptions
 
 # from .models import Transaction
 from ..models.models import CarMerchant, Car, TransactionPin, User, TransactionPinStatus, Wallet, Transaction, \
-    TransactionKinds, TransactionStatus, TransactionTypes, Trade, TradeUnit
+    TransactionKinds, TransactionStatus, TransactionTypes, Trade, TradeUnit, TradeStates
 from rave_python import Rave
 from django.contrib.auth.hashers import make_password, check_password
 import requests
 from ..models.serializers import UserSerializer
 from src.config import common
-
+from uuid import uuid4
+from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
+from django.db import transaction
 
 class SocialSerializer(serializers.Serializer):
     """
@@ -38,6 +40,7 @@ class TransactionPinSerializers(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ("id", "created", "modified", "status", "user")
         extra_kwargs = {'pin': {'write_only': True}}
+
 
     def validate_pin(self, pin):
         if not str.isdigit(pin) or len(pin) != 6:
@@ -129,6 +132,7 @@ class WalletSerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
+        ref_name = "transactions_api_serializer"
         fields = (
             'id',
             'created',
@@ -151,8 +155,11 @@ class TransactionSerializer(serializers.ModelSerializer):
             "transaction_type",
             "transaction_payment_link")
 
-    from uuid import uuid4
-    from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
+    def validate_transaction_kind(self, value):
+        if value not in [TransactionKinds.Deposit, TransactionKinds.Withdrawal]:
+            raise serializers.ValidationError("Transaction kind is not valid")
+        return value
+
     def create(self, validated_data):
         # rave = Rave(common.FLW_PUBLIC_KEY, common.FLW_SECRET_KEY)
         ref = f"CP-{uuid4()}"
@@ -175,7 +182,8 @@ class TransactionSerializer(serializers.ModelSerializer):
                         transaction_status=TransactionStatus.Pending,
                         transaction_description=validated_data["transaction_description"],
                         # noqa
-                        transaction_type=TransactionTypes.Credit if validated_data["transaction_kind"] == TransactionKinds.Deposit else TransactionTypes.Debit,
+                        transaction_type=TransactionTypes.Credit if validated_data[
+                                                                        "transaction_kind"] == TransactionKinds.Deposit else TransactionTypes.Debit,
                         amount=validated_data["amount"],
                         wallet=wallet,
                         transaction_payment_link=data["data"]["link"]
@@ -194,13 +202,69 @@ class TradeSerializer(serializers.ModelSerializer):
         model = Trade
         fields = "__all__"
         read_only_fields = \
-        ('created', 'modified', 'slots_available', 'slots_purchased',
-                        "expected_return_on_trade", "return_on_trade", "traded_slots",
-                        "remaining_slots", "total_slots", "price_per_slot", "trade_status", "car")
+            ('created', 'modified', 'slots_available', 'slots_purchased',
+             "expected_return_on_trade", "return_on_trade",
+             "remaining_slots", "total_slots", "price_per_slot", "trade_status", "car")
 
 
 class TradeUnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = TradeUnit
         fields = "__all__"
-        read_only_fields = ('created', 'modified', "id")
+        read_only_fields = ('created', 'modified', "id", "unit_value",
+                            "vat_percentage", "share_percentage", "estimated_rot")
+
+    def _unit_value(self, merchant: CarMerchant, trade: Trade, wallet: Wallet, attrs: dict):
+        # merchant = self.context["merchant"]
+        # wallet: Wallet = merchant.wallet
+        # trade_ = Trade.objects.filter(id=attrs.get("trade"))
+        # if len(trade_) < 1:
+        #     raise serializers.ValidationError("Trade matching query does not exist")
+        # trade: Trade = trade_[0]
+        unit_value = trade.price_per_slot * attrs["slots_quantity"]
+
+        if len(trade) < 1 or unit_value > wallet.balance:
+            raise serializers.ValidationError("Wallet balance is insufficient for this transaction")
+        return unit_value
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        merchant = self.context["merchant"]
+        wallet: Wallet = merchant.wallet
+        trade_ = Trade.objects.filter(id=attrs.get("trade"))
+        if len(trade_) < 1:
+            raise serializers.ValidationError("Trade matching query does not exist")
+        trade: Trade = trade_[0]
+        if trade.trade_status != TradeStates.Ongoing:
+            raise serializers.ValidationError("Trade is not currently open")
+        if trade.remaining_slots < attrs["slots_quantity"]:
+            raise serializers.ValidationError("Trade does not have enough slots available")
+        unit_value = self._unit_value(merchant, trade, wallet, attrs)
+        rot = (trade.estimated_return_on_trade / trade.slots_available) * attrs["slots_quantity"]
+        attrs["unit_value"] = unit_value
+        attrs["trade"] = trade
+        attrs["merchant"] = merchant
+        attrs["estimated_rot"] = rot
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        trade: Trade = validated_data["trade"]
+        share_percentage = (trade.slots_available / validated_data["slots_quantity"]) * 100
+        unit = TradeUnit.objects.create(trade=trade, merchant=validated_data["merchant"],
+                                        share_percentage=share_percentage,
+                                        slots_quantity=validated_data["slots_quantity"],
+                                        estimated_rot=validated_data["estimated_rot"])
+        ref = f"CP-{uuid4()}"
+        Transaction.objects.create(
+            transaction_reference=ref,
+            transaction_kind=TransactionKinds.WalletTransfer,
+            transaction_status=TransactionStatus.Success,
+            transaction_description="Trade Unit Purchase",
+            # noqa
+            transaction_type=TransactionTypes.Debit,
+            amount=unit.unit_value,
+            wallet=trade.trade_status,
+            transaction_payment_link=None
+        )
+        return unit

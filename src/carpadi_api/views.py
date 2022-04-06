@@ -238,10 +238,16 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
     #     return self.queryset.filter(user=user)
 
 
-class TradeUnitViewSet(viewsets.ReadOnlyModelViewSet):
+class TradeUnitViewSet(viewsets.ModelViewSet):
     serializer_class = TradeUnitSerializer
     queryset = TradeUnit.objects.all()
     permission_classes = (IsCarMerchantAndAuthed,)
+
+    def get_serializer_context(self):
+        ctx = super(CarMerchantViewSet, self).get_serializer_context()
+        if self.action != "list":
+            ctx["merchant"] = self.request.user.merchant
+        return ctx
 
     def get_queryset(self):
         user: User = self.request.user
@@ -250,3 +256,5 @@ class TradeUnitViewSet(viewsets.ReadOnlyModelViewSet):
     def perform_create(self, serializer):
         user: User = self.request.user
         serializer.save(merchant=user.merchant)
+
+

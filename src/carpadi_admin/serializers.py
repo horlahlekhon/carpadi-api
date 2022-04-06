@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from src.models.models import CarMerchant, Car, Wallet, Transaction
+from src.models.models import CarMerchant, Car, Wallet, Transaction, Trade
 
 
 class SocialSerializer(serializers.Serializer):
@@ -41,3 +41,15 @@ class TransactionSerializer(serializers.ModelSerializer):
                             "wallet", "transaction_reference",
                             "transaction_description", "transaction_status",
                             "transaction_response", "transaction_kind", "transaction_payment_link")
+
+
+class TradeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trade
+        fields = "__all__"
+        read_only_fields = \
+            ('created', 'modified', 'slots_purchased',
+             "traded_slots",
+             "remaining_slots", "total_slots", "price_per_slot", "trade_status", "car")
+
+        

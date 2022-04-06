@@ -5,10 +5,10 @@ from rest_framework.views import status
 from rest_framework.permissions import IsAdminUser
 from django_filters import rest_framework as filters
 
-from src.carpadi_admin.filters import TransactionsFilterAdmin, WalletFilterAdmin
-from src.carpadi_admin.serializers import CarSerializer, WalletSerializerAdmin, TransactionSerializer
+from src.carpadi_admin.filters import TransactionsFilterAdmin, WalletFilterAdmin, TradeFilterAdmin
+from src.carpadi_admin.serializers import CarSerializer, WalletSerializerAdmin, TransactionSerializer, TradeSerializer
 from src.models.serializers import  CarBrandSerializer, CarMerchantSerializer
-from src.models.models import Transaction, CarBrand, Car, CarMerchant, Wallet
+from src.models.models import Transaction, CarBrand, Car, CarMerchant, Wallet, Trade
 
 
 # Create your views here.
@@ -57,3 +57,13 @@ class WalletViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     queryset = Wallet.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = WalletFilterAdmin
+
+
+class TradeViewSetAdmin(viewsets.ModelViewSet):
+    serializer_class = TradeSerializer
+    permissions = {'default': (IsAdminUser,)}
+    queryset = Trade.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = TradeFilterAdmin
+
+
