@@ -6,7 +6,7 @@ class CommonConfig(AppConfig):
 
     def ready(self):
         import uuid
-        from .signals import complete_user_registeration, transaction_completed, trade_unit_completed, disbursement_completed
+        from .signals import complete_user_registeration, trade_unit_completed, disbursement_completed
         from django.contrib.auth import get_user_model
         from django.db.models.signals import post_save, pre_save
         from django_rest_passwordreset.signals import reset_password_token_created
@@ -22,6 +22,5 @@ class CommonConfig(AppConfig):
         )
         post_save.connect(complete_transaction, sender=Transaction, dispatch_uid=uuid.uuid4())
 
-        post_save.connect(transaction_completed, sender=Transaction, dispatch_uid=uuid.uuid4())
         post_save.connect(trade_unit_completed, sender=TradeUnit, dispatch_uid=uuid.uuid4())
         post_save.connect(disbursement_completed, sender=Disbursement, dispatch_uid=uuid.uuid4())

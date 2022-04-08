@@ -5,7 +5,6 @@ from rest_framework.views import status
 from django_filters import rest_framework as filters
 from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter
 from src.carpadi_api.serializers import (
-    ActivitySerializer,
     CarSerializer,
     TransactionPinSerializers,
     UpdateTransactionPinSerializers,
@@ -15,6 +14,8 @@ from src.carpadi_api.serializers import (
     TradeSerializer,
     TradeUnitSerializer,
 )
+
+from src.models.serializers import ActivitySerializer
 from django.db import transaction
 
 from src.config import common

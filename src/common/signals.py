@@ -118,21 +118,14 @@ def complete_transaction(sender, **kwargs):
         Activity.save()
 
 
-def transaction_completed(sender, instance, created):
-    if created:
-        Activity.activity_type = ActivityTypes.Transaction
-        Activity.activity = instance
-        Activity.save()
-
-
-def trade_unit_completed(sender, instance, created):
+def trade_unit_completed(sender, instance, created, **kwargs):
     if created:
         Activity.activity_type = ActivityTypes.TradeUnit
         Activity.activity = instance
         Activity.save()
 
 
-def disbursement_completed(sender, instance, created):
+def disbursement_completed(sender, instance, created, **kwargs):
     if created:
         Activity.activity_type = ActivityTypes.Disbursement
         Activity.activity = instance
