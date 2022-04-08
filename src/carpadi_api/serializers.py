@@ -5,8 +5,21 @@ from celery import uuid
 from rest_framework import serializers, exceptions
 
 # from .models import Transaction
-from ..models.models import CarMerchant, Car, Disbursement, TransactionPin, User, TransactionPinStatus, Wallet, Transaction, \
-    TransactionKinds, TransactionStatus, TransactionTypes, Trade, TradeUnit, Activity
+from ..models.models import (
+    CarMerchant,
+    Car,
+    TransactionPin,
+    User,
+    TransactionPinStatus,
+    Wallet,
+    Transaction,
+    TransactionKinds,
+    TransactionStatus,
+    TransactionTypes,
+    Trade,
+    TradeUnit,
+)
+
 # from rave_python import Rave
 from django.contrib.auth.hashers import make_password, check_password
 import requests
@@ -121,8 +134,16 @@ class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = "__all__"
-        read_only_fields = ('created', 'modified', 'user', 'balance', "withdrawable_cash",
-                            "unsettled_cash", "total_cash", "trading_cash")
+        read_only_fields = (
+            'created',
+            'modified',
+            'user',
+            'balance',
+            "withdrawable_cash",
+            "unsettled_cash",
+            "total_cash",
+            "trading_cash",
+        )
 
 
 # transaction  serializer
@@ -139,7 +160,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             "transaction_reference",
             "transaction_description",
             "transaction_kind",
-            "transaction_payment_link"
+            "transaction_payment_link",
         )
         read_only_fields = (
             'id',
@@ -149,19 +170,23 @@ class TransactionSerializer(serializers.ModelSerializer):
             "transaction_status",
             "transaction_reference",
             "transaction_type",
-            "transaction_payment_link")
+            "transaction_payment_link",
+        )
 
     from uuid import uuid4
     from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
+
     def create(self, validated_data):
         # rave = Rave(common.FLW_PUBLIC_KEY, common.FLW_SECRET_KEY)
         ref = f"CP-{uuid4()}"
         wallet: Wallet = validated_data["merchant"].wallet
-        payload = dict(tx_ref=ref, amount=validated_data["amount"], redirect_url=common.FLW_REDIRECT_URL,
-                       customer=dict(phone=wallet.merchant.user.phone,
-                                     email=wallet.merchant.user.email),
-                       currency="NGN",
-                       )
+        payload = dict(
+            tx_ref=ref,
+            amount=validated_data["amount"],
+            redirect_url=common.FLW_REDIRECT_URL,
+            customer=dict(phone=wallet.merchant.user.phone, email=wallet.merchant.user.email),
+            currency="NGN",
+        )
         headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
         try:
             transaction = None
@@ -175,10 +200,12 @@ class TransactionSerializer(serializers.ModelSerializer):
                         transaction_status=TransactionStatus.Pending,
                         transaction_description=validated_data["transaction_description"],
                         # noqa
-                        transaction_type=TransactionTypes.Credit if validated_data["transaction_kind"] == TransactionKinds.Deposit else TransactionTypes.Debit,
+                        transaction_type=TransactionTypes.Credit
+                        if validated_data["transaction_kind"] == TransactionKinds.Deposit
+                        else TransactionTypes.Debit,
                         amount=validated_data["amount"],
                         wallet=wallet,
-                        transaction_payment_link=data["data"]["link"]
+                        transaction_payment_link=data["data"]["link"],
                     )
                 else:
                     raise serializers.ValidationError(data["message"])
@@ -193,10 +220,20 @@ class TradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trade
         fields = "__all__"
-        read_only_fields = \
-        ('created', 'modified', 'slots_available', 'slots_purchased',
-                        "expected_return_on_trade", "return_on_trade", "traded_slots",
-                        "remaining_slots", "total_slots", "price_per_slot", "trade_status", "car")
+        read_only_fields = (
+            'created',
+            'modified',
+            'slots_available',
+            'slots_purchased',
+            "expected_return_on_trade",
+            "return_on_trade",
+            "traded_slots",
+            "remaining_slots",
+            "total_slots",
+            "price_per_slot",
+            "trade_status",
+            "car",
+        )
 
 
 class TradeUnitSerializer(serializers.ModelSerializer):
@@ -204,15 +241,3 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         model = TradeUnit
         fields = "__all__"
         read_only_fields = ('created', 'modified', "id")
-
-class DisbursementSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Disbursement
-        fields = ('id', 'created', 'trade_unit', 'amount')
-        read_only_fields = "__all__"
-
-class ActivitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Activity
-        fields = ('id', 'created', 'activity_type', 'activity')
-        read_only_fields = "__all__"

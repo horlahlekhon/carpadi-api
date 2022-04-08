@@ -19,18 +19,42 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Trade',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('slots_available', models.IntegerField(default=0)),
                 ('slots_purchased', models.IntegerField(default=0)),
                 ('return_on_trade', models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)),
-                ('expected_return_on_trade', models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)),
+                (
+                    'expected_return_on_trade',
+                    models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10),
+                ),
                 ('traded_slots', models.IntegerField(default=0)),
                 ('remaining_slots', models.IntegerField(default=0)),
                 ('total_slots', models.IntegerField(default=0)),
                 ('price_per_slot', models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)),
-                ('trade_status', models.CharField(choices=[('pending', 'Pending review'), ('ongoing', 'Slots are yet to be fully bought'), ('completed', 'Car has been sold and returns sorted to merchants'), ('purchased', 'All slots have been bought by merchants')], max_length=20)),
+                (
+                    'trade_status',
+                    models.CharField(
+                        choices=[
+                            ('pending', 'Pending review'),
+                            ('ongoing', 'Slots are yet to be fully bought'),
+                            ('completed', 'Car has been sold and returns sorted to merchants'),
+                            ('purchased', 'All slots have been bought by merchants'),
+                        ],
+                        max_length=20,
+                    ),
+                ),
                 ('car', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='trades', to='models.car')),
             ],
             options={
@@ -40,7 +64,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='transaction',
             name='transaction_kind',
-            field=models.CharField(choices=[('deposit', 'Deposit'), ('withdrawal', 'Withdrawal'), ('transfer', 'Transfer')], default='deposit', max_length=50),
+            field=models.CharField(
+                choices=[('deposit', 'Deposit'), ('withdrawal', 'Withdrawal'), ('transfer', 'Transfer')],
+                default='deposit',
+                max_length=50,
+            ),
         ),
         migrations.AddField(
             model_name='transaction',
@@ -60,12 +88,28 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='TradeUnit',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('share_percentage', models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)),
-                ('merchant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='units', to='models.carmerchant')),
-                ('trade', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='units', to='models.trade')),
+                (
+                    'merchant',
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='units', to='models.carmerchant'),
+                ),
+                (
+                    'trade',
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='units', to='models.trade'),
+                ),
             ],
             options={
                 'abstract': False,

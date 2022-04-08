@@ -29,11 +29,26 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Disbursement',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('amount', models.DecimalField(decimal_places=5, editable=False, max_digits=15)),
-                ('trade_unit', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='disbursement', to='models.tradeunit')),
+                (
+                    'trade_unit',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name='disbursement', to='models.tradeunit'
+                    ),
+                ),
             ],
             options={
                 'abstract': False,
@@ -42,10 +57,26 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Activity',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('activity_type', models.CharField(choices=[('transaction', 'transaction'), ('trade_unit', 'trade_unit'), ('disbursement', 'disbursement')], max_length=15)),
+                (
+                    'activity_type',
+                    models.CharField(
+                        choices=[('transaction', 'transaction'), ('trade_unit', 'trade_unit'), ('disbursement', 'disbursement')],
+                        max_length=15,
+                    ),
+                ),
                 ('object_id', models.UUIDField()),
                 ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
             ],

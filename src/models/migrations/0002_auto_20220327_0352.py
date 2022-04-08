@@ -29,7 +29,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='transaction',
             name='transaction_status',
-            field=models.CharField(choices=[('success', 'Success'), ('failed', 'Failed'), ('pending', 'Pending')], default='pending', max_length=10),
+            field=models.CharField(
+                choices=[('success', 'Success'), ('failed', 'Failed'), ('pending', 'Pending')], default='pending', max_length=10
+            ),
         ),
         migrations.AddField(
             model_name='transaction',
@@ -64,7 +66,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='car',
             name='car_inspector',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL, validators=[src.models.models.validate_inspector]),
+            field=models.OneToOneField(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+                validators=[src.models.models.validate_inspector],
+            ),
         ),
         migrations.AlterField(
             model_name='otp',
@@ -74,6 +81,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='wallet',
             name='merchant',
-            field=models.OneToOneField(help_text='merchant user wallet that holds monetary balances', on_delete=django.db.models.deletion.CASCADE, related_name='merchant_wallet', to='models.carmerchant'),
+            field=models.OneToOneField(
+                help_text='merchant user wallet that holds monetary balances',
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='merchant_wallet',
+                to='models.carmerchant',
+            ),
         ),
     ]

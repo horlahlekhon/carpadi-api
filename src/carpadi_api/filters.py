@@ -24,6 +24,7 @@ class CarsFilter(filters.FilterSet):
         model = Car
         fields = ["status", "brand__name"]
 
+
 class DisbursementFilter(filters.FilterSet):
     disbursement_date_lte = filters.DateTimeFilter(field_name="created", lookup_expr='day__lte')
     disbursement_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')

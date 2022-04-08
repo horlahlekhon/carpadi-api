@@ -2,7 +2,7 @@ from dataclasses import fields
 from pyexpat import model
 from rest_framework import serializers
 
-from src.models.models import CarMerchant, Car, Wallet, Transaction, Disbursement, Activity
+from src.models.models import CarMerchant, Car, Wallet, Transaction, Trade, Disbursement, Activity
 
 
 class SocialSerializer(serializers.Serializer):
@@ -39,16 +39,42 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = "__all__"
-        read_only_fields = ("amount", "transaction_type",
-                            "wallet", "transaction_reference",
-                            "transaction_description", "transaction_status",
-                            "transaction_response", "transaction_kind", "transaction_payment_link")
+        read_only_fields = (
+            "amount",
+            "transaction_type",
+            "wallet",
+            "transaction_reference",
+            "transaction_description",
+            "transaction_status",
+            "transaction_response",
+            "transaction_kind",
+            "transaction_payment_link",
+        )
+
+
+class TradeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trade
+        fields = "__all__"
+        read_only_fields = (
+            'created',
+            'modified',
+            'slots_purchased',
+            "traded_slots",
+            "remaining_slots",
+            "total_slots",
+            "price_per_slot",
+            "trade_status",
+            "car",
+        )
+
 
 class DisbursementSerializerAdmin(serializers.ModelSerializer):
     class Meta:
         model = Disbursement
         fields = ("created", "id", "amount", "trade_unit")
         read_only_fields = ("created", "id", "amount", "trade_unit")
+
 
 class ActivitySerializerAdmin(serializers.ModelSerializer):
     class Meta:

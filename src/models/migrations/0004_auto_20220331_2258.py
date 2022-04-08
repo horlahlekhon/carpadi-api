@@ -26,6 +26,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='wallet',
             name='merchant',
-            field=models.OneToOneField(help_text='merchant user wallet that holds monetary balances', on_delete=django.db.models.deletion.CASCADE, related_name='wallet', to='models.carmerchant'),
+            field=models.OneToOneField(
+                help_text='merchant user wallet that holds monetary balances',
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='wallet',
+                to='models.carmerchant',
+            ),
         ),
     ]

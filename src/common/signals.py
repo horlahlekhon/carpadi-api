@@ -1,10 +1,9 @@
 import datetime
-import random
 from collections import defaultdict
 from django.db.models import signals
 
 from src.common.helpers import build_absolute_uri
-from src.models.models import Activity, ActivityTypes, User, Otp, UserTypes
+from src.models.models import User, Otp, UserTypes, Transaction, TransactionStatus, Activity, ActivityTypes
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
 from django_rest_passwordreset.models import ResetPasswordToken
 from src.config.common import OTP_EXPIRY
@@ -69,14 +68,6 @@ def complete_user_registeration(sender, **kwargs):
             # )
 
 
-# def send_reset_password_token(sender, **kwargs):
-#     token: ResetPasswordToken = kwargs.get("reset_password_token")
-#     if token:
-#         otp = random.randrange(100000, 999999)
-#         token.key = otp
-#         token.save(update_fields=["key"])
-#         context = dict(username=user.username, otp=ot.otp)
-#         notify(PASSWORD_RESET_TOKEEN, context=context, email_to=[user.email, ])
 from django.urls import reverse
 
 
@@ -90,10 +81,10 @@ def password_reset_token_created(sender, instance, reset_password_token: ResetPa
     # reset_password_token.save(update_fields=["key"])
     # reset_password_token.refresh_from_db()
     reset_password_path = reverse('password_reset:reset-password-confirm')
-    ResetPasswordToken.objects.filter(key="123456").delete() # TOdo remember to remove this coder abeg.
+    ResetPasswordToken.objects.filter(key="123456").delete()  # TOdo remember to remove this coder abeg.
     # reset_password_token.key = "123456"  # TOdo remember to remove this coder abeg.
     # reset_password_token.save(update_fields=["key"])
-    ResetPasswordToken.objects.create( # TOdo remember to remove this coder abeg.
+    ResetPasswordToken.objects.create(  # TOdo remember to remove this coder abeg.
         user=reset_password_token.user,
         user_agent=reset_password_token.user_agent,
         ip_address=reset_password_token.ip_address,
@@ -103,25 +94,46 @@ def password_reset_token_created(sender, instance, reset_password_token: ResetPa
         'username': reset_password_token.user.username,
         'email': reset_password_token.user.email,
         'reset_password_url': build_absolute_uri(f'{reset_password_path}?token={reset_password_token.key}'),
-        'token': "123456"  # reset_password_token.key,
+        'token': "123456",  # reset_password_token.key,
     }
 
     # notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
 
-# Signals for post_save signal for activity
-def transaction_completed(sender, instance):
-    Activity.activity_type = ActivityTypes.Transaction
-    Activity.activity = instance
-    Activity.save()
 
-def trade_unit_completed(sender, instance, **kwargs):
-    Activity.activity_type = ActivityTypes.TradeUnit
-    Activity.activity = instance
-    Activity.save()
+def complete_transaction(sender, **kwargs):
+    tx: Transaction = kwargs.get("instance")
+    if kwargs.get("created"):
+        if tx.transaction_status == TransactionStatus.Success:
+            context = {
+                'username': tx.wallet.merchant.user.username,
+                'email': tx.wallet.merchant.user.email,
+                'amount': tx.amount,
+            }
+            print("transaction successful")
 
-def disbursement_completed(sender, instance, **kwargs):
-    Activity.activity_type = ActivityTypes.Disbursement
-    Activity.activity = instance
-    Activity.save()
+            # notify(ACTIVITY_MERCHANT_PAYMENT_SUCCESS, context=context, email_to=[tx.wallet.merchant.user.email])
 
-# Signals for post_save signal for activity End
+        Activity.activity_type = ActivityTypes.Transaction
+        Activity.activity = tx
+        Activity.save()
+
+
+def transaction_completed(sender, instance, created):
+    if created:
+        Activity.activity_type = ActivityTypes.Transaction
+        Activity.activity = instance
+        Activity.save()
+
+
+def trade_unit_completed(sender, instance, created):
+    if created:
+        Activity.activity_type = ActivityTypes.TradeUnit
+        Activity.activity = instance
+        Activity.save()
+
+
+def disbursement_completed(sender, instance, created):
+    if created:
+        Activity.activity_type = ActivityTypes.Disbursement
+        Activity.activity = instance
+        Activity.save()

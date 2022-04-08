@@ -1,5 +1,6 @@
 import datetime
-
+from decimal import Decimal
+from django.core.validators import MinValueValidator
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -15,6 +16,7 @@ from django.db import transaction
 from src.config.common import OTP_EXPIRY
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+
 
 class Base(UUIDModel, TimeStampedModel):
     pass
@@ -108,14 +110,18 @@ class CarMerchant(Base):
 
     # class Meta:
 
+
 class TransactionTypes(models.TextChoices):
     Debit = "debit", _("Debit")
     Credit = "credit", _("Credit")
+
 
 class TransactionKinds(models.TextChoices):
     Deposit = "deposit", _("Deposit")
     Withdrawal = "withdrawal", _("Withdrawal")
     Transfer = "transfer", _("Transfer")
+    WalletTransfer = "wallet_transfer", _("Wallet Transfer")
+
 
 class Wallet(Base):
     balance = models.DecimalField(decimal_places=10, max_digits=16, editable=True)
@@ -125,12 +131,13 @@ class Wallet(Base):
         related_name="wallet",
         help_text="merchant user wallet that holds monetary balances",
     )
-    trading_cash = models.DecimalField(decimal_places=10, max_digits=16,
-                                       editable=True)  # cash accross all pending trades
-    withdrawable_cash = models.DecimalField(decimal_places=10, max_digits=16,
-                                            editable=True)  # the money you can withdraw that is unattached to any trade
-    unsettled_cash = models.DecimalField(decimal_places=10, max_digits=16,
-                                         editable=True)  # money you requested to withdraw, i.e pending credit
+    trading_cash = models.DecimalField(decimal_places=10, max_digits=16, editable=True)  # cash accross all pending trades
+    withdrawable_cash = models.DecimalField(
+        decimal_places=10, max_digits=16, editable=True
+    )  # the money you can withdraw that is unattached to any trade
+    unsettled_cash = models.DecimalField(
+        decimal_places=10, max_digits=16, editable=True
+    )  # money you requested to withdraw, i.e pending credit
     total_cash = models.DecimalField(decimal_places=10, max_digits=16, editable=True)  # accross all sections
 
     @transaction.atomic
@@ -144,33 +151,24 @@ class Wallet(Base):
         self.save(update_fields=['balance', 'withdrawable_cash'])
 
 
-
-
 class TransactionStatus(models.TextChoices):
     Success = "success", _("Success")
     Failed = "failed", _("Failed")
     Pending = "pending", _("Pending")
 
 
-
-
-
 # Transactions
 class Transaction(Base):
     amount = models.DecimalField(max_digits=10, decimal_places=4)
     wallet = models.ForeignKey(
-        Wallet, on_delete=models.CASCADE,
-        related_name="merchant_transactions",
-        help_text="transactions carried out by merchant"
+        Wallet, on_delete=models.CASCADE, related_name="merchant_transactions", help_text="transactions carried out by merchant"
     )
     transaction_type = models.CharField(max_length=10, choices=TransactionTypes.choices)
     transaction_reference = models.CharField(max_length=50, null=False, blank=False)
     transaction_description = models.CharField(max_length=50, null=True, blank=True)
-    transaction_status = models.CharField(max_length=10, choices=TransactionStatus.choices,
-                                          default=TransactionStatus.Pending)
+    transaction_status = models.CharField(max_length=10, choices=TransactionStatus.choices, default=TransactionStatus.Pending)
     transaction_response = models.JSONField(null=True, blank=True)
-    transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices,
-                                        default=TransactionKinds.Deposit)
+    transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices, default=TransactionKinds.Deposit)
     transaction_payment_link = models.URLField(max_length=200, null=True, blank=True)
 
 
@@ -179,8 +177,7 @@ class BankAccount(Base):
     bank_name = models.CharField(max_length=50)
     account_number = models.CharField(max_length=10)
     merchant = models.ForeignKey(
-        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts",
-        help_text="Bank account to remit merchant money to"
+        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts", help_text="Bank account to remit merchant money to"
     )
 
 
@@ -265,9 +262,15 @@ class Car(Base):
     vin = models.CharField(max_length=17)
     pictures = models.URLField(help_text="url of the folder where the images for the car is located.")
     partitions = models.IntegerField(default=10, null=False, blank=False)
-    car_inspector = models.OneToOneField(get_user_model(),
-                                         on_delete=models.SET_NULL,
-                                         null=True, blank=False, validators=[validate_inspector, ])
+    car_inspector = models.OneToOneField(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+        validators=[
+            validate_inspector,
+        ],
+    )
     cost = models.DecimalField(
         decimal_places=10,
         editable=False,
@@ -345,30 +348,104 @@ class TradeStates(models.TextChoices):
 
 class Trade(Base):
     car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="trades")
-    slots_available = models.IntegerField(default=0)
-    slots_purchased = models.IntegerField(default=0)
-    return_on_trade = models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)
-    expected_return_on_trade = models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)
-    traded_slots = models.IntegerField(default=0)
-    remaining_slots = models.IntegerField(default=0)
-    total_slots = models.IntegerField(default=0)
-    price_per_slot = models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)
+    slots_available = models.PositiveIntegerField(default=0)
+    slots_purchased = models.PositiveIntegerField(default=0)
+    return_on_trade = models.DecimalField(
+        decimal_places=10,
+        max_digits=10,
+        default=Decimal(0.00),
+        max_length=10,
+        validators=[MinValueValidator(Decimal(0.00))],
+    )
+    estimated_return_on_trade = models.DecimalField(
+        decimal_places=10, default=Decimal(0.00), validators=[MinValueValidator(Decimal(0.00))], max_digits=10, max_length=10
+    )
+    # traded_slots = models.IntegerField(default=0, help_text="number of slots that have been sold")
+    remaining_slots = models.PositiveIntegerField(default=0, help_text="slots that are still available for sale")
+    # total_slots = models.IntegerField(default=10, help_text="total number of slots that are available for sale")
+    price_per_slot = models.DecimalField(
+        decimal_places=10,
+        editable=False,
+        validators=[MinValueValidator(Decimal(0.00))],
+        max_digits=10,
+        default=Decimal(0.00),
+        max_length=10,
+        help_text="price per slot",
+    )
     trade_status = models.CharField(choices=TradeStates.choices, max_length=20)
+    min_sale_price = models.DecimalField(
+        validators=[MinValueValidator(Decimal(0.00))],
+        decimal_places=10,
+        max_digits=10,
+        default=Decimal(0.00),
+        max_length=10,
+        help_text="min price at which the car " "can be sold",
+    )
+    max_sale_price = models.DecimalField(
+        validators=[MinValueValidator(Decimal(0.00))],
+        decimal_places=10,
+        max_digits=10,
+        default=Decimal(0.00),
+        max_length=10,
+        help_text="max price at which the car " "can be sold",
+    )
 
 
 class TradeUnit(Base):
     trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name="units")
     merchant = models.ForeignKey(CarMerchant, on_delete=models.CASCADE, related_name="units")
-    share_percentage = models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)
+    share_percentage = models.DecimalField(
+        decimal_places=10,
+        editable=False,
+        default=Decimal(0.00),
+        max_digits=10,
+        max_length=10,
+        help_text="the percentage of this unit in the trade",
+    )
+    slots_quantity = models.PositiveIntegerField(default=1)
+    unit_value = models.DecimalField(
+        decimal_places=10,
+        editable=False,
+        default=Decimal(0.00),
+        max_digits=10,
+        max_length=10,
+        help_text="The amount to be paid given the slots quantity x trade.price_per_slot",
+    )
+    vat_percentage = models.DecimalField(
+        null=True,
+        blank=True,
+        decimal_places=10,
+        editable=False,
+        default=Decimal(0.00),
+        max_digits=10,
+        max_length=10,
+        help_text="the percentage of vat to be paid. calculated in relation to share " "percentage of tradeUnit in trade",
+    )
+    estimated_rot = models.DecimalField(
+        decimal_places=10,
+        editable=False,
+        validators=[MinValueValidator(Decimal(0.00))],
+        max_digits=10,
+        max_length=10,
+        default=Decimal(0.00),
+        help_text="the estimated return on trade",
+    )
+    transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, related_name="trade_units", null=True, blank=True)
+
+    class Meta:
+        ordering = ["-slots_quantity"]
+
 
 class Disbursement(Base):
     trade_unit = models.ForeignKey(TradeUnit, on_delete=models.CASCADE, related_name="disbursement")
     amount = models.DecimalField(decimal_places=5, editable=False, max_digits=15)
 
+
 class ActivityTypes(models.TextChoices):
     Transaction = "transaction", _("transaction")
     TradeUnit = "trade_unit", _("trade_unit")
     Disbursement = "disbursement", _("disbursement")
+
 
 class Activity(Base):
     activity_type = models.CharField(choices=ActivityTypes.choices, max_length=15)

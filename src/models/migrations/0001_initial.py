@@ -26,22 +26,81 @@ class Migration(migrations.Migration):
             fields=[
                 ('password', models.CharField(max_length=128, verbose_name='password')),
                 ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
+                (
+                    'is_superuser',
+                    models.BooleanField(
+                        default=False,
+                        help_text='Designates that this user has all permissions without explicitly assigning them.',
+                        verbose_name='superuser status',
+                    ),
+                ),
                 ('first_name', models.CharField(blank=True, max_length=150, verbose_name='first name')),
                 ('last_name', models.CharField(blank=True, max_length=150, verbose_name='last name')),
                 ('email', models.EmailField(blank=True, max_length=254, verbose_name='email address')),
-                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
-                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
+                (
+                    'is_staff',
+                    models.BooleanField(
+                        default=False,
+                        help_text='Designates whether the user can log into this admin site.',
+                        verbose_name='staff status',
+                    ),
+                ),
+                (
+                    'is_active',
+                    models.BooleanField(
+                        default=True,
+                        help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.',
+                        verbose_name='active',
+                    ),
+                ),
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('profile_picture', models.URLField(blank=True, null=True)),
                 ('user_type', models.CharField(choices=[('admin', 'admin'), ('merchant', 'merchant')], max_length=20)),
                 ('phone', models.CharField(help_text='International format phone number', max_length=15, unique=True)),
-                ('username', models.CharField(max_length=50, null=True, unique=True, validators=[django.contrib.auth.validators.UnicodeUsernameValidator()])),
-                ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.Group', verbose_name='groups')),
-                ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.Permission', verbose_name='user permissions')),
+                (
+                    'username',
+                    models.CharField(
+                        max_length=50,
+                        null=True,
+                        unique=True,
+                        validators=[django.contrib.auth.validators.UnicodeUsernameValidator()],
+                    ),
+                ),
+                (
+                    'groups',
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
+                        related_name='user_set',
+                        related_query_name='user',
+                        to='auth.Group',
+                        verbose_name='groups',
+                    ),
+                ),
+                (
+                    'user_permissions',
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text='Specific permissions for this user.',
+                        related_name='user_set',
+                        related_query_name='user',
+                        to='auth.Permission',
+                        verbose_name='user permissions',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'user',
@@ -55,22 +114,111 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Car',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('status', models.CharField(choices=[('failed_inspection', 'Failed Inspection'), ('inspected', 'inspected'), ('available', 'available'), ('bought', 'bought'), ('sold', 'sold')], max_length=30)),
+                (
+                    'status',
+                    models.CharField(
+                        choices=[
+                            ('failed_inspection', 'Failed Inspection'),
+                            ('inspected', 'inspected'),
+                            ('available', 'available'),
+                            ('bought', 'bought'),
+                            ('sold', 'sold'),
+                        ],
+                        max_length=30,
+                    ),
+                ),
                 ('vin', models.CharField(max_length=17)),
                 ('pictures', models.URLField(help_text='url of the folder where the images for the car is located.')),
                 ('partitions', models.IntegerField(default=10)),
-                ('cost', models.DecimalField(decimal_places=10, editable=False, help_text='cost of  purchasing the car', max_digits=10, max_length=10)),
-                ('cost_of_repairs', models.DecimalField(decimal_places=10, editable=False, help_text='Total cost of spare parts', max_digits=10, max_length=10)),
-                ('total_cost', models.DecimalField(decimal_places=10, editable=False, help_text='Total cost = cost + cost_of_repairs + maintainance_cost + misc', max_digits=10, max_length=10)),
-                ('maintainance_cost', models.DecimalField(decimal_places=10, editable=False, help_text='fuel, parking, mechanic workmanship costs', max_digits=10, max_length=10)),
-                ('resale_price', models.DecimalField(blank=True, decimal_places=10, help_text='price presented to merchants', max_digits=10, max_length=10, null=True)),
+                (
+                    'cost',
+                    models.DecimalField(
+                        decimal_places=10, editable=False, help_text='cost of  purchasing the car', max_digits=10, max_length=10
+                    ),
+                ),
+                (
+                    'cost_of_repairs',
+                    models.DecimalField(
+                        decimal_places=10, editable=False, help_text='Total cost of spare parts', max_digits=10, max_length=10
+                    ),
+                ),
+                (
+                    'total_cost',
+                    models.DecimalField(
+                        decimal_places=10,
+                        editable=False,
+                        help_text='Total cost = cost + cost_of_repairs + maintainance_cost + misc',
+                        max_digits=10,
+                        max_length=10,
+                    ),
+                ),
+                (
+                    'maintainance_cost',
+                    models.DecimalField(
+                        decimal_places=10,
+                        editable=False,
+                        help_text='fuel, parking, mechanic workmanship costs',
+                        max_digits=10,
+                        max_length=10,
+                    ),
+                ),
+                (
+                    'resale_price',
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=10,
+                        help_text='price presented to merchants',
+                        max_digits=10,
+                        max_length=10,
+                        null=True,
+                    ),
+                ),
                 ('inspection_report', models.TextField()),
                 ('buy_to_sale_time', models.IntegerField(editable=False)),
-                ('margin', models.DecimalField(decimal_places=10, editable=False, help_text='The profit that was made from car after sales in percentage of the total cost', max_digits=10, max_length=10)),
-                ('car_type', models.CharField(choices=[('suv', 'suv'), ('saloon', 'saloon'), ('minivan', 'minivan'), ('convertible', 'convertible'), ('microcar', 'microcar'), ('city_car', 'City car'), ('hatchback', 'Hatchback'), ('sedan', 'sedan'), ('family_car', 'Family car'), ('muscle_car', 'Muscle car'), ('roadstar', 'Roadstar'), ('pickup', 'pickup'), ('coupe', 'coupe')], max_length=30)),
+                (
+                    'margin',
+                    models.DecimalField(
+                        decimal_places=10,
+                        editable=False,
+                        help_text='The profit that was made from car after sales in percentage of the total cost',
+                        max_digits=10,
+                        max_length=10,
+                    ),
+                ),
+                (
+                    'car_type',
+                    models.CharField(
+                        choices=[
+                            ('suv', 'suv'),
+                            ('saloon', 'saloon'),
+                            ('minivan', 'minivan'),
+                            ('convertible', 'convertible'),
+                            ('microcar', 'microcar'),
+                            ('city_car', 'City car'),
+                            ('hatchback', 'Hatchback'),
+                            ('sedan', 'sedan'),
+                            ('family_car', 'Family car'),
+                            ('muscle_car', 'Muscle car'),
+                            ('roadstar', 'Roadstar'),
+                            ('pickup', 'pickup'),
+                            ('coupe', 'coupe'),
+                        ],
+                        max_length=30,
+                    ),
+                ),
             ],
             options={
                 'abstract': False,
@@ -79,8 +227,18 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CarBrand',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=100)),
                 ('model', models.CharField(max_length=100)),
@@ -93,11 +251,26 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CarMerchant',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('bvn', models.CharField(default=None, max_length=14, null=True)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='merchant', to=settings.AUTH_USER_MODEL)),
+                (
+                    'user',
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE, related_name='merchant', to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
             options={
                 'abstract': False,
@@ -106,11 +279,29 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Wallet',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('balance', models.DecimalField(decimal_places=10, max_digits=16)),
-                ('merchant', models.ForeignKey(help_text='merchant user wallet that holds monetary balances', on_delete=django.db.models.deletion.CASCADE, related_name='merchant_wallet', to='models.carmerchant')),
+                (
+                    'merchant',
+                    models.ForeignKey(
+                        help_text='merchant user wallet that holds monetary balances',
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='merchant_wallet',
+                        to='models.carmerchant',
+                    ),
+                ),
             ],
             options={
                 'abstract': False,
@@ -119,15 +310,40 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='TransactionPin',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('device_serial_number', models.CharField(max_length=50, unique=True)),
                 ('device_platform', models.CharField(max_length=20)),
-                ('status', models.CharField(choices=[('expired', 'User already deleted device from device management'), ('active', 'Transaction pin is still active'), ('deleted', 'Transaction pin has been deleted')], max_length=10)),
+                (
+                    'status',
+                    models.CharField(
+                        choices=[
+                            ('expired', 'User already deleted device from device management'),
+                            ('active', 'Transaction pin is still active'),
+                            ('deleted', 'Transaction pin has been deleted'),
+                        ],
+                        max_length=10,
+                    ),
+                ),
                 ('pin', models.CharField(max_length=200)),
                 ('device_name', models.CharField(help_text='The name of the device i.e Iphone x', max_length=50)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transaction_pins', to=settings.AUTH_USER_MODEL)),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name='transaction_pins', to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
             options={
                 'abstract': False,
@@ -136,11 +352,29 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Transaction',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('amount', models.DecimalField(decimal_places=10, editable=False, max_digits=10)),
-                ('wallet', models.ForeignKey(help_text='transactions carried out by merchant', on_delete=django.db.models.deletion.CASCADE, related_name='merchant_transactions', to='models.wallet')),
+                (
+                    'wallet',
+                    models.ForeignKey(
+                        help_text='transactions carried out by merchant',
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='merchant_transactions',
+                        to='models.wallet',
+                    ),
+                ),
             ],
             options={
                 'abstract': False,
@@ -149,8 +383,18 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='SpareParts',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=100)),
                 ('estimated_price', models.DecimalField(decimal_places=10, max_digits=10)),
@@ -163,13 +407,44 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Otp',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('otp', models.CharField(editable=False, max_length=6)),
-                ('expiry', models.DateTimeField(default=datetime.datetime(2022, 3, 24, 23, 7, 48, 909448, tzinfo=utc), editable=False)),
-                ('status', models.CharField(choices=[('verified', 'Otp verified by user successfully'), ('failed', 'User entered wrong otp until disabled'), ('expired', 'Otp was not entered before it expired'), ('pending', 'Otp is yet to expire or has expired and no one sent a verification request for it')], default='pending', help_text='Keep track of weather the otp was later verified or expired or failed', max_length=20)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='otps', to=settings.AUTH_USER_MODEL)),
+                (
+                    'expiry',
+                    models.DateTimeField(default=datetime.datetime(2022, 3, 24, 23, 7, 48, 909448, tzinfo=utc), editable=False),
+                ),
+                (
+                    'status',
+                    models.CharField(
+                        choices=[
+                            ('verified', 'Otp verified by user successfully'),
+                            ('failed', 'User entered wrong otp until disabled'),
+                            ('expired', 'Otp was not entered before it expired'),
+                            ('pending', 'Otp is yet to expire or has expired and no one sent a verification request for it'),
+                        ],
+                        default='pending',
+                        help_text='Keep track of weather the otp was later verified or expired or failed',
+                        max_length=20,
+                    ),
+                ),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name='otps', to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
             options={
                 'get_latest_by': 'created',
@@ -178,8 +453,18 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='LoginSessions',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('device_imei', models.CharField(max_length=20)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
@@ -191,11 +476,33 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CarMaintainance',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('type', models.CharField(choices=[('spare_part', 'Car spare parts i.e brake.'), ('expense', 'other expenses made on the car that doesnt directly relate to a physical parts.')], max_length=20)),
-                ('car', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='maintanances', to='models.car')),
+                (
+                    'type',
+                    models.CharField(
+                        choices=[
+                            ('spare_part', 'Car spare parts i.e brake.'),
+                            ('expense', 'other expenses made on the car that doesnt directly relate to a physical parts.'),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    'car',
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='maintanances', to='models.car'),
+                ),
             ],
             options={
                 'abstract': False,
@@ -214,13 +521,31 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='BankAccount',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=100)),
                 ('bank_name', models.CharField(max_length=50)),
                 ('account_number', models.CharField(max_length=10)),
-                ('merchant', models.ForeignKey(help_text='Bank account to remit merchant money to', on_delete=django.db.models.deletion.CASCADE, related_name='bank_accounts', to='models.carmerchant')),
+                (
+                    'merchant',
+                    models.ForeignKey(
+                        help_text='Bank account to remit merchant money to',
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='bank_accounts',
+                        to='models.carmerchant',
+                    ),
+                ),
             ],
             options={
                 'abstract': False,
