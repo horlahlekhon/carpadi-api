@@ -8,6 +8,7 @@ from src.carpadi_api.views import (
     TransactionPinsViewSet,
     TransactionViewSet,
     WalletViewSet,
+    ActivityViewSet,
 )
 from src.models.views import UserViewSet
 
@@ -21,4 +22,5 @@ router.register(r'car-brands', CarBrandSerializerViewSet)
 router.register(r'cars', CarViewSet)
 router.register('pins', TransactionPinsViewSet)
 router.register('wallets', WalletViewSet)
+router.register('activities', ActivityViewSet)
 # urlpatterns = router.urls

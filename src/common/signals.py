@@ -4,7 +4,7 @@ from collections import defaultdict
 from django.db.models import signals
 
 from src.common.helpers import build_absolute_uri
-from src.models.models import User, Otp, CarMerchant, UserTypes
+from src.models.models import Activity, ActivityTypes, User, Otp, UserTypes
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
 from django_rest_passwordreset.models import ResetPasswordToken
 from src.config.common import OTP_EXPIRY
@@ -107,3 +107,21 @@ def password_reset_token_created(sender, instance, reset_password_token: ResetPa
     }
 
     # notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
+
+# Signals for post_save signal for activity
+def transaction_completed(sender, instance):
+    Activity.activity_type = ActivityTypes.Transaction
+    Activity.activity = instance
+    Activity.save()
+
+def trade_unit_completed(sender, instance, **kwargs):
+    Activity.activity_type = ActivityTypes.TradeUnit
+    Activity.activity = instance
+    Activity.save()
+
+def disbursement_completed(sender, instance, **kwargs):
+    Activity.activity_type = ActivityTypes.Disbursement
+    Activity.activity = instance
+    Activity.save()
+
+# Signals for post_save signal for activity End

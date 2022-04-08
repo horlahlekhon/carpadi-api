@@ -3,8 +3,9 @@ from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import status
 from django_filters import rest_framework as filters
-from src.carpadi_api.filters import TransactionsFilter, CarsFilter
+from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter
 from src.carpadi_api.serializers import (
+    ActivitySerializer,
     CarSerializer,
     TransactionPinSerializers,
     UpdateTransactionPinSerializers,
@@ -18,12 +19,13 @@ from src.models.serializers import (
     CarMerchantSerializer,
     BankAccountSerializer,
     CarBrandSerializer,
+    ActivitySerializer,
 
 )
 from rest_framework.decorators import action
 import requests
 from src.models.models import Transaction, CarMerchant, BankAccount, CarBrand, Car, TransactionPin, \
-    TransactionPinStatus, Wallet, TransactionStatus, Trade, TradeUnit
+    TransactionPinStatus, Wallet, TransactionStatus, Trade, TradeUnit, Activity
 
 
 class DefaultApiModelViewset(viewsets.ModelViewSet):
@@ -250,3 +252,10 @@ class TradeUnitViewSet(viewsets.ReadOnlyModelViewSet):
     def perform_create(self, serializer):
         user: User = self.request.user
         serializer.save(merchant=user.merchant)
+
+class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ActivitySerializer
+    queryset = Activity.objects.all()
+    permission_classes = (IsCarMerchantAndAuthed,)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ActivityFilter

@@ -16,6 +16,8 @@ from src.models.models import (
     TransactionPinStatus,
     TransactionPin,
     Otp,
+    Disbursement,
+    Activity
 )
 from src.common.serializers import ThumbnailerJSONSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, PasswordField
@@ -264,6 +266,18 @@ class OtpSerializer(serializers.Serializer):
         else:
             key = list(validated_data.keys())[0]
             raise serializers.ValidationError(f"user with {key} {validated_data[key]} does not exist")
+
+class DisbursementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Disbursement
+        fields = ('id', 'created', 'trade_unit', 'amount')
+        read_only_fields = "__all__"
+
+class ActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = ('id', 'created', 'activity_type', 'activity')
+        read_only_fields = "__all__"
 
 
 from rest_framework.renderers import JSONRenderer

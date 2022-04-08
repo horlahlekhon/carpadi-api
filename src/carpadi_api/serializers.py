@@ -5,9 +5,9 @@ from celery import uuid
 from rest_framework import serializers, exceptions
 
 # from .models import Transaction
-from ..models.models import CarMerchant, Car, TransactionPin, User, TransactionPinStatus, Wallet, Transaction, \
-    TransactionKinds, TransactionStatus, TransactionTypes, Trade, TradeUnit
-from rave_python import Rave
+from ..models.models import CarMerchant, Car, Disbursement, TransactionPin, User, TransactionPinStatus, Wallet, Transaction, \
+    TransactionKinds, TransactionStatus, TransactionTypes, Trade, TradeUnit, Activity
+# from rave_python import Rave
 from django.contrib.auth.hashers import make_password, check_password
 import requests
 from ..models.serializers import UserSerializer
@@ -204,3 +204,15 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         model = TradeUnit
         fields = "__all__"
         read_only_fields = ('created', 'modified', "id")
+
+class DisbursementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Disbursement
+        fields = ('id', 'created', 'trade_unit', 'amount')
+        read_only_fields = "__all__"
+
+class ActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = ('id', 'created', 'activity_type', 'activity')
+        read_only_fields = "__all__"

@@ -5,8 +5,15 @@ from rest_framework.views import status
 from rest_framework.permissions import IsAdminUser
 from django_filters import rest_framework as filters
 
-from src.carpadi_admin.filters import TransactionsFilterAdmin, WalletFilterAdmin
-from src.carpadi_admin.serializers import CarSerializer, WalletSerializerAdmin, TransactionSerializer
+from src.carpadi_admin.filters import ( 
+    TransactionsFilterAdmin, WalletFilterAdmin,
+    DisbursementFilterAdmin, ActivityFilterAdmin,
+)
+from src.carpadi_admin.serializers import (
+    CarSerializer, WalletSerializerAdmin,
+    TransactionSerializer, DisbursementSerializerAdmin,
+    ActivitySerializerAdmin
+)
 from src.models.serializers import  CarBrandSerializer, CarMerchantSerializer
 from src.models.models import Transaction, CarBrand, Car, CarMerchant, Wallet
 
@@ -57,3 +64,18 @@ class WalletViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     queryset = Wallet.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = WalletFilterAdmin
+
+class DisbursementViewSetAdmin(viewsets.ReadOnlyModelViewSet):
+    permissions = {'default': (IsAdminUser,)}
+    serializer_class = DisbursementSerializerAdmin
+    queryset = Wallet.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = DisbursementFilterAdmin
+
+
+class ActivityViewSetAdmin(viewsets.ReadOnlyModelViewSet):
+    permissions = {'default': (IsAdminUser,)}
+    serializer_class = ActivitySerializerAdmin
+    queryset = Wallet.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ActivityFilterAdmin

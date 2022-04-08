@@ -13,7 +13,8 @@ from model_utils.models import UUIDModel, TimeStampedModel
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import transaction
 from src.config.common import OTP_EXPIRY
-
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 class Base(UUIDModel, TimeStampedModel):
     pass
@@ -359,3 +360,18 @@ class TradeUnit(Base):
     trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name="units")
     merchant = models.ForeignKey(CarMerchant, on_delete=models.CASCADE, related_name="units")
     share_percentage = models.DecimalField(decimal_places=10, editable=False, max_digits=10, max_length=10)
+
+class Disbursement(Base):
+    trade_unit = models.ForeignKey(TradeUnit, on_delete=models.CASCADE, related_name="disbursement")
+    amount = models.DecimalField(decimal_places=5, editable=False, max_digits=15)
+
+class ActivityTypes(models.TextChoices):
+    Transaction = "transaction", _("transaction")
+    TradeUnit = "trade_unit", _("trade_unit")
+    Disbursement = "disbursement", _("disbursement")
+
+class Activity(Base):
+    activity_type = models.CharField(choices=ActivityTypes.choices, max_length=15)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.UUIDField()
+    activity = GenericForeignKey("content_type", "object_id")
