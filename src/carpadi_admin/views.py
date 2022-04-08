@@ -22,9 +22,14 @@ from src.carpadi_admin.serializers import (
 )
 from src.models.serializers import CarBrandSerializer, CarMerchantSerializer
 from src.models.models import (
-    Transaction, CarBrand, Car,
-    CarMerchant, Wallet, Trade,
-    Disbursement, Activity,
+    Transaction,
+    CarBrand,
+    Car,
+    CarMerchant,
+    Wallet,
+    Trade,
+    Disbursement,
+    Activity,
 )
 
 
