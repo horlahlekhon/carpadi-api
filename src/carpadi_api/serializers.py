@@ -18,13 +18,16 @@ from ..models.models import (
     TransactionTypes,
     Trade,
     TradeUnit,
+    TradeStates,
 )
-
-# from rave_python import Rave
+from rave_python import Rave
 from django.contrib.auth.hashers import make_password, check_password
 import requests
 from ..models.serializers import UserSerializer
 from src.config import common
+from uuid import uuid4
+from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
+from django.db import transaction
 
 
 class SocialSerializer(serializers.Serializer):
@@ -150,6 +153,7 @@ class WalletSerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
+        ref_name = "transactions_api_serializer"
         fields = (
             'id',
             'created',
@@ -173,8 +177,10 @@ class TransactionSerializer(serializers.ModelSerializer):
             "transaction_payment_link",
         )
 
-    from uuid import uuid4
-    from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
+    def validate_transaction_kind(self, value):
+        if value not in [TransactionKinds.Deposit, TransactionKinds.Withdrawal]:
+            raise serializers.ValidationError("Transaction kind is not valid")
+        return value
 
     def create(self, validated_data):
         # rave = Rave(common.FLW_PUBLIC_KEY, common.FLW_SECRET_KEY)
@@ -188,9 +194,6 @@ class TransactionSerializer(serializers.ModelSerializer):
             currency="NGN",
         )
         headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
-        print(
-            f"Headers: {common.FLW_SECRET_KEY}",
-        )
         try:
             transaction = None
             response: requests.Response = requests.post(url=common.FLW_PAYMENT_URL, json=payload, headers=headers)
@@ -230,7 +233,6 @@ class TradeSerializer(serializers.ModelSerializer):
             'slots_purchased',
             "expected_return_on_trade",
             "return_on_trade",
-            "traded_slots",
             "remaining_slots",
             "total_slots",
             "price_per_slot",
@@ -243,4 +245,62 @@ class TradeUnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = TradeUnit
         fields = "__all__"
-        read_only_fields = ('created', 'modified', "id")
+        read_only_fields = ('created', 'modified', "id", "unit_value", "vat_percentage", "share_percentage", "estimated_rot")
+
+    def _unit_value(self, merchant: CarMerchant, trade: Trade, wallet: Wallet, attrs: dict):
+        # merchant = self.context["merchant"]
+        # wallet: Wallet = merchant.wallet
+        # trade_ = Trade.objects.filter(id=attrs.get("trade"))
+        # if len(trade_) < 1:
+        #     raise serializers.ValidationError("Trade matching query does not exist")
+        # trade: Trade = trade_[0]
+        unit_value = trade.price_per_slot * attrs["slots_quantity"]
+
+        if len(trade) < 1 or unit_value > wallet.balance:
+            raise serializers.ValidationError("Wallet balance is insufficient for this transaction")
+        return unit_value
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        merchant = self.context["merchant"]
+        wallet: Wallet = merchant.wallet
+        trade_ = Trade.objects.filter(id=attrs.get("trade"))
+        if len(trade_) < 1:
+            raise serializers.ValidationError("Trade matching query does not exist")
+        trade: Trade = trade_[0]
+        if trade.trade_status != TradeStates.Ongoing:
+            raise serializers.ValidationError("Trade is not currently open")
+        if trade.remaining_slots < attrs["slots_quantity"]:
+            raise serializers.ValidationError("Trade does not have enough slots available")
+        unit_value = self._unit_value(merchant, trade, wallet, attrs)
+        rot = (trade.estimated_return_on_trade / trade.slots_available) * attrs["slots_quantity"]
+        attrs["unit_value"] = unit_value
+        attrs["trade"] = trade
+        attrs["merchant"] = merchant
+        attrs["estimated_rot"] = rot
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        trade: Trade = validated_data["trade"]
+        share_percentage = (trade.slots_available / validated_data["slots_quantity"]) * 100
+        unit = TradeUnit.objects.create(
+            trade=trade,
+            merchant=validated_data["merchant"],
+            share_percentage=share_percentage,
+            slots_quantity=validated_data["slots_quantity"],
+            estimated_rot=validated_data["estimated_rot"],
+        )
+        ref = f"CP-{uuid4()}"
+        Transaction.objects.create(
+            transaction_reference=ref,
+            transaction_kind=TransactionKinds.WalletTransfer,
+            transaction_status=TransactionStatus.Success,
+            transaction_description="Trade Unit Purchase",
+            # noqa
+            transaction_type=TransactionTypes.Debit,
+            amount=unit.unit_value,
+            wallet=trade.trade_status,
+            transaction_payment_link=None,
+        )
+        return unit
