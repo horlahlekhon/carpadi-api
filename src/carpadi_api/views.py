@@ -142,18 +142,8 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
             transaction = get_object_or_404(self.queryset, transaction_reference=tx_ref)
             headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
             response = requests.get(url=common.FLW_PAYMENT_VERIFY_URL(transaction_id), headers=headers)
-            data = response.json()
-            if response.status_code == 200 and data['status'] == 'success':
-                transaction.transaction_status = TransactionStatus.Success
-                transaction.transaction_response = data
-                transaction.save(update_fields=['transaction_status', 'transaction_response'])
-                transaction.wallet.update_balance(transaction.amount, transaction.transaction_type, transaction.transaction_kind)
-                return Response({"message": "Payment Successful"}, status=status.HTTP_200_OK)
-            else:
-                transaction.transaction_status = TransactionStatus.Failed
-                transaction.transaction_response = data
-                transaction.save(update_fields=['transaction_status', 'transaction_response'])
-                return Response({"message": "Payment Failed"}, status=status.HTTP_400_BAD_REQUEST)
+            res, code = Transaction.verify_transaction(response, transaction)
+            return Response(res, code)
         else:
             return Response({"message": "tx_ref and transaction_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 

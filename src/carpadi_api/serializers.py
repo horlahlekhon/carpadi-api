@@ -188,6 +188,9 @@ class TransactionSerializer(serializers.ModelSerializer):
             currency="NGN",
         )
         headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
+        print(
+            f"Headers: {common.FLW_SECRET_KEY}",
+        )
         try:
             transaction = None
             response: requests.Response = requests.post(url=common.FLW_PAYMENT_URL, json=payload, headers=headers)

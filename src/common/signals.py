@@ -3,7 +3,17 @@ from collections import defaultdict
 from django.db.models import signals
 
 from src.common.helpers import build_absolute_uri
-from src.models.models import User, Otp, UserTypes, Transaction, TransactionStatus, Activity, ActivityTypes
+from src.models.models import (
+    Disbursement,
+    TradeUnit,
+    User,
+    Otp,
+    UserTypes,
+    Transaction,
+    TransactionStatus,
+    Activity,
+    ActivityTypes,
+)
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
 from django_rest_passwordreset.models import ResetPasswordToken
 from src.config.common import OTP_EXPIRY
@@ -113,20 +123,34 @@ def complete_transaction(sender, **kwargs):
 
             # notify(ACTIVITY_MERCHANT_PAYMENT_SUCCESS, context=context, email_to=[tx.wallet.merchant.user.email])
 
-        Activity.activity_type = ActivityTypes.Transaction
-        Activity.activity = tx
-        Activity.save()
+    if tx.transaction_status in (
+        TransactionStatus.Success,
+        TransactionStatus.Failed,
+    ):
+        activity = Activity.objects.create(
+            activity_type=ActivityTypes.Transaction,
+            activity=tx,
+            description=f"Activity Type: Transaction, Status: {tx.transaction_status}, Description: {tx.transaction_kind} of {tx.amount} naira.",
+        )
 
 
 def trade_unit_completed(sender, instance, created, **kwargs):
+    trd: TradeUnit = kwargs.get("instance")
     if created:
-        Activity.activity_type = ActivityTypes.TradeUnit
-        Activity.activity = instance
-        Activity.save()
+        activity = Activity.objects.create(
+            activity_type=ActivityTypes.TradeUnit,
+            activity=trd,
+            description=f"Activity Type: Purchase of Unit Description: {trd.slots_quantity} ({trd.share_percentage})  of \
+                    {trd.trade.car.brand.name} {trd.trade.car.brand.model} VIN: {trd.trade.car.vin} valued at {trd.unit_value} naira only.",
+        )
 
 
 def disbursement_completed(sender, instance, created, **kwargs):
+    dis: Disbursement = kwargs.get("instance")
     if created:
-        Activity.activity_type = ActivityTypes.Disbursement
-        Activity.activity = instance
-        Activity.save()
+        activity = Activity.objects.create(
+            activity_type=ActivityTypes.Disbursement,
+            activity=dis,
+            description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} naira for {dis.trade_units.slots_quantity} units \
+                    owned in {dis.trade_units.trade.car.brand.name} {dis.trade_units.trade.car.brand.model} VIN: {dis.trade_units.trade.car.vin}",
+        )

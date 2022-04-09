@@ -79,5 +79,5 @@ class DisbursementSerializerAdmin(serializers.ModelSerializer):
 class ActivitySerializerAdmin(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields = ("created", "id", "activity_type", "activity")
-        read_only_fields = ("created", "id", "activity_type", "activity")
+        fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
+        read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")

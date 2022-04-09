@@ -371,10 +371,11 @@ DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
     "OPTIONS": {"min_number": 100000, "max_number": 999999},
 }
 
-FLW_PUBLIC_KEY = os.getenv('FLUTTER_WAVE_PUBLIC_KEY', '')
-FLW_SECRET_KEY = os.getenv('FLUTTER_WAVE_SECRET_KEY', '')
+FLW_PUBLIC_KEY = os.getenv('FLUTTER_WAVE_PUBLIC_KEY', 'FLWPUBK_TEST-f2b61ab7600b378ba59786b7f4bcd557-X')
+FLW_SECRET_KEY = os.getenv('FLUTTER_WAVE_SECRET_KEY', 'FLWSECK_TEST-4c72b4c4b7085383856f23d4e8c4fda0-X')
+FLUTTER_WAVE_ENCODING_KEY = os.getenv('FLUTTER_WAVE_ENCODING_KEY', 'FLWSECK_TESTdcbbcac9d890')
 FLW_REDIRECT_URL = os.getenv(
-    'PAYMENT_REDIRECT_URL', 'https://3e8b-196-50-4-33.ngrok.io/api/v1/merchants/transactions/verify-transaction'
+    'PAYMENT_REDIRECT_URL', 'http://587d-129-56-51-215.ngrok.io/api/v1/merchants/transactions/verify-transaction'
 )
 FLW_PAYMENT_URL = os.getenv('PAYMENT_URL', "https://api.flutterwave.com/v3/payments")
 FLW_PAYMENT_VERIFY_URL = "https://api.flutterwave.com/v3/transactions/{}/verify".format

@@ -1,5 +1,6 @@
 import datetime
 from decimal import Decimal
+from email.policy import default
 from django.core.validators import MinValueValidator
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -170,6 +171,21 @@ class Transaction(Base):
     transaction_response = models.JSONField(null=True, blank=True)
     transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices, default=TransactionKinds.Deposit)
     transaction_payment_link = models.URLField(max_length=200, null=True, blank=True)
+
+    @classmethod
+    def verify_transaction(cls, response, tx):
+        data = response.json()
+        if response.status_code == 200 and data['status'] == 'success':
+            tx.transaction_status = TransactionStatus.Success
+            tx.transaction_response = data
+            tx.save(update_fields=['transaction_status', 'transaction_response'])
+            tx.wallet.update_balance(tx.amount, tx.transaction_type, tx.transaction_kind)
+            return {"message": "Payment Successful"}, 200
+        else:
+            tx.transaction_status = TransactionStatus.Failed
+            tx.transaction_response = data
+            tx.save(update_fields=['transaction_status', 'transaction_response'])
+            return {"message": "Payment Failed"}, 400
 
 
 class BankAccount(Base):
@@ -437,7 +453,7 @@ class TradeUnit(Base):
 
 
 class Disbursement(Base):
-    trade_unit = models.ForeignKey(TradeUnit, on_delete=models.CASCADE, related_name="disbursement")
+    trade_unit = models.ForeignKey(TradeUnit, on_delete=models.CASCADE, related_name="trade_units")
     amount = models.DecimalField(decimal_places=5, editable=False, max_digits=15)
 
 
@@ -452,3 +468,4 @@ class Activity(Base):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.UUIDField()
     activity = GenericForeignKey("content_type", "object_id")
+    description = models.TextField(default="")

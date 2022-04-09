@@ -281,8 +281,8 @@ class DisbursementSerializer(serializers.ModelSerializer):
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields = ('id', 'created', 'activity_type', 'activity')
-        read_only_fields = "__all__"
+        fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
+        read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
 
 
 from rest_framework.renderers import JSONRenderer
