@@ -52,4 +52,3 @@ class TradeSerializer(serializers.ModelSerializer):
              "traded_slots",
              "remaining_slots", "total_slots", "price_per_slot", "trade_status", "car")
 
-        

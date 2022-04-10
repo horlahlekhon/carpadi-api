@@ -81,7 +81,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             else:
                 raise exceptions.ValidationError("Invalid user type")
         except IntegrityError as reason:
-            raise exceptions.ValidationError("phone or email already exists", 400)
+            raise exceptions.ValidationError("phone or email or username already exists", 400)
         return user
 
     class Meta:
@@ -191,7 +191,7 @@ class TokenObtainModSerializer(serializers.Serializer):
 
         self.fields[self.username_field] = serializers.CharField()
         self.fields['password'] = PasswordField()
-        self.fields['device_imei'] = serializers.CharField()
+        self.fields['device_imei'] = serializers.CharField(required=False)
         self.fields['skip_pin'] = serializers.BooleanField(required=False)
 
     def validate(self, attrs):
@@ -211,6 +211,26 @@ class TokenObtainModSerializer(serializers.Serializer):
                 self.error_messages['no_active_account'],
                 'no_active_account',
             )
+        if self.user.is_staff:
+            return self.login_staff_user(attrs)
+        if self.user.is_merchant:
+            return self.login_merchant_user(attrs)
+
+    @classmethod
+    def get_token(cls, user):
+        return RefreshToken.for_user(user)
+
+    def login_staff_user(self, attrs):
+        User.update_last_login(self.user, **{})
+
+        refresh = self.get_token(self.user)
+        user = UserSerializer(instance=self.user)
+        data = {'refresh': str(refresh), 'access': str(refresh.access_token), "user": user.data}
+        return data
+
+    def login_merchant_user(self, attrs):
+        if not attrs.get('device_imei'):
+            raise serializers.ValidationError("Device imei is required")
 
         device_logins = self.user.transaction_pins.filter(
             device_serial_number=attrs.get('device_imei'), status__in=(TransactionPinStatus.Active,)
@@ -227,11 +247,6 @@ class TokenObtainModSerializer(serializers.Serializer):
         car_merch = CarMerchantSerializer(instance=self.user.merchant)
         data = {'refresh': str(refresh), 'access': str(refresh.access_token), "merchant": car_merch.data}
         return data
-
-    @classmethod
-    def get_token(cls, user):
-        return RefreshToken.for_user(user)
-
 
 class OtpSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
