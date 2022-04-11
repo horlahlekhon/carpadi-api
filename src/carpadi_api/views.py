@@ -3,13 +3,19 @@ from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import status
 from django_filters import rest_framework as filters
-from src.carpadi_api.filters import TransactionsFilter, CarsFilter
+from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter
 from src.carpadi_api.serializers import (
     CarSerializer,
     TransactionPinSerializers,
     UpdateTransactionPinSerializers,
-    CarMerchantUpdateSerializer, WalletSerializer, TransactionSerializer, TradeSerializer, TradeUnitSerializer
+    CarMerchantUpdateSerializer,
+    WalletSerializer,
+    TransactionSerializer,
+    TradeSerializer,
+    TradeUnitSerializer,
 )
+
+from src.models.serializers import ActivitySerializer
 from django.db import transaction
 
 from src.config import common
@@ -18,12 +24,24 @@ from src.models.serializers import (
     CarMerchantSerializer,
     BankAccountSerializer,
     CarBrandSerializer,
-
+    ActivitySerializer,
 )
 from rest_framework.decorators import action
 import requests
-from src.models.models import Transaction, CarMerchant, BankAccount, CarBrand, Car, TransactionPin, \
-    TransactionPinStatus, Wallet, TransactionStatus, Trade, TradeUnit
+from src.models.models import (
+    Transaction,
+    CarMerchant,
+    BankAccount,
+    CarBrand,
+    Car,
+    TransactionPin,
+    TransactionPinStatus,
+    Wallet,
+    TransactionStatus,
+    Trade,
+    TradeUnit,
+    Activity,
+)
 
 
 class DefaultApiModelViewset(viewsets.ModelViewSet):
@@ -48,8 +66,7 @@ class DefaultGenericViewset(viewsets.GenericViewSet):
         serializer.save(user=self.request.user)
 
 
-class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-                         viewsets.GenericViewSet):
+class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = CarMerchant.objects.all()
     serializers = {"default": CarMerchantSerializer, "partial_update": CarMerchantUpdateSerializer}
     permission_classes = (IsCarMerchantAndAuthed,)
@@ -85,8 +102,7 @@ class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         return Response(ser.data)
 
 
-class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                         mixins.CreateModelMixin, viewsets.GenericViewSet):
+class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     handles basic CRUD functionalities for transaction model
     """
@@ -126,19 +142,8 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
             transaction = get_object_or_404(self.queryset, transaction_reference=tx_ref)
             headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
             response = requests.get(url=common.FLW_PAYMENT_VERIFY_URL(transaction_id), headers=headers)
-            data = response.json()
-            if response.status_code == 200 and data['status'] == 'success':
-                transaction.transaction_status = TransactionStatus.Success
-                transaction.transaction_response = data
-                transaction.save(update_fields=['transaction_status', 'transaction_response'])
-                transaction.wallet.update_balance(transaction.amount, transaction.transaction_type,
-                                                  transaction.transaction_kind)
-                return Response({"message": "Payment Successful"}, status=status.HTTP_200_OK)
-            else:
-                transaction.transaction_status = TransactionStatus.Failed
-                transaction.transaction_response = data
-                transaction.save(update_fields=['transaction_status', 'transaction_response'])
-                return Response({"message": "Payment Failed"}, status=status.HTTP_400_BAD_REQUEST)
+            res, code = Transaction.verify_transaction(response, transaction)
+            return Response(res, code)
         else:
             return Response({"message": "tx_ref and transaction_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -258,3 +263,9 @@ class TradeUnitViewSet(viewsets.ModelViewSet):
         serializer.save(merchant=user.merchant)
 
 
+class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ActivitySerializer
+    queryset = Activity.objects.all()
+    permission_classes = (IsCarMerchantAndAuthed,)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ActivityFilter

@@ -16,6 +16,8 @@ from src.models.models import (
     TransactionPinStatus,
     TransactionPin,
     Otp,
+    Disbursement,
+    Activity,
 )
 from src.common.serializers import ThumbnailerJSONSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, PasswordField
@@ -118,7 +120,6 @@ class PhoneVerificationSerializer(serializers.Serializer):
     def get_tokens(self, user):
         return user.get_tokens()
 
-
     def validate(self, attrs):
         user = User.objects.get(phone=attrs["phone"])
         if user:
@@ -140,16 +141,20 @@ class PhoneVerificationSerializer(serializers.Serializer):
         user.is_active = True
         if user.user_type == UserTypes.CarMerchant:
             # we have validated user, lets create the wallet
-            Wallet.objects.create(merchant=user.merchant, balance=Decimal(0),
-                                  trading_cash=Decimal(0),
-                                  withdrawable_cash=Decimal(0), unsettled_cash=Decimal(0), total_cash=Decimal(0))
+            Wallet.objects.create(
+                merchant=user.merchant,
+                balance=Decimal(0),
+                trading_cash=Decimal(0),
+                withdrawable_cash=Decimal(0),
+                unsettled_cash=Decimal(0),
+                total_cash=Decimal(0),
+            )
         user.save(update_fields=["is_active"])
         user.refresh_from_db()
         return user
 
     class Meta:
         fields = ('token',)
-
 
 
 class CarMerchantSerializer(serializers.ModelSerializer):
@@ -279,6 +284,20 @@ class OtpSerializer(serializers.Serializer):
         else:
             key = list(validated_data.keys())[0]
             raise serializers.ValidationError(f"user with {key} {validated_data[key]} does not exist")
+
+
+class DisbursementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Disbursement
+        fields = ('id', 'created', 'trade_unit', 'amount')
+        read_only_fields = "__all__"
+
+
+class ActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
+        read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
 
 
 from rest_framework.renderers import JSONRenderer

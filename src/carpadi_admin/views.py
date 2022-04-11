@@ -5,10 +5,32 @@ from rest_framework.views import status
 from rest_framework.permissions import IsAdminUser
 from django_filters import rest_framework as filters
 
-from src.carpadi_admin.filters import TransactionsFilterAdmin, WalletFilterAdmin, TradeFilterAdmin
-from src.carpadi_admin.serializers import CarSerializer, WalletSerializerAdmin, TransactionSerializer, TradeSerializer
-from src.models.serializers import  CarBrandSerializer, CarMerchantSerializer
-from src.models.models import Transaction, CarBrand, Car, CarMerchant, Wallet, Trade
+from src.carpadi_admin.filters import (
+    TransactionsFilterAdmin,
+    WalletFilterAdmin,
+    DisbursementFilterAdmin,
+    ActivityFilterAdmin,
+    TradeFilterAdmin,
+)
+from src.carpadi_admin.serializers import (
+    CarSerializer,
+    WalletSerializerAdmin,
+    TransactionSerializer,
+    DisbursementSerializerAdmin,
+    ActivitySerializerAdmin,
+    TradeSerializer,
+)
+from src.models.serializers import CarBrandSerializer, CarMerchantSerializer
+from src.models.models import (
+    Transaction,
+    CarBrand,
+    Car,
+    CarMerchant,
+    Wallet,
+    Trade,
+    Disbursement,
+    Activity,
+)
 
 
 # Create your views here.
@@ -67,3 +89,17 @@ class TradeViewSetAdmin(viewsets.ModelViewSet):
     filter_class = TradeFilterAdmin
 
 
+class DisbursementViewSetAdmin(viewsets.ReadOnlyModelViewSet):
+    permissions = {'default': (IsAdminUser,)}
+    serializer_class = DisbursementSerializerAdmin
+    queryset = Disbursement.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = DisbursementFilterAdmin
+
+
+class ActivityViewSetAdmin(viewsets.ReadOnlyModelViewSet):
+    permissions = {'default': (IsAdminUser,)}
+    serializer_class = ActivitySerializerAdmin
+    queryset = Activity.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ActivityFilterAdmin

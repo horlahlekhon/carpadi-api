@@ -5,8 +5,21 @@ from celery import uuid
 from rest_framework import serializers, exceptions
 
 # from .models import Transaction
-from ..models.models import CarMerchant, Car, TransactionPin, User, TransactionPinStatus, Wallet, Transaction, \
-    TransactionKinds, TransactionStatus, TransactionTypes, Trade, TradeUnit, TradeStates
+from ..models.models import (
+    CarMerchant,
+    Car,
+    TransactionPin,
+    User,
+    TransactionPinStatus,
+    Wallet,
+    Transaction,
+    TransactionKinds,
+    TransactionStatus,
+    TransactionTypes,
+    Trade,
+    TradeUnit,
+    TradeStates,
+)
 from rave_python import Rave
 from django.contrib.auth.hashers import make_password, check_password
 import requests
@@ -15,6 +28,7 @@ from src.config import common
 from uuid import uuid4
 from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
 from django.db import transaction
+
 
 class SocialSerializer(serializers.Serializer):
     """
@@ -40,7 +54,6 @@ class TransactionPinSerializers(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ("id", "created", "modified", "status", "user")
         extra_kwargs = {'pin': {'write_only': True}}
-
 
     def validate_pin(self, pin):
         if not str.isdigit(pin) or len(pin) != 6:
@@ -124,8 +137,16 @@ class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = "__all__"
-        read_only_fields = ('created', 'modified', 'user', 'balance', "withdrawable_cash",
-                            "unsettled_cash", "total_cash", "trading_cash")
+        read_only_fields = (
+            'created',
+            'modified',
+            'user',
+            'balance',
+            "withdrawable_cash",
+            "unsettled_cash",
+            "total_cash",
+            "trading_cash",
+        )
 
 
 # transaction  serializer
@@ -143,7 +164,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             "transaction_reference",
             "transaction_description",
             "transaction_kind",
-            "transaction_payment_link"
+            "transaction_payment_link",
         )
         read_only_fields = (
             'id',
@@ -153,7 +174,8 @@ class TransactionSerializer(serializers.ModelSerializer):
             "transaction_status",
             "transaction_reference",
             "transaction_type",
-            "transaction_payment_link")
+            "transaction_payment_link",
+        )
 
     def validate_transaction_kind(self, value):
         if value not in [TransactionKinds.Deposit, TransactionKinds.Withdrawal]:
@@ -164,11 +186,13 @@ class TransactionSerializer(serializers.ModelSerializer):
         # rave = Rave(common.FLW_PUBLIC_KEY, common.FLW_SECRET_KEY)
         ref = f"CP-{uuid4()}"
         wallet: Wallet = validated_data["merchant"].wallet
-        payload = dict(tx_ref=ref, amount=validated_data["amount"], redirect_url=common.FLW_REDIRECT_URL,
-                       customer=dict(phone=wallet.merchant.user.phone,
-                                     email=wallet.merchant.user.email),
-                       currency="NGN",
-                       )
+        payload = dict(
+            tx_ref=ref,
+            amount=validated_data["amount"],
+            redirect_url=common.FLW_REDIRECT_URL,
+            customer=dict(phone=wallet.merchant.user.phone, email=wallet.merchant.user.email),
+            currency="NGN",
+        )
         headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
         try:
             transaction = None
@@ -182,11 +206,12 @@ class TransactionSerializer(serializers.ModelSerializer):
                         transaction_status=TransactionStatus.Pending,
                         transaction_description=validated_data["transaction_description"],
                         # noqa
-                        transaction_type=TransactionTypes.Credit if validated_data[
-                                                                        "transaction_kind"] == TransactionKinds.Deposit else TransactionTypes.Debit,
+                        transaction_type=TransactionTypes.Credit
+                        if validated_data["transaction_kind"] == TransactionKinds.Deposit
+                        else TransactionTypes.Debit,
                         amount=validated_data["amount"],
                         wallet=wallet,
-                        transaction_payment_link=data["data"]["link"]
+                        transaction_payment_link=data["data"]["link"],
                     )
                 else:
                     raise serializers.ValidationError(data["message"])
@@ -201,18 +226,26 @@ class TradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trade
         fields = "__all__"
-        read_only_fields = \
-            ('created', 'modified', 'slots_available', 'slots_purchased',
-             "expected_return_on_trade", "return_on_trade",
-             "remaining_slots", "total_slots", "price_per_slot", "trade_status", "car")
+        read_only_fields = (
+            'created',
+            'modified',
+            'slots_available',
+            'slots_purchased',
+            "expected_return_on_trade",
+            "return_on_trade",
+            "remaining_slots",
+            "total_slots",
+            "price_per_slot",
+            "trade_status",
+            "car",
+        )
 
 
 class TradeUnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = TradeUnit
         fields = "__all__"
-        read_only_fields = ('created', 'modified', "id", "unit_value",
-                            "vat_percentage", "share_percentage", "estimated_rot")
+        read_only_fields = ('created', 'modified', "id", "unit_value", "vat_percentage", "share_percentage", "estimated_rot")
 
     def _unit_value(self, merchant: CarMerchant, trade: Trade, wallet: Wallet, attrs: dict):
         # merchant = self.context["merchant"]
@@ -251,10 +284,13 @@ class TradeUnitSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         trade: Trade = validated_data["trade"]
         share_percentage = (trade.slots_available / validated_data["slots_quantity"]) * 100
-        unit = TradeUnit.objects.create(trade=trade, merchant=validated_data["merchant"],
-                                        share_percentage=share_percentage,
-                                        slots_quantity=validated_data["slots_quantity"],
-                                        estimated_rot=validated_data["estimated_rot"])
+        unit = TradeUnit.objects.create(
+            trade=trade,
+            merchant=validated_data["merchant"],
+            share_percentage=share_percentage,
+            slots_quantity=validated_data["slots_quantity"],
+            estimated_rot=validated_data["estimated_rot"],
+        )
         ref = f"CP-{uuid4()}"
         Transaction.objects.create(
             transaction_reference=ref,
@@ -265,6 +301,6 @@ class TradeUnitSerializer(serializers.ModelSerializer):
             transaction_type=TransactionTypes.Debit,
             amount=unit.unit_value,
             wallet=trade.trade_status,
-            transaction_payment_link=None
+            transaction_payment_link=None,
         )
         return unit
