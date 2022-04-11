@@ -49,6 +49,9 @@ class User(AbstractUser, Base):
     def __str__(self):
         return self.username
 
+    def is_merchant(self):
+        return self.user_type == UserTypes.CarMerchant
+
     @staticmethod
     def update_last_login(user, **kwargs):
         """
@@ -64,7 +67,7 @@ saved_file.connect(generate_aliases_global)
 
 
 class LoginSessions(Base):
-    device_imei = models.CharField(max_length=20)
+    device_imei = models.CharField(max_length=20, null=True, blank=True)
     user = models.ForeignKey(get_user_model(), models.CASCADE)
 
 
@@ -271,6 +274,14 @@ def validate_inspector(value: User):
             params={'value': value},
         )
 
+class CarTransmissionTypes(models.TextChoices):
+    Manual = "manual", _(
+        "Manual",
+    )
+    Automatic = "automatic", _(
+        "Automatic",
+    )
+
 
 class Car(Base):
     brand = models.ForeignKey(CarBrand, on_delete=models.SET_NULL, null=True)
@@ -287,6 +298,9 @@ class Car(Base):
             validate_inspector,
         ],
     )
+    colour = models.CharField(max_length=50)
+    transmission_type = models.CharField(max_length=15, choices=CarTransmissionTypes.choices)
+
     cost = models.DecimalField(
         decimal_places=10,
         editable=False,
@@ -404,7 +418,8 @@ class Trade(Base):
         default=Decimal(0.00),
         max_length=10,
         help_text="max price at which the car " "can be sold",
-    )
+    )                                                                                   
+    bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days")
 
 
 class TradeUnit(Base):
