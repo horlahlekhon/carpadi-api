@@ -59,7 +59,7 @@ class ActivityFilterAdmin(filters.FilterSet):
     activity_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')
     activity_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
 
-    actvity_type = filters.CharFilter(field_name="actvity_type")
+    activity_type = filters.CharFilter(field_name="activity_type")
 
     class Meta:
         model = Activity
