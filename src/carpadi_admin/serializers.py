@@ -5,7 +5,7 @@ import datetime
 
 from rest_framework import serializers
 
-from src.models.models import CarMerchant, Car, Wallet, Transaction, Trade as trade, TradeUnit as trade_unit, Disbursement, Activity
+from src.models.models import CarMerchant, Car, Wallet, Transaction, Trade, TradeUnit, Disbursement, Activity
 
 
 class SocialSerializer(serializers.Serializer):
@@ -89,9 +89,9 @@ class ActivitySerializerAdmin(serializers.ModelSerializer):
 class DashboardSerializerAdmin(serializers.Serializer):
     average_bts = serializers.IntegerField()
     number_of_users_trading = serializers.IntegerField()
-    average_trading_cash = serializers.DecimalField(max_digits=15, decimal_places=5)
+    avg_trading_cash = serializers.DecimalField(max_digits=15, decimal_places=5)
     total_available_shares = serializers.IntegerField()
-    total_available_shares_value = serializers.DecimalField(max_digits=15, decimal_places=5)
+    available_shares_value = serializers.DecimalField(max_digits=15, decimal_places=5)
     cars_with_available_share = serializers.IntegerField()
     recent_trade_activities = serializers.JSONField()
     cars_summary = serializers.JSONField()
@@ -100,78 +100,58 @@ class DashboardSerializerAdmin(serializers.Serializer):
     total_trading_cash_year = serializers.JSONField()
     return_on_trades_year = serializers.JSONField()
 
-    @classmethod
-    def get_average_bts(cls, trade, month=None, year=None):
-        if month and year:
-            average_bts = trade.objects.filter(trade_status='completed',
-                                               modified__year=year, modified__month=month) \
-                .aggregate(data=Avg('bts_time'))
-
-            return average_bts, 200
-
-        if year and not month:
-            average_bts = trade.objects.filter(trade_status='completed', modified__year=year) \
-                .aggregate(data=Avg('bts_time'))
-
-            return average_bts, 200
-
+    @staticmethod
+    def filter_data(model_name, model_field: str = None, value: str = None, created: bool = False, month: datetime.date.month = None,
+                    year: datetime.date.year = None):
         date = datetime.date.today()
-        average_bts = trade.objects.filter(trade_status='completed', modified__year=date.year,
-                                           modified__month=date.month).aggregate(data=Avg('bts_time'))
 
-        return average_bts, 200
+        if created and not month and not year:
+            return model_name.objects.filter(model_field=value, created__month=date.month, created__year=date.year)
 
-    @classmethod
-    get_total_available_shares(cls, trade, month=None, year=None):
-    if month and year:
-        average_bts = trade.objects.filter(trade_status='ongoing',
-                                           modified__year=year, modified__month=month) \
-            .aggregate(data=Avg('remaining_slots'))
+        elif not created and not month and not year:
+            return model_name.objects.filter(model__field=value, modified__month=date.month, modified__year=date.year)
 
-        return total_available_shares, 200
+        elif created and month and year:
+            return model_name.objects.filter(model__field=value, created__month=month, created__year=year)
 
-    if year and not month:
-        average_bts = trade.objects.filter(trade_status='ongoing', modified__year=year) \
-            .aggregate(data=Avg('remaining_slots'))
+        elif not created and month and year:
+            return model_name.objects.filter(model_field=value, modified__month=month, created__year=year)
 
-        return total_available_shares, 200
+        elif not created  and not month:
+            return model_name.objects.filter(model__field=value, modified__year=year)
 
-    date = datetime.date.today()
-    average_bts = trade.objects.filter(trade_status='ongoing', modified__year=date.year,
-                                       modified__month=date.month).aggregate(data=Avg('remaining_slots'))
+        elif created and not month:
+            return model_name.objects.filter(model__field=value, created__year=year)
 
-    return total_available_shares, 200
+        elif not model_field and not created and not month and not year:
+            return model_name.objects.filter(modified__month=date.month, created__year=date.year)
 
-    @classmethod
-    def get_number_of_users_trading(cls, trade_unit,  month=None, year=None):
-        if year and month:
-            number_of_users_trading = trade_unit.objects.filter(created__year=year, created__month=month)\
-                .aggregate(data=Sum('merchant'))
-            return number_of_users_trading, 200
+        elif not model_field and created and not month and not year:
+            return model_name.objects.filter(created__month=date.month, created__year=date.year)
 
-        if year and not month:
-            number_of_users_trading = trade_unit.objects.filter(created__year=year)\
-                .aggregate(data=Sum('merchant'))
-            return number_of_users_trading, 200
+        elif not model_field and created and month and year:
+            return model_name.objects.filter(created__month=month, created__year=year)
 
-        date = datetime.date.today()
-        number_of_users_trading = trade_unit.objects.filter(created__year=date.year, created__month=date.month)\
-            .aggregate(data=Sum('merchant'))
-        return number_of_users_trading, 200
+        # data = model.objects.filter(model_field=f"{value}", month=month, year=year)
 
-    @classmethod
-    get_average_trading_cash(cls, trade_unit, month=None, year=None):
-        if year and month:
-            average_trading_cash = unit_price.objects.filter(created__year=year, created__month=month) \
-                .aggregate(data=Avg('unit_value'))
-            return average_trading_cash, 200
+    def get_average_bts(self, trade: Trade, month, year):
+        return self.filter_data(trade, 'trade_status', 'completed', month, year)\
+                   .aggregate(data=Avg('bts_time')), 200
+        # return average_bts, 200
 
-        if year and not month:
-            average_trading_cash = unit_price.objects.filter(created__year=year) \
-                .aggregate(data=Avg('unit_value'))
-            return average_trading_cash, 200
+    def get_total_available_shares(self, trade: Trade, month, year):
+        return self.filter_data(trade, 'trade_status', 'ongoing', True, month, year)\
+            .aggregate(data=Avg('remaining_slots')), 200
+        # return total_available_shares, 200
 
-        date = datetime.date.today()
-        average_trading_cash = unit_price.objects.filter(created__year=date.year, created__month=date.month) \
-            .aggregate(data=Avg('unit_value'))
-        return average_trading_cash, 200
+    def get_number_of_users_trading(self, trade_unit: TradeUnit,  month, year):
+        return self.filter_data(trade_unit, year, month, created=True).aggregate(data=Sum('merchant')), 200
+        # return number_of_users_trading, 200
+
+    def get_avg_trading_cash(self, trade_unit: TradeUnit, month, year):
+        return self.filter_data(trade_unit, month, year, created=True).aggregate(data=Avg('unit_value')), 200
+        # return average_trading_cash, 200
+
+    def get_available_shares_value(self, trade: Trade, month, year):
+        return self.filter_data(trade, 'trade_status', 'ongoing', month, year)\
+            .aggregate(data=Sum('remaining_slots'))
