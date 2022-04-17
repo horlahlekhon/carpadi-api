@@ -95,10 +95,8 @@ class DashboardSerializerAdmin(serializers.Serializer):
     cars_with_available_share = serializers.IntegerField()
     recent_trade_activities = serializers.JSONField()
     cars_summary = serializers.JSONField()
-    total_trading_cash_month = serializers.JSONField()
-    return_on_trades_month = serializers.JSONField()
-    total_trading_cash_year = serializers.JSONField()
-    return_on_trades_year = serializers.JSONField()
+    total_trading_cash = serializers.JSONField()
+    return_on_trades = serializers.JSONField()
 
     @staticmethod
     def filter_data(model_name, model_field: str = None, value: str = None, created: bool = False, month: datetime.date.month = None,
@@ -137,21 +135,22 @@ class DashboardSerializerAdmin(serializers.Serializer):
     def get_average_bts(self, trade: Trade, month, year):
         return self.filter_data(trade, 'trade_status', 'completed', month, year)\
                    .aggregate(data=Avg('bts_time')), 200
-        # return average_bts, 200
 
     def get_total_available_shares(self, trade: Trade, month, year):
         return self.filter_data(trade, 'trade_status', 'ongoing', True, month, year)\
             .aggregate(data=Avg('remaining_slots')), 200
-        # return total_available_shares, 200
 
     def get_number_of_users_trading(self, trade_unit: TradeUnit,  month, year):
         return self.filter_data(trade_unit, year, month, created=True).aggregate(data=Sum('merchant')), 200
-        # return number_of_users_trading, 200
 
     def get_avg_trading_cash(self, trade_unit: TradeUnit, month, year):
-        return self.filter_data(trade_unit, month, year, created=True).aggregate(data=Avg('unit_value')), 200
-        # return average_trading_cash, 200
+        return self.filter_data(trade_unit, month, year, created=True).aggregate(data=Sum('unit_value')), 200
 
-    def get_available_shares_value(self, trade: Trade, month, year):
-        return self.filter_data(trade, 'trade_status', 'ongoing', month, year)\
-            .aggregate(data=Sum('remaining_slots'))
+    # def get_available_shares_value(self, trade: Trade, month, year):
+    #     collect_data = self.filter_data(trade, 'trade_status', 'ongoing', month, year)\
+    #         .annotate(data=Sum('remaining_slots'))
+
+    def get_cars_with_available_shares(self, trade: Trade, month, year):
+        return self.filter_data(trade, 'trade__status', 'ongoing', month, year).aggregate(data=Sum('car')), 200
+
+    # def
