@@ -1,6 +1,6 @@
 from email.policy import default
 from uuid import uuid4
-
+from django.utils import timezone
 from celery import uuid
 from rest_framework import serializers, exceptions
 
@@ -223,29 +223,57 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class TradeSerializer(serializers.ModelSerializer):
+    remaining_slots = serializers.SerializerMethodField()
+    trade_status = serializers.SerializerMethodField()
     class Meta:
         model = Trade
         fields = "__all__"
         read_only_fields = (
             'created',
             'modified',
-            'slots_available',
             'slots_purchased',
             "expected_return_on_trade",
             "return_on_trade",
             "remaining_slots",
-            "total_slots",
             "price_per_slot",
             "trade_status",
             "car",
         )
+
+    def get_trade_status(self, obj: Trade):
+        if obj.units.count() == obj.slots_available:
+            return TradeStates.Purchased
+        elif obj.units.count() >= 0 and obj.units.count() != obj.slots_available:
+            return TradeStates.Ongoing
+        else:
+            raise exceptions.APIException("Error, cannot determine trade status")
+
+    def calculate_price_per_slot(self, car_price, slots_availble):
+        return car_price / slots_availble
+
+    def get_remaining_slots(self, trade: Trade):
+        slots_purchased = TradeUnit.objects.filter(trade=trade).count()
+        return trade.slots_available - slots_purchased
+
+    def get_bts_time(self, trade: Trade):
+        if trade.date_of_sale:
+            return (trade.created.date() - trade.date_of_sale).days
+        return (trade.created.date() - timezone.now()).days
+
+    def create(self, validated_data):
+        raise exceptions.APIException("Cannot create a trade")
+
+    def update(self, instance, validated_data):
+        raise exceptions.APIException("Cannot update a trade")
+
 
 
 class TradeUnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = TradeUnit
         fields = "__all__"
-        read_only_fields = ('created', 'modified', "id", "unit_value", "vat_percentage", "share_percentage", "estimated_rot")
+        read_only_fields = (
+        'created', 'modified', "id", "unit_value", "vat_percentage", "share_percentage", "estimated_rot")
 
     def _unit_value(self, merchant: CarMerchant, trade: Trade, wallet: Wallet, attrs: dict):
         # merchant = self.context["merchant"]

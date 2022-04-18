@@ -17,6 +17,7 @@ from django.db import transaction
 from src.config.common import OTP_EXPIRY
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Sum
 
 
 class Base(UUIDModel, TimeStampedModel):
@@ -128,21 +129,21 @@ class TransactionKinds(models.TextChoices):
 
 
 class Wallet(Base):
-    balance = models.DecimalField(decimal_places=10, max_digits=16, editable=True)
+    balance = models.DecimalField(decimal_places=2, max_digits=16, editable=True)
     merchant = models.OneToOneField(
         CarMerchant,
         on_delete=models.CASCADE,
         related_name="wallet",
         help_text="merchant user wallet that holds monetary balances",
     )
-    trading_cash = models.DecimalField(decimal_places=10, max_digits=16, editable=True)  # cash accross all pending trades
+    trading_cash = models.DecimalField(decimal_places=2, max_digits=16, editable=True)  # cash accross all pending trades
     withdrawable_cash = models.DecimalField(
-        decimal_places=10, max_digits=16, editable=True
+        decimal_places=2, max_digits=16, editable=True
     )  # the money you can withdraw that is unattached to any trade
     unsettled_cash = models.DecimalField(
-        decimal_places=10, max_digits=16, editable=True
+        decimal_places=2, max_digits=16, editable=True
     )  # money you requested to withdraw, i.e pending credit
-    total_cash = models.DecimalField(decimal_places=10, max_digits=16, editable=True)  # accross all sections
+    total_cash = models.DecimalField(decimal_places=2, max_digits=16, editable=True)  # accross all sections
 
     @transaction.atomic
     def update_balance(self, amount, transaction_type: TransactionTypes, transaction_kind: TransactionKinds):
@@ -257,7 +258,7 @@ class CarStates(models.TextChoices):
         "inspected",
     )
     Available = "available", _(
-        "available",
+        "available for trading and sale",
     )
     Bought = "bought", _(
         "bought",
@@ -265,6 +266,7 @@ class CarStates(models.TextChoices):
     Sold = "sold", _(
         "sold",
     )
+    New = "new", _("New car waiting to be inspected")
 
 
 def validate_inspector(value: User):
@@ -285,10 +287,9 @@ class CarTransmissionTypes(models.TextChoices):
 
 class Car(Base):
     brand = models.ForeignKey(CarBrand, on_delete=models.SET_NULL, null=True)
-    status = models.CharField(choices=CarStates.choices, max_length=30)
+    status = models.CharField(choices=CarStates.choices, max_length=30, default=CarStates.New)
     vin = models.CharField(max_length=17)
-    pictures = models.URLField(help_text="url of the folder where the images for the car is located.")
-    partitions = models.IntegerField(default=10, null=False, blank=False)
+    pictures = models.URLField(help_text="url of the folder where the images for the car is located.", null=True, blank=True)
     car_inspector = models.OneToOneField(
         get_user_model(),
         on_delete=models.SET_NULL,
@@ -301,72 +302,84 @@ class Car(Base):
     colour = models.CharField(max_length=50)
     transmission_type = models.CharField(max_length=15, choices=CarTransmissionTypes.choices)
 
-    cost = models.DecimalField(
-        decimal_places=10,
-        editable=False,
+    offering_price = models.DecimalField(
+        decimal_places=2,
         max_digits=10,
         max_length=10,
-        help_text="cost of  purchasing the car",
-        null=False,
-        blank=False,
+        help_text="potential cost of  purchasing the car offered by the seller. "
+                  "this should be changed to reflect the actual cost of the car when it is bought",
+        validators=[MinValueValidator(Decimal(0.00))],
+        default=Decimal(0.00),
     )
     cost_of_repairs = models.DecimalField(
-        decimal_places=10,
+        decimal_places=2,
         editable=False,
         max_digits=10,
-        max_length=10,
         help_text="Total cost of spare parts",
-        null=False,
-        blank=False,
+        null=True, blank=True
     )
     total_cost = models.DecimalField(
-        decimal_places=10,
+        decimal_places=2,
         editable=False,
-        null=False,
-        blank=False,
+        null=True, blank=True,
         max_digits=10,
-        max_length=10,
-        help_text="Total cost = cost + cost_of_repairs + maintainance_cost + misc",
+        help_text="Total cost = offering_price + cost_of_repairs + maintainance_cost + misc",
     )
     maintainance_cost = models.DecimalField(
-        decimal_places=10,
+        decimal_places=2,
         editable=False,
         max_digits=10,
-        max_length=10,
         help_text="fuel, parking, mechanic workmanship costs",
-        null=False,
-        blank=False,
+        null=True, blank=True
     )
     resale_price = models.DecimalField(
-        decimal_places=10, max_digits=10, max_length=10, help_text="price presented to merchants", null=True, blank=True
+        decimal_places=2, max_digits=10, max_length=10, help_text="price presented to merchants", null=True, blank=True
     )
     # TODO change to a full fledge model
-    inspection_report = models.TextField()
-    buy_to_sale_time = models.IntegerField(editable=False)
+    inspection_report = models.TextField(null=True, blank=True)
     margin = models.DecimalField(
-        decimal_places=10,
-        editable=False,
+        decimal_places=2,
         max_digits=10,
-        max_length=10,
         help_text="The profit that was made from car " "after sales in percentage of the total cost",
+        null=True, blank=True
     )
     car_type = models.CharField(choices=CarTypes.choices, max_length=30, null=False, blank=False)
+
+    def maintenance_cost_calc(self):
+        return self.maintenances.all().aggregate(sum=Sum("cost")).get("sum", Decimal(0))
+
+    def total_cost_calc(self):
+        return self.offering_price + self.maintenance_cost_calc()
 
 
 class SpareParts(Base):
     name = models.CharField(max_length=100)
     car_brand = models.ForeignKey(CarBrand, on_delete=models.CASCADE)
-    estimated_price = models.DecimalField(max_digits=10, decimal_places=10)
+    estimated_price = models.DecimalField(max_digits=10, decimal_places=2)
 
 
-class CarMaintainanceTypes(models.TextChoices):
+class MiscellaneousExpenses(Base):
+    name = models.CharField(max_length=100)
+    estimated_price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(null=True, blank=True)
+
+
+class CarMaintenanceTypes(models.TextChoices):
     SparePart = "spare_part", _("Car spare parts i.e brake.")
     Expense = "expense", _("other expenses made on the car that doesnt directly relate to a physical parts.")
 
 
-class CarMaintainance(Base):
-    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="maintanances")
-    type = models.CharField(choices=CarMaintainanceTypes.choices, max_length=20)
+class CarMaintenance(Base):
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="maintenances", null=False, blank=False)
+    type = models.CharField(choices=CarMaintenanceTypes.choices, max_length=20)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
+    object_id = models.UUIDField(null=True, blank=True)
+    maintenance = GenericForeignKey("content_type", "object_id")
+    cost = models.DecimalField(max_digits=10, decimal_places=2,
+                               help_text="cost of the maintenance a the time of the maintenance.. "
+                                         "cost on the maintenance might change, i.e spare parts. "
+                                         "the cost here is the correct one to use when calculating "
+                                         "total cost of car maintenance")
 
 
 class TradeStates(models.TextChoices):
@@ -381,83 +394,89 @@ class Trade(Base):
     slots_available = models.PositiveIntegerField(default=0)
     slots_purchased = models.PositiveIntegerField(default=0)
     return_on_trade = models.DecimalField(
-        decimal_places=10,
+        decimal_places=2,
         max_digits=10,
         default=Decimal(0.00),
-        max_length=10,
-        validators=[MinValueValidator(Decimal(0.00))],
+        validators=[MinValueValidator(Decimal(0.00))], help_text="The actual profit that was made from car " ,
     )
     estimated_return_on_trade = models.DecimalField(
-        decimal_places=10, default=Decimal(0.00), validators=[MinValueValidator(Decimal(0.00))], max_digits=10, max_length=10
+        decimal_places=2, default=Decimal(0.00), validators=[MinValueValidator(Decimal(0.00))], max_digits=10,
+        help_text="The estimated profit that can be made from car sale"
     )
     # traded_slots = models.IntegerField(default=0, help_text="number of slots that have been sold")
-    remaining_slots = models.PositiveIntegerField(default=0, help_text="slots that are still available for sale")
+    # remaining_slots = models.PositiveIntegerField(default=0, help_text="slots that are still available for sale")
     # total_slots = models.IntegerField(default=10, help_text="total number of slots that are available for sale")
     price_per_slot = models.DecimalField(
-        decimal_places=10,
+        decimal_places=2,
         editable=False,
         validators=[MinValueValidator(Decimal(0.00))],
         max_digits=10,
         default=Decimal(0.00),
-        max_length=10,
         help_text="price per slot",
     )
-    trade_status = models.CharField(choices=TradeStates.choices, max_length=20)
+    trade_status = models.CharField(choices=TradeStates.choices, default=TradeStates.Ongoing, max_length=20)
     min_sale_price = models.DecimalField(
         validators=[MinValueValidator(Decimal(0.00))],
-        decimal_places=10,
+        decimal_places=2,
         max_digits=10,
         default=Decimal(0.00),
-        max_length=10,
         help_text="min price at which the car " "can be sold",
     )
     max_sale_price = models.DecimalField(
         validators=[MinValueValidator(Decimal(0.00))],
-        decimal_places=10,
+        decimal_places=2,
         max_digits=10,
         default=Decimal(0.00),
-        max_length=10,
         help_text="max price at which the car " "can be sold",
     )                                                                                   
     bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days")
+    date_of_sale = models.DateField(null=True, blank=True)
+
+    def return_on_trade_calc(self):
+        return self.car.resale_price - self.car.total_cost_calc()
+
+    def return_on_trade_calc_percent(self):
+        return self.return_on_trade_calc() / self.car.resale_price * 100
+
+    def return_on_trade_per_slot(self):
+        return self.return_on_trade_calc() / self.slots_available
+
+    def return_on_trade_per_slot_percent(self):
+        return self.return_on_trade_per_slot() / self.car.resale_price * 100
 
 
 class TradeUnit(Base):
     trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name="units")
     merchant = models.ForeignKey(CarMerchant, on_delete=models.CASCADE, related_name="units")
     share_percentage = models.DecimalField(
-        decimal_places=10,
+        decimal_places=2,
         editable=False,
         default=Decimal(0.00),
         max_digits=10,
-        max_length=10,
         help_text="the percentage of this unit in the trade",
     )
     slots_quantity = models.PositiveIntegerField(default=1)
     unit_value = models.DecimalField(
-        decimal_places=10,
+        decimal_places=2,
         editable=False,
         default=Decimal(0.00),
         max_digits=10,
-        max_length=10,
         help_text="The amount to be paid given the slots quantity x trade.price_per_slot",
     )
     vat_percentage = models.DecimalField(
         null=True,
         blank=True,
-        decimal_places=10,
+        decimal_places=2,
         editable=False,
         default=Decimal(0.00),
         max_digits=10,
-        max_length=10,
         help_text="the percentage of vat to be paid. calculated in relation to share " "percentage of tradeUnit in trade",
     )
     estimated_rot = models.DecimalField(
-        decimal_places=10,
+        decimal_places=2,
         editable=False,
         validators=[MinValueValidator(Decimal(0.00))],
         max_digits=10,
-        max_length=10,
         default=Decimal(0.00),
         help_text="the estimated return on trade",
     )
@@ -469,7 +488,7 @@ class TradeUnit(Base):
 
 class Disbursement(Base):
     trade_unit = models.ForeignKey(TradeUnit, on_delete=models.CASCADE, related_name="trade_units")
-    amount = models.DecimalField(decimal_places=5, editable=False, max_digits=15)
+    amount = models.DecimalField(decimal_places=5, editable=False, max_digits=10)
 
 
 class ActivityTypes(models.TextChoices):

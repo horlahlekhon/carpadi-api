@@ -161,6 +161,7 @@ class BankAccountViewSet(viewsets.ModelViewSet):
 class CarBrandSerializerViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = CarBrandSerializer
     queryset = CarBrand.objects.all()
+    permission_classes = (IsCarMerchantAndAuthed,)
 
 
 class CarViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
