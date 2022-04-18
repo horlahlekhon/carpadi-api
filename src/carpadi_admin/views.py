@@ -11,6 +11,7 @@ from src.carpadi_admin.filters import (
     DisbursementFilterAdmin,
     ActivityFilterAdmin,
     TradeFilterAdmin,
+    SparePartsFilter
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
@@ -19,6 +20,7 @@ from src.carpadi_admin.serializers import (
     DisbursementSerializerAdmin,
     ActivitySerializerAdmin,
     TradeSerializer,
+    SparePartsSerializer
 )
 from src.models.serializers import CarBrandSerializer, CarMerchantSerializer
 from src.models.models import (
@@ -30,6 +32,7 @@ from src.models.models import (
     Trade,
     Disbursement,
     Activity,
+    SpareParts
 )
 
 
@@ -103,3 +106,11 @@ class ActivityViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     queryset = Activity.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ActivityFilterAdmin
+
+
+class SparePartsViewSet(viewsets.ModelViewSet):
+    permissions = {'default': (IsAdminUser,)}
+    serializer_class = SparePartsSerializer
+    queryset = SpareParts.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = SparePartsFilter
