@@ -89,14 +89,13 @@ class ActivitySerializerAdmin(serializers.ModelSerializer):
 class DashboardSerializerAdmin(serializers.Serializer):
     average_bts = serializers.IntegerField()
     number_of_users_trading = serializers.IntegerField()
-    avg_trading_cash = serializers.DecimalField(max_digits=15, decimal_places=5)
+    total_trading_cash = serializers.DecimalField(max_digits=15, decimal_places=5)
     total_available_shares = serializers.IntegerField()
     available_shares_value = serializers.DecimalField(max_digits=15, decimal_places=5)
     cars_with_available_share = serializers.IntegerField()
     recent_trade_activities = serializers.JSONField()
     cars_summary = serializers.JSONField()
-    total_trading_cash = serializers.JSONField()
-    return_on_trades = serializers.JSONField()
+    rot_vs_ttc = serializers.JSONField()
 
     @staticmethod
     def filter_data(model_name, model_field: str = None, value: str = None, created: bool = False, month: datetime.date.month = None,
@@ -143,7 +142,7 @@ class DashboardSerializerAdmin(serializers.Serializer):
     def get_number_of_users_trading(self, trade_unit: TradeUnit,  month, year):
         return self.filter_data(trade_unit, year, month, created=True).aggregate(data=Sum('merchant')), 200
 
-    def get_avg_trading_cash(self, trade_unit: TradeUnit, month, year):
+    def get_total_trading_cash(self, trade_unit: TradeUnit, month, year):
         return self.filter_data(trade_unit, month, year, created=True).aggregate(data=Sum('unit_value')), 200
 
     # def get_available_shares_value(self, trade: Trade, month, year):
@@ -153,4 +152,5 @@ class DashboardSerializerAdmin(serializers.Serializer):
     def get_cars_with_available_shares(self, trade: Trade, month, year):
         return self.filter_data(trade, 'trade__status', 'ongoing', month, year).aggregate(data=Sum('car')), 200
 
-    # def
+    # def get_rot_vs_ttc(self):
+    #     return self.filter_data()
