@@ -250,7 +250,7 @@ class TradeUnitViewSet(viewsets.ModelViewSet):
     permission_classes = (IsCarMerchantAndAuthed,)
 
     def get_serializer_context(self):
-        ctx = super(CarMerchantViewSet, self).get_serializer_context()
+        ctx = super(TradeUnitViewSet, self).get_serializer_context()
         if self.action != "list":
             ctx["merchant"] = self.request.user.merchant
         return ctx

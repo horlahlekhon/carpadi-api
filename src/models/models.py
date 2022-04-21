@@ -126,6 +126,7 @@ class TransactionKinds(models.TextChoices):
     Withdrawal = "withdrawal", _("Withdrawal")
     Transfer = "transfer", _("Transfer")
     WalletTransfer = "wallet_transfer", _("Wallet Transfer")
+    Disbursement = "disbursement", _("Disbursement")
 
 
 class Wallet(Base):
@@ -136,7 +137,8 @@ class Wallet(Base):
         related_name="wallet",
         help_text="merchant user wallet that holds monetary balances",
     )
-    trading_cash = models.DecimalField(decimal_places=2, max_digits=16, editable=True)  # cash accross all pending trades
+    trading_cash = models.DecimalField(decimal_places=2, max_digits=16,
+                                       editable=True)  # cash accross all pending trades
     withdrawable_cash = models.DecimalField(
         decimal_places=2, max_digits=16, editable=True
     )  # the money you can withdraw that is unattached to any trade
@@ -146,14 +148,25 @@ class Wallet(Base):
     total_cash = models.DecimalField(decimal_places=2, max_digits=16, editable=True)  # accross all sections
 
     @transaction.atomic
+    # TODO maybe we should do balance check here
     def update_balance(self, amount, transaction_type: TransactionTypes, transaction_kind: TransactionKinds):
+        updated_fields = []
         if transaction_type == TransactionTypes.Debit and transaction_kind == TransactionKinds.Withdrawal:
-            self.balance -= amount
+            self.balance -= amount  # FIXME are we sure we arent drunk here.. what should we do if a withrdrawal is done
             self.withdrawable_cash -= amount
+            updated_fields = ['balance', 'withdrawable_cash']
         elif transaction_type == TransactionTypes.Credit and transaction_kind == TransactionKinds.Deposit:
             self.balance += amount
             self.withdrawable_cash += amount
-        self.save(update_fields=['balance', 'withdrawable_cash'])
+            updated_fields = ['balance', 'withdrawable_cash']
+        elif transaction_type == TransactionTypes.Debit and transaction_kind == TransactionKinds.WalletTransfer:
+            self.balance -= amount
+            updated_fields = ['balance']
+        else:
+            raise ValueError(
+                f"Invalid transaction type and kind combination {transaction_type} {transaction_kind}: Aborting"
+            )
+        self.save(update_fields=updated_fields)
 
 
 class TransactionStatus(models.TextChoices):
@@ -166,14 +179,17 @@ class TransactionStatus(models.TextChoices):
 class Transaction(Base):
     amount = models.DecimalField(max_digits=10, decimal_places=4)
     wallet = models.ForeignKey(
-        Wallet, on_delete=models.CASCADE, related_name="merchant_transactions", help_text="transactions carried out by merchant"
+        Wallet, on_delete=models.CASCADE, related_name="merchant_transactions",
+        help_text="transactions carried out by merchant"
     )
     transaction_type = models.CharField(max_length=10, choices=TransactionTypes.choices)
     transaction_reference = models.CharField(max_length=50, null=False, blank=False)
     transaction_description = models.CharField(max_length=50, null=True, blank=True)
-    transaction_status = models.CharField(max_length=10, choices=TransactionStatus.choices, default=TransactionStatus.Pending)
+    transaction_status = models.CharField(max_length=10, choices=TransactionStatus.choices,
+                                          default=TransactionStatus.Pending)
     transaction_response = models.JSONField(null=True, blank=True)
-    transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices, default=TransactionKinds.Deposit)
+    transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices,
+                                        default=TransactionKinds.Deposit)
     transaction_payment_link = models.URLField(max_length=200, null=True, blank=True)
 
     @classmethod
@@ -197,7 +213,8 @@ class BankAccount(Base):
     bank_name = models.CharField(max_length=50)
     account_number = models.CharField(max_length=10)
     merchant = models.ForeignKey(
-        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts", help_text="Bank account to remit merchant money to"
+        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts",
+        help_text="Bank account to remit merchant money to"
     )
 
 
@@ -260,6 +277,7 @@ class CarStates(models.TextChoices):
     Available = "available", _(
         "available for trading and sale",
     )
+    OngoingTrade = "ongoing_trade", _("Car is an ongoing trade")
     Bought = "bought", _(
         "bought",
     )
@@ -276,6 +294,7 @@ def validate_inspector(value: User):
             params={'value': value},
         )
 
+
 class CarTransmissionTypes(models.TextChoices):
     Manual = "manual", _(
         "Manual",
@@ -285,11 +304,33 @@ class CarTransmissionTypes(models.TextChoices):
     )
 
 
+class FuelTypes(models.TextChoices):
+    Petrol = "petrol", _(
+        "Petrol",
+    )
+    Diesel = "diesel", _(
+        "Diesel",
+    )
+    CNG = "cng", _(
+        "CNG",
+    )
+    LPG = "lpg", _(
+        "LPG",
+    )
+    Electric = "electric", _(
+        "Electric",
+    )
+    Hybrid = "hybrid", _(
+        "Hybrid",
+    )
+
+
 class Car(Base):
     brand = models.ForeignKey(CarBrand, on_delete=models.SET_NULL, null=True)
     status = models.CharField(choices=CarStates.choices, max_length=30, default=CarStates.New)
     vin = models.CharField(max_length=17)
-    pictures = models.URLField(help_text="url of the folder where the images for the car is located.", null=True, blank=True)
+    pictures = models.URLField(help_text="url of the folder where the images for the car is located.", null=True,
+                               blank=True)
     car_inspector = models.OneToOneField(
         get_user_model(),
         on_delete=models.SET_NULL,
@@ -325,13 +366,13 @@ class Car(Base):
         max_digits=10,
         help_text="Total cost = offering_price + cost_of_repairs + maintainance_cost + misc",
     )
-    maintainance_cost = models.DecimalField(
-        decimal_places=2,
-        editable=False,
-        max_digits=10,
-        help_text="fuel, parking, mechanic workmanship costs",
-        null=True, blank=True
-    )
+    # maintainance_cost = models.DecimalField(
+    #     decimal_places=2,
+    #     editable=False,
+    #     max_digits=10,
+    #     help_text="fuel, parking, mechanic workmanship costs",
+    #     null=True, blank=True
+    # )
     resale_price = models.DecimalField(
         decimal_places=2, max_digits=10, max_length=10, help_text="price presented to merchants", null=True, blank=True
     )
@@ -344,9 +385,13 @@ class Car(Base):
         null=True, blank=True
     )
     car_type = models.CharField(choices=CarTypes.choices, max_length=30, null=False, blank=False)
+    fuel_type = models.CharField(choices=FuelTypes.choices, max_length=30, null=False, blank=False)
+    mileage = models.IntegerField(null=True, blank=True)
+    age = models.IntegerField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
 
     def maintenance_cost_calc(self):
-        return self.maintenances.all().aggregate(sum=Sum("cost")).get("sum", Decimal(0))
+        return self.maintenances.all().aggregate(sum=Sum("cost")).get("sum") or Decimal(0.00)
 
     def total_cost_calc(self):
         return self.offering_price + self.maintenance_cost_calc()
@@ -390,14 +435,14 @@ class TradeStates(models.TextChoices):
 
 
 class Trade(Base):
-    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="trades")
+    car = models.OneToOneField(Car, on_delete=models.CASCADE, related_name="trades")
     slots_available = models.PositiveIntegerField(default=0)
-    slots_purchased = models.PositiveIntegerField(default=0)
+    # slots_purchased = models.PositiveIntegerField(default=0)
     return_on_trade = models.DecimalField(
         decimal_places=2,
         max_digits=10,
         default=Decimal(0.00),
-        validators=[MinValueValidator(Decimal(0.00))], help_text="The actual profit that was made from car " ,
+        validators=[MinValueValidator(Decimal(0.00))], help_text="The actual profit that was made from car ",
     )
     estimated_return_on_trade = models.DecimalField(
         decimal_places=2, default=Decimal(0.00), validators=[MinValueValidator(Decimal(0.00))], max_digits=10,
@@ -428,7 +473,7 @@ class Trade(Base):
         max_digits=10,
         default=Decimal(0.00),
         help_text="max price at which the car " "can be sold",
-    )                                                                                   
+    )
     bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days")
     date_of_sale = models.DateField(null=True, blank=True)
 
@@ -442,7 +487,23 @@ class Trade(Base):
         return self.return_on_trade_calc() / self.slots_available
 
     def return_on_trade_per_slot_percent(self):
-        return self.return_on_trade_per_slot() / self.car.resale_price * 100
+        return self.return_on_trade_calc_percent() / self.slots_available
+
+    def slots_purchased(self):
+        # TODO: this is a hack, fix it using annotations
+        slots_purchased = sum([unit.slots_quantity for unit in self.units.all()])
+        return slots_purchased
+
+    def remaining_slots(self):
+        slots_purchased = sum([unit.slots_quantity for unit in self.units.all()])
+        return self.slots_available - slots_purchased
+
+    def run_disbursement(self):
+        if self.trade_status == TradeStates.Purchased:
+            for unit in self.units.all():
+                unit.disbursement()
+        else:
+            raise ValueError("Trade is not in purchased state")
 
 
 class TradeUnit(Base):
@@ -480,15 +541,38 @@ class TradeUnit(Base):
         default=Decimal(0.00),
         help_text="the estimated return on trade",
     )
-    transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, related_name="trade_units", null=True, blank=True)
+    transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, related_name="trade_units", null=True,
+                                    blank=True)
 
     class Meta:
         ordering = ["-slots_quantity"]
 
+    def disbursement(self):
+        return Disbursement.objects.create(self)
+
+
+class DisbursementStates(models.TextChoices):
+    Ongoing = "Ongoing"
+    Completed = "Completed"
+
 
 class Disbursement(Base):
-    trade_unit = models.ForeignKey(TradeUnit, on_delete=models.CASCADE, related_name="trade_units")
+    trade_unit = models.OneToOneField(TradeUnit, on_delete=models.CASCADE, related_name="trade_unit")
     amount = models.DecimalField(decimal_places=5, editable=False, max_digits=10)
+    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, related_name="disbursements", null=True,blank=True)
+    disbursement_status = models.CharField(choices=DisbursementStates.choices, max_length=20, default=DisbursementStates.Ongoing)
+
+    def save(self, *args, **kwargs):
+        ref = f"cp-db-{self.id}"
+        self.amount = self.trade_unit.estimated_rot
+        self.transaction = Transaction.objects.create(
+            wallet=self.trade_unit.merchant.wallet, amount=self.amount,
+            transaction_type=TransactionTypes.Credit, transaction_reference=ref,
+            transaction_status=TransactionStatus.Pending,
+            transaction_kind=TransactionKinds.Disbursement)
+        # TODO: initiate payment from flutterwave.. change the disbusement status
+        #  to completed after payment is successful
+        super().save(*args, **kwargs)
 
 
 class ActivityTypes(models.TextChoices):

@@ -12,7 +12,7 @@ from src.models.models import (
     Transaction,
     TransactionStatus,
     Activity,
-    ActivityTypes,
+    ActivityTypes, Trade, TradeStates,
 )
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
 from django_rest_passwordreset.models import ResetPasswordToken
@@ -134,15 +134,26 @@ def complete_transaction(sender, **kwargs):
         )
 
 
-def trade_unit_completed(sender, instance, created, **kwargs):
-    trd: TradeUnit = kwargs.get("instance")
+def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
+    """
+    Handles trade unit creation completion. it handles things like creation of activity for the trade unit
+    check if trade has been fully purchased and update Trade state accordingly
+    and also sends an email to the merchant
+    """
     if created:
         activity = Activity.objects.create(
             activity_type=ActivityTypes.TradeUnit,
-            activity=trd,
-            description=f"Activity Type: Purchase of Unit Description: {trd.slots_quantity} ({trd.share_percentage})  of \
-                    {trd.trade.car.brand.name} {trd.trade.car.brand.model} VIN: {trd.trade.car.vin} valued at {trd.unit_value} naira only.",
+            activity=instance,
+            description=f"Activity Type: Purchase of Unit Description: "
+                        f"{instance.slots_quantity} ({instance.share_percentage})  of \
+                    {instance.trade.car.brand.name} {instance.trade.car.brand.model}"
+                        f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
         )
+        trade: Trade = instance.trade
+        if trade.slots_available == trade.slots_purchased():
+            trade.trade_status = TradeStates.Purchased
+            trade.save(update_fields=["trade_status"])
+            trade.run_disbursement()
 
 
 def disbursement_completed(sender, instance, created, **kwargs):

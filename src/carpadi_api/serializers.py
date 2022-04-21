@@ -225,6 +225,10 @@ class TransactionSerializer(serializers.ModelSerializer):
 class TradeSerializer(serializers.ModelSerializer):
     remaining_slots = serializers.SerializerMethodField()
     trade_status = serializers.SerializerMethodField()
+    slots_purchased = serializers.SerializerMethodField()
+    return_on_trade_percentage = serializers.SerializerMethodField()
+    return_on_trade = serializers.SerializerMethodField()
+
     class Meta:
         model = Trade
         fields = "__all__"
@@ -240,20 +244,24 @@ class TradeSerializer(serializers.ModelSerializer):
             "car",
         )
 
+    def get_slots_purchased(self, obj):
+        return obj.slots_purchased()
+
+
+    def get_return_on_trade(self, obj: Trade):
+        return obj.return_on_trade_calc()
+
+    def get_return_on_trade_percentage(self, obj: Trade):
+        return obj.return_on_trade_calc_percent()
+
     def get_trade_status(self, obj: Trade):
-        if obj.units.count() == obj.slots_available:
-            return TradeStates.Purchased
-        elif obj.units.count() >= 0 and obj.units.count() != obj.slots_available:
-            return TradeStates.Ongoing
-        else:
-            raise exceptions.APIException("Error, cannot determine trade status")
+        return obj.trade_status
 
     def calculate_price_per_slot(self, car_price, slots_availble):
         return car_price / slots_availble
 
     def get_remaining_slots(self, trade: Trade):
-        slots_purchased = TradeUnit.objects.filter(trade=trade).count()
-        return trade.slots_available - slots_purchased
+        return trade.remaining_slots()
 
     def get_bts_time(self, trade: Trade):
         if trade.date_of_sale:
@@ -267,68 +275,63 @@ class TradeSerializer(serializers.ModelSerializer):
         raise exceptions.APIException("Cannot update a trade")
 
 
-
 class TradeUnitSerializer(serializers.ModelSerializer):
+    merchant = serializers.PrimaryKeyRelatedField(queryset=CarMerchant.objects.all(), required=False)
+
     class Meta:
         model = TradeUnit
         fields = "__all__"
         read_only_fields = (
-        'created', 'modified', "id", "unit_value", "vat_percentage", "share_percentage", "estimated_rot")
-
-    def _unit_value(self, merchant: CarMerchant, trade: Trade, wallet: Wallet, attrs: dict):
-        # merchant = self.context["merchant"]
-        # wallet: Wallet = merchant.wallet
-        # trade_ = Trade.objects.filter(id=attrs.get("trade"))
-        # if len(trade_) < 1:
-        #     raise serializers.ValidationError("Trade matching query does not exist")
-        # trade: Trade = trade_[0]
-        unit_value = trade.price_per_slot * attrs["slots_quantity"]
-
-        if len(trade) < 1 or unit_value > wallet.balance:
-            raise serializers.ValidationError("Wallet balance is insufficient for this transaction")
-        return unit_value
+            'created', 'modified', "id", "unit_value", "vat_percentage", "share_percentage", "estimated_rot")
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
         merchant = self.context["merchant"]
         wallet: Wallet = merchant.wallet
-        trade_ = Trade.objects.filter(id=attrs.get("trade"))
-        if len(trade_) < 1:
-            raise serializers.ValidationError("Trade matching query does not exist")
-        trade: Trade = trade_[0]
+        trade: Trade = attrs.get("trade")
         if trade.trade_status != TradeStates.Ongoing:
             raise serializers.ValidationError("Trade is not currently open")
-        if trade.remaining_slots < attrs["slots_quantity"]:
-            raise serializers.ValidationError("Trade does not have enough slots available")
-        unit_value = self._unit_value(merchant, trade, wallet, attrs)
-        rot = (trade.estimated_return_on_trade / trade.slots_available) * attrs["slots_quantity"]
-        attrs["unit_value"] = unit_value
+        remaining_slots = trade.remaining_slots()
+        if remaining_slots < attrs["slots_quantity"]:
+            raise serializers.ValidationError({"trade": "Trade does not have enough slots available"})
+        # unit_value = self._unit_value(merchant, trade, wallet, attrs)
+        rot = trade.return_on_trade_per_slot() * attrs["slots_quantity"]
+        # attrs["unit_value"] = unit_value
+        unit_value = trade.price_per_slot * attrs["slots_quantity"]
+        if unit_value > wallet.balance:
+            raise serializers.ValidationError("Wallet balance is insufficient for this transaction")
         attrs["trade"] = trade
         attrs["merchant"] = merchant
         attrs["estimated_rot"] = rot
         return attrs
 
-    @transaction.atomic
+    @transaction.atomic()
     def create(self, validated_data):
         trade: Trade = validated_data["trade"]
+        merchant: CarMerchant = validated_data["merchant"]
         share_percentage = (trade.slots_available / validated_data["slots_quantity"]) * 100
         unit = TradeUnit.objects.create(
             trade=trade,
-            merchant=validated_data["merchant"],
+            merchant=merchant,
             share_percentage=share_percentage,
             slots_quantity=validated_data["slots_quantity"],
             estimated_rot=validated_data["estimated_rot"],
+            unit_value=trade.price_per_slot * validated_data["slots_quantity"],
         )
         ref = f"CP-{uuid4()}"
-        Transaction.objects.create(
-            transaction_reference=ref,
-            transaction_kind=TransactionKinds.WalletTransfer,
-            transaction_status=TransactionStatus.Success,
-            transaction_description="Trade Unit Purchase",
-            # noqa
-            transaction_type=TransactionTypes.Debit,
-            amount=unit.unit_value,
-            wallet=trade.trade_status,
-            transaction_payment_link=None,
-        )
+        tx = Transaction.objects.create(
+                transaction_reference=ref,
+                transaction_kind=TransactionKinds.WalletTransfer,
+                transaction_status=TransactionStatus.Success,
+                transaction_description="Trade Unit Purchase",
+                # noqa
+                transaction_type=TransactionTypes.Debit,
+                amount=unit.unit_value,
+                wallet=merchant.wallet,
+                transaction_payment_link=None,
+            )
+        unit.transaction = tx
+        unit.save(update_fields=["transaction"])
+        unit.refresh_from_db()
+        tx.wallet.update_balance(tx.amount, tx.transaction_type, tx.transaction_kind)
         return unit

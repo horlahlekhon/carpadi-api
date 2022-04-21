@@ -61,9 +61,12 @@ class CarSerializer(serializers.ModelSerializer):
         else:
             # we are doing create
             if value == CarStates.Inspected:
-                if not self.initial_data.get("inspection_report") and not self.initial_data.get("inspector"):
+                if not self.initial_data.get("inspection_report") :
                     raise serializers.ValidationError(
                         "Inspection report is required for a car with status of inspected")
+                if not self.initial_data.get("car_inspector"):
+                    raise serializers.ValidationError(
+                        "A valid car inspector is required for cars that have been inspected")
             if value == CarStates.Available:
                 if not self.initial_data.get("inspection_report"):
                     raise serializers.ValidationError(
@@ -80,6 +83,7 @@ class CarSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Aye! You cannot create set the resale price of a car while creating it")
         return value
 
+    @atomic()
     def create(self, validated_data):
         car = Car.objects.create(**validated_data)
         return car
@@ -119,6 +123,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     remaining_slots = serializers.SerializerMethodField()
     trade_status = serializers.SerializerMethodField()
     return_on_trade = serializers.SerializerMethodField()
+    return_on_trade_percentage = serializers.SerializerMethodField()
 
     class Meta:
         model = Trade
@@ -137,10 +142,14 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     def get_return_on_trade(self, obj: Trade):
         return obj.return_on_trade_calc()
 
+    def get_return_on_trade_percentage(self, obj: Trade):
+        return obj.return_on_trade_calc_percent()
+
     def get_trade_status(self, obj: Trade):
+        sum_of_slots = sum([unit.slots_purchased for unit in obj.units.all()])
         if obj.units.count() == obj.slots_available:
             return TradeStates.Purchased
-        elif obj.units.count() >= 0 and obj.units.count() != obj.slots_available:
+        elif sum_of_slots >= 0 and obj.units.count() != obj.slots_available:
             return TradeStates.Ongoing
         else:
             raise exceptions.APIException("Error, cannot determine trade status")
@@ -149,7 +158,8 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         return car_price / slots_availble
 
     def get_remaining_slots(self, trade: Trade):
-        slots_purchased = TradeUnit.objects.filter(trade=trade).count()
+        # TODO: this is a hack, fix it using annotations
+        slots_purchased = sum([unit.slots_purchased for unit in trade.units.all()])
         return trade.slots_available - slots_purchased
 
     def get_bts_time(self, trade: Trade):
@@ -218,11 +228,11 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
             return spare_part
         return value
 
-    @atomic
+    @atomic()
     def create(self, validated_data):
         car: Car = validated_data["car"]
         if car.status == CarStates.Available:
-            raise serializers.ValidationError("new maintenance cannot be created for an available car")
+            raise serializers.ValidationError({"error": "new maintenance cannot be created for an available car"})
         maintenance_type = validated_data["type"]
         if maintenance_type == CarMaintenanceTypes.SparePart:
             part: SpareParts = validated_data["spare_part_id"]
