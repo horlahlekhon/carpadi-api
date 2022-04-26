@@ -152,7 +152,10 @@ class Wallet(Base):
     def update_balance(self, amount, transaction_type: TransactionTypes, transaction_kind: TransactionKinds):
         updated_fields = []
         if transaction_type == TransactionTypes.Debit and transaction_kind == TransactionKinds.Withdrawal:
-            self.balance -= amount  # FIXME are we sure we arent drunk here.. what should we do if a withrdrawal is done
+            # FIXME are we sure we arent drunk here.. what should we do if a withdrawal is done
+            if self.withdrawable_cash < amount or self.balance < amount:
+                raise ValueError("You cannot withdraw more than you have")
+            self.balance -= amount
             self.withdrawable_cash -= amount
             updated_fields = ['balance', 'withdrawable_cash']
         elif transaction_type == TransactionTypes.Credit and transaction_kind == TransactionKinds.Deposit:
@@ -160,6 +163,8 @@ class Wallet(Base):
             self.withdrawable_cash += amount
             updated_fields = ['balance', 'withdrawable_cash']
         elif transaction_type == TransactionTypes.Debit and transaction_kind == TransactionKinds.WalletTransfer:
+            if self.balance < amount:
+                raise ValueError("You do not have sufficient funds for this transaction")
             self.balance -= amount
             updated_fields = ['balance']
         else:
@@ -331,7 +336,7 @@ class Car(Base):
     vin = models.CharField(max_length=17)
     pictures = models.URLField(help_text="url of the folder where the images for the car is located.", null=True,
                                blank=True)
-    car_inspector = models.OneToOneField(
+    car_inspector = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,
         null=True,
@@ -396,6 +401,14 @@ class Car(Base):
     def total_cost_calc(self):
         return self.offering_price + self.maintenance_cost_calc()
 
+    def margin_calc(self):
+        return self.total_cost_calc() - self.offering_price
+
+    def update_on_sold(self):
+        self.status = CarStates.Sold
+        self.margin = self.margin_calc()
+        self.save(update_fields=["status", "margin"])
+
 
 class SpareParts(Base):
     name = models.CharField(max_length=100)
@@ -432,10 +445,11 @@ class TradeStates(models.TextChoices):
     Ongoing = "ongoing", _("Slots are yet to be fully bought")
     Completed = "completed", _("Car has been sold and returns sorted to merchants")
     Purchased = "purchased", _("All slots have been bought by merchants")
+    Closed = "closed", _("All slots have been bought by merchants, car has been sold and disbursements made")
 
 
 class Trade(Base):
-    car = models.OneToOneField(Car, on_delete=models.CASCADE, related_name="trades")
+    car = models.OneToOneField(Car, on_delete=models.CASCADE, related_name="trade")
     slots_available = models.PositiveIntegerField(default=0)
     # slots_purchased = models.PositiveIntegerField(default=0)
     return_on_trade = models.DecimalField(
@@ -477,11 +491,15 @@ class Trade(Base):
     bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days")
     date_of_sale = models.DateField(null=True, blank=True)
 
+    @property
+    def resale_price(self):
+        return self.car.resale_price if self.car.resale_price else self.min_sale_price
+
     def return_on_trade_calc(self):
-        return self.car.resale_price - self.car.total_cost_calc()
+        return self.resale_price - self.car.total_cost_calc()
 
     def return_on_trade_calc_percent(self):
-        return self.return_on_trade_calc() / self.car.resale_price * 100
+        return self.return_on_trade_calc() / self.resale_price * 100
 
     def return_on_trade_per_slot(self):
         return self.return_on_trade_calc() / self.slots_available
@@ -498,12 +516,15 @@ class Trade(Base):
         slots_purchased = sum([unit.slots_quantity for unit in self.units.all()])
         return self.slots_available - slots_purchased
 
+    def total_payout(self):
+        return self.return_on_trade_per_slot() * self.slots_available
+
     def run_disbursement(self):
-        if self.trade_status == TradeStates.Purchased:
+        if self.trade_status == TradeStates.Completed:
             for unit in self.units.all():
-                unit.disbursement()
+                unit.disburse()
         else:
-            raise ValueError("Trade is not in purchased state")
+            raise ValueError("Trade is not in completed state")
 
 
 class TradeUnit(Base):
@@ -547,8 +568,8 @@ class TradeUnit(Base):
     class Meta:
         ordering = ["-slots_quantity"]
 
-    def disbursement(self):
-        return Disbursement.objects.create(self)
+    def disburse(self):
+        return Disbursement.objects.create(trade_unit=self)
 
 
 class DisbursementStates(models.TextChoices):
@@ -557,10 +578,12 @@ class DisbursementStates(models.TextChoices):
 
 
 class Disbursement(Base):
-    trade_unit = models.OneToOneField(TradeUnit, on_delete=models.CASCADE, related_name="trade_unit")
+    trade_unit = models.OneToOneField(TradeUnit, on_delete=models.CASCADE, related_name="disbursement")
     amount = models.DecimalField(decimal_places=5, editable=False, max_digits=10)
-    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, related_name="disbursements", null=True,blank=True)
-    disbursement_status = models.CharField(choices=DisbursementStates.choices, max_length=20, default=DisbursementStates.Ongoing)
+    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, related_name="disbursement", null=True,
+                                       blank=True)
+    disbursement_status = models.CharField(choices=DisbursementStates.choices, max_length=20,
+                                           default=DisbursementStates.Ongoing)
 
     def save(self, *args, **kwargs):
         ref = f"cp-db-{self.id}"
@@ -570,9 +593,16 @@ class Disbursement(Base):
             transaction_type=TransactionTypes.Credit, transaction_reference=ref,
             transaction_status=TransactionStatus.Pending,
             transaction_kind=TransactionKinds.Disbursement)
-        # TODO: initiate payment from flutterwave.. change the disbusement status
+        # TODO: initiate payment from flutterwave.. change the disbursement status
         #  to completed after payment is successful
-        super().save(*args, **kwargs)
+        # TODO also we need to change the disbursement status to completed after
+        # TODO payment is successful and the transaction status to successful
+        # TODO and lastly we need to update the trade status to closed
+        #  after disbursement has been confirmed and payment made
+        self.transaction.wallet \
+            .update_balance(amount=self.amount, transaction_type=TransactionTypes.Credit,
+                            transaction_kind=TransactionKinds.Disbursement)
+        return super().save(*args, **kwargs)
 
 
 class ActivityTypes(models.TextChoices):

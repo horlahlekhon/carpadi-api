@@ -4,7 +4,7 @@ from pyexpat import model
 
 from rest_framework import serializers, exceptions
 from src.models.models import CarMerchant, Car, Wallet, Transaction, Trade, Disbursement, Activity, TradeStates, \
-    TradeUnit, CarStates, CarMaintenance, CarMaintenanceTypes, SpareParts, MiscellaneousExpenses
+    TradeUnit, CarStates, CarMaintenance, CarMaintenanceTypes, SpareParts, MiscellaneousExpenses, DisbursementStates
 from django.utils import timezone
 from django.db.transaction import atomic
 from django.db.models import Sum
@@ -61,7 +61,7 @@ class CarSerializer(serializers.ModelSerializer):
         else:
             # we are doing create
             if value == CarStates.Inspected:
-                if not self.initial_data.get("inspection_report") :
+                if not self.initial_data.get("inspection_report"):
                     raise serializers.ValidationError(
                         "Inspection report is required for a car with status of inspected")
                 if not self.initial_data.get("car_inspector"):
@@ -119,11 +119,21 @@ class TransactionSerializer(serializers.ModelSerializer):
         )
 
 
+class CarSerializerField(serializers.PrimaryKeyRelatedField):
+
+    def to_internal_value(self, data):
+        car: Car = super().to_internal_value(data)
+        if car.trade:
+            raise serializers.ValidationError("This car is being traded already")
+        return car
+
+
 class TradeSerializerAdmin(serializers.ModelSerializer):
     remaining_slots = serializers.SerializerMethodField()
-    trade_status = serializers.SerializerMethodField()
+    # trade_status = serializers.SerializerMethodField()
     return_on_trade = serializers.SerializerMethodField()
     return_on_trade_percentage = serializers.SerializerMethodField()
+    car = CarSerializerField(queryset=Car.objects.all())
 
     class Meta:
         model = Trade
@@ -135,9 +145,11 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             "traded_slots",
             "remaining_slots",
             "total_slots",
-            "price_per_slot",
-            "trade_status",
+            "price_per_slot"
         )
+        extra_kwargs = {"car":
+                            {"error_messages": {"required": "Car to trade on is required", "unique": "Car already "
+                                                                                                     "traded"}}}
 
     def get_return_on_trade(self, obj: Trade):
         return obj.return_on_trade_calc()
@@ -145,27 +157,39 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     def get_return_on_trade_percentage(self, obj: Trade):
         return obj.return_on_trade_calc_percent()
 
-    def get_trade_status(self, obj: Trade):
-        sum_of_slots = sum([unit.slots_purchased for unit in obj.units.all()])
-        if obj.units.count() == obj.slots_available:
-            return TradeStates.Purchased
-        elif sum_of_slots >= 0 and obj.units.count() != obj.slots_available:
-            return TradeStates.Ongoing
-        else:
-            raise exceptions.APIException("Error, cannot determine trade status")
+    # def get_trade_status(self, obj: Trade):
+    #     sum_of_slots = sum([unit.slots_quantity for unit in obj.units.all()])
+    #     if obj.units.count() == obj.slots_available:
+    #         return TradeStates.Purchased
+    #     elif sum_of_slots >= 0 and obj.units.count() != obj.slots_available:
+    #         return TradeStates.Ongoing
+    #     else:
+    #         raise exceptions.APIException("Error, cannot determine trade status")
 
     def calculate_price_per_slot(self, car_price, slots_availble):
         return car_price / slots_availble
 
     def get_remaining_slots(self, trade: Trade):
         # TODO: this is a hack, fix it using annotations
-        slots_purchased = sum([unit.slots_purchased for unit in trade.units.all()])
+        slots_purchased = sum([unit.slots_quantity for unit in trade.units.all()])
         return trade.slots_available - slots_purchased
 
     def get_bts_time(self, trade: Trade):
         if trade.date_of_sale:
             return (trade.created.date() - trade.date_of_sale).days
         return (trade.created.date() - timezone.now()).days
+
+    def validate_trade_status(self, attr):
+        trade: Trade = self.instance
+        if not trade:  # we are creating
+            if attr == TradeStates.Completed:
+                raise serializers.ValidationError("Cannot set trade status to completed when creating a trade")
+        else:
+            if attr == TradeStates.Completed:
+                if not trade.car.resale_price:
+                    raise serializers \
+                        .ValidationError("Please add resale price to the car first before completing the trade")
+        return attr
 
     def validate_car(self, value):
         if value.status != CarStates.Available:
@@ -188,6 +212,33 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         car: Car = validated_data["car"]
         price_per_slot = self.calculate_price_per_slot(car.resale_price, validated_data["slots_available"])
         return Trade.objects.create(slots_purchased=0, **validated_data, price_per_slot=price_per_slot)
+
+    def complete_trade(self, trade: Trade):
+        successful_disbursements = trade \
+            .units \
+            .annotate(is_disbursed="disbursement__disbursement_status") \
+            .filter(is_disbursed=DisbursementStates.Completed).count()
+        total_disbursed = trade.units \
+            .annotate(total_disbursed=Sum('disbursements__amount')) \
+            .aggregate(total_disbursed=Sum('total_disbursed')) \
+            .get('total_disbursed')
+
+        if successful_disbursements == trade.units.count() and total_disbursed == trade.total_payout():
+            trade.trade_status = TradeStates.Closed
+            trade.save(update_fields=["trade_status"])
+            car: Car = trade.car
+            car.update_on_sold()
+
+
+
+    @atomic()
+    def update(self, instance: Trade, validated_data):
+        resp = super(TradeSerializerAdmin, self).update(instance, validated_data)
+        if validated_data.get("trade_status") and validated_data.get("trade_status") == TradeStates.Completed:
+            instance.run_disbursement()
+            # check disbursements and update trade state
+            self.complete_trade(instance)
+        return resp
 
 
 class DisbursementSerializerAdmin(serializers.ModelSerializer):
@@ -244,4 +295,3 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
             misc = MiscellaneousExpenses.objects.create(estimated_price=cost,
                                                         description=description, name=validated_data["name"])
             return CarMaintenance.objects.create(car=car, type=maintenance_type, cost=cost, maintenance=misc)
-

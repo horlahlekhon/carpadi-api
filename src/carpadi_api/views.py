@@ -132,7 +132,7 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         user: User = self.request.user
         serializer.save(merchant=user.merchant)
 
-    @transaction.atomic
+    @transaction.atomic()
     @action(detail=False, methods=['get'], url_path='verify-transaction', url_name='verify_transaction')
     def verify_transaction(self, request):
         tx_ref = request.query_params.get('tx_ref')

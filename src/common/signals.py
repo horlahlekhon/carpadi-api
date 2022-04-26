@@ -12,12 +12,13 @@ from src.models.models import (
     Transaction,
     TransactionStatus,
     Activity,
-    ActivityTypes, Trade, TradeStates,
+    ActivityTypes, Trade, TradeStates, DisbursementStates, CarStates,
 )
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
 from django_rest_passwordreset.models import ResetPasswordToken
 from src.config.common import OTP_EXPIRY
-
+from django.db.models import Sum
+from rest_framework.exceptions import APIException
 
 class DisableSignals(object):
     """
@@ -153,15 +154,18 @@ def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
         if trade.slots_available == trade.slots_purchased():
             trade.trade_status = TradeStates.Purchased
             trade.save(update_fields=["trade_status"])
-            trade.run_disbursement()
 
 
 def disbursement_completed(sender, instance, created, **kwargs):
-    dis: Disbursement = kwargs.get("instance")
+    dis: Disbursement = instance
     if created:
         activity = Activity.objects.create(
             activity_type=ActivityTypes.Disbursement,
             activity=dis,
-            description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} naira for {dis.trade_units.slots_quantity} units \
-                    owned in {dis.trade_units.trade.car.brand.name} {dis.trade_units.trade.car.brand.model} VIN: {dis.trade_units.trade.car.vin}",
+            description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} "
+                        f"naira for {dis.trade_unit.slots_quantity} units \
+                    owned in {dis.trade_unit.trade.car.brand.name}"
+                        f" {dis.trade_unit.trade.car.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
         )
+#         update trade status
+
