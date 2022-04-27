@@ -321,7 +321,7 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         ref = f"CP-{uuid4()}"
         tx = Transaction.objects.create(
                 transaction_reference=ref,
-                transaction_kind=TransactionKinds.WalletTransfer,
+                transaction_kind=TransactionKinds.TradeUnitPurchases,
                 transaction_status=TransactionStatus.Success,
                 transaction_description="Trade Unit Purchase",
                 # noqa
@@ -333,5 +333,5 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         unit.transaction = tx
         unit.save(update_fields=["transaction"])
         unit.refresh_from_db()
-        tx.wallet.update_balance(tx.amount, tx.transaction_type, tx.transaction_kind)
+        tx.wallet.update_balance(transaction=tx)
         return unit

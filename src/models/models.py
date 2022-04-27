@@ -14,6 +14,8 @@ from easy_thumbnails.signals import saved_file
 from model_utils.models import UUIDModel, TimeStampedModel
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import transaction
+
+from src.carpadi_admin.utils import validate_inspector, checkout_transaction_validator
 from src.config.common import OTP_EXPIRY
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -125,7 +127,7 @@ class TransactionKinds(models.TextChoices):
     Deposit = "deposit", _("Deposit")
     Withdrawal = "withdrawal", _("Withdrawal")
     Transfer = "transfer", _("Transfer")
-    WalletTransfer = "wallet_transfer", _("Wallet Transfer")
+    TradeUnitPurchases = "trade_unit_purchases", _("Wallet Deduction for trade unit purchases")
     Disbursement = "disbursement", _("Disbursement")
 
 
@@ -138,40 +140,68 @@ class Wallet(Base):
         help_text="merchant user wallet that holds monetary balances",
     )
     trading_cash = models.DecimalField(decimal_places=2, max_digits=16,
-                                       editable=True)  # cash accross all pending trades
+                                       editable=True)  # cash across all pending trades
     withdrawable_cash = models.DecimalField(
         decimal_places=2, max_digits=16, editable=True
     )  # the money you can withdraw that is unattached to any trade
     unsettled_cash = models.DecimalField(
         decimal_places=2, max_digits=16, editable=True
     )  # money you requested to withdraw, i.e pending credit
-    total_cash = models.DecimalField(decimal_places=2, max_digits=16, editable=True)  # accross all sections
+    total_cash = models.DecimalField(decimal_places=2, max_digits=16, editable=True)  # across all sections
 
-    @transaction.atomic
-    # TODO maybe we should do balance check here
-    def update_balance(self, amount, transaction_type: TransactionTypes, transaction_kind: TransactionKinds):
+    def update_balance(self, tx: "Transaction"):
         updated_fields = []
-        if transaction_type == TransactionTypes.Debit and transaction_kind == TransactionKinds.Withdrawal:
-            # FIXME are we sure we arent drunk here.. what should we do if a withdrawal is done
-            if self.withdrawable_cash < amount or self.balance < amount:
-                raise ValueError("You cannot withdraw more than you have")
-            self.balance -= amount
-            self.withdrawable_cash -= amount
-            updated_fields = ['balance', 'withdrawable_cash']
-        elif transaction_type == TransactionTypes.Credit and transaction_kind == TransactionKinds.Deposit:
-            self.balance += amount
-            self.withdrawable_cash += amount
-            updated_fields = ['balance', 'withdrawable_cash']
-        elif transaction_type == TransactionTypes.Debit and transaction_kind == TransactionKinds.WalletTransfer:
-            if self.balance < amount:
-                raise ValueError("You do not have sufficient funds for this transaction")
-            self.balance -= amount
-            updated_fields = ['balance']
+        if tx.transaction_kind == TransactionKinds.Deposit and tx.transaction_type == TransactionTypes.Credit:
+            self.withdrawable_cash += tx.amount
+            updated_fields.append("withdrawable_cash")
+        elif tx.transaction_kind == TransactionKinds.Withdrawal and tx.transaction_type == TransactionTypes.Debit:
+            self.withdrawable_cash -= tx.amount
+            updated_fields.append("withdrawable_cash")
+        elif tx.transaction_kind == TransactionKinds.Disbursement and tx.transaction_type == TransactionTypes.Credit:
+            db: "Disbursement" = tx.disbursement
+            if db.disbursement_status == "unsettled":
+                self.unsettled_cash += tx.amount
+                self.trading_cash -= db.trade_unit.unit_value
+                updated_fields = updated_fields + ["unsettled_cash", "trading_cash"]
+            elif db.disbursement_status == "settled":
+                self.withdrawable_cash += tx.amount
+                self.unsettled_cash -= tx.amount
+                updated_fields = updated_fields + ["withdrawable_cash", "unsettled_cash"]
+            else:
+                raise ValidationError("Invalid disbursement status")
+        elif tx.transaction_kind == TransactionKinds.TradeUnitPurchases and\
+                tx.transaction_type == TransactionTypes.Debit:
+            self.trading_cash += tx.amount
+            self.withdrawable_cash -= tx.amount
         else:
-            raise ValueError(
-                f"Invalid transaction type and kind combination {transaction_type} {transaction_kind}: Aborting"
-            )
-        self.save(update_fields=updated_fields)
+            raise ValidationError("Invalid transaction type and kind combination")
+
+    # @transaction.atomic
+    # # TODO maybe we should do balance check here
+    # # FIXME make this take a transaction object and update the balance
+    # def update_balance(self, amount, transaction_type: TransactionTypes, transaction_kind: TransactionKinds):
+    #     updated_fields = []
+    #     if transaction_type == TransactionTypes.Debit and transaction_kind == TransactionKinds.Withdrawal:
+    #         # FIXME are we sure we arent drunk here.. what should we do if a withdrawal is done
+    #         if self.withdrawable_cash < amount or self.balance < amount:
+    #             raise ValueError("You cannot withdraw more than you have")
+    #         self.balance -= amount
+    #         self.withdrawable_cash -= amount
+    #         updated_fields = ['balance', 'withdrawable_cash']
+    #     elif transaction_type == TransactionTypes.Credit and transaction_kind == TransactionKinds.Deposit:
+    #         self.balance += amount
+    #         self.withdrawable_cash += amount
+    #         updated_fields = ['balance', 'withdrawable_cash']
+    #     elif transaction_type == TransactionTypes.Debit and transaction_kind == TransactionKinds.TradeUnitPurchases:
+    #         if self.balance < amount:
+    #             raise ValueError("You do not have sufficient funds for this transaction")
+    #         self.balance -= amount
+    #         updated_fields = ['balance']
+    #     else:
+    #         raise ValueError(
+    #             f"Invalid transaction type and kind combination {transaction_type} {transaction_kind}: Aborting"
+    #         )
+    #     self.save(update_fields=updated_fields)
 
 
 class TransactionStatus(models.TextChoices):
@@ -204,7 +234,7 @@ class Transaction(Base):
             tx.transaction_status = TransactionStatus.Success
             tx.transaction_response = data
             tx.save(update_fields=['transaction_status', 'transaction_response'])
-            tx.wallet.update_balance(tx.amount, tx.transaction_type, tx.transaction_kind)
+            tx.wallet.update_balance(tx)
             return {"message": "Payment Successful"}, 200
         else:
             tx.transaction_status = TransactionStatus.Failed
@@ -291,13 +321,6 @@ class CarStates(models.TextChoices):
     )
     New = "new", _("New car waiting to be inspected")
 
-
-def validate_inspector(value: User):
-    if not value.is_staff:
-        raise ValidationError(
-            _(f'user {value.username} is not an admin user'),
-            params={'value': value},
-        )
 
 
 class CarTransmissionTypes(models.TextChoices):
@@ -562,8 +585,14 @@ class TradeUnit(Base):
         default=Decimal(0.00),
         help_text="the estimated return on trade",
     )
-    transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, related_name="trade_units", null=True,
-                                    blank=True)
+    buy_transaction = models.ForeignKey(
+        Transaction, on_delete=models.PROTECT,
+        related_name="trade_units_buy", null=True, blank=True, help_text="the transaction that bought this unit")
+    checkout_transaction = models.ForeignKey(
+        Transaction, on_delete=models.PROTECT,
+        related_name="trade_units_checkout",
+        null=True, blank=True, validators=[MinValueValidator(Decimal(0.00)), checkout_transaction_validator],
+        help_text="the transaction that materialized out this unit")
 
     class Meta:
         ordering = ["-slots_quantity"]
@@ -575,6 +604,8 @@ class TradeUnit(Base):
 class DisbursementStates(models.TextChoices):
     Ongoing = "Ongoing"
     Completed = "Completed"
+    Unsettled = "Unsettled", _("Unsettled. The disbursement has been created but not yet settled by the admin")
+    Settled = "Settled", _("Settled. The disbursement has been settled by the admin")
 
 
 class Disbursement(Base):
@@ -583,7 +614,7 @@ class Disbursement(Base):
     transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, related_name="disbursement", null=True,
                                        blank=True)
     disbursement_status = models.CharField(choices=DisbursementStates.choices, max_length=20,
-                                           default=DisbursementStates.Ongoing)
+                                           default=DisbursementStates.Unsettled)
 
     def save(self, *args, **kwargs):
         ref = f"cp-db-{self.id}"
@@ -600,8 +631,7 @@ class Disbursement(Base):
         # TODO and lastly we need to update the trade status to closed
         #  after disbursement has been confirmed and payment made
         self.transaction.wallet \
-            .update_balance(amount=self.amount, transaction_type=TransactionTypes.Credit,
-                            transaction_kind=TransactionKinds.Disbursement)
+            .update_balance(self.transaction)
         return super().save(*args, **kwargs)
 
 

@@ -119,13 +119,19 @@ class TransactionSerializer(serializers.ModelSerializer):
         )
 
 
-class CarSerializerField(serializers.PrimaryKeyRelatedField):
+class CarSerializerField(serializers.RelatedField):
 
     def to_internal_value(self, data):
-        car: Car = super().to_internal_value(data)
-        if car.trade:
-            raise serializers.ValidationError("This car is being traded already")
+        car: Car = Car.objects.get(id=data)
+        try:
+            if car.trade:
+                raise serializers.ValidationError("This car is already being traded")
+        except BaseException as e:
+            pass
         return car
+
+    def to_representation(self, value):
+        return value.id
 
 
 class TradeSerializerAdmin(serializers.ModelSerializer):
@@ -208,10 +214,11 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             raise serializers.ValidationError("Maximum sale price cannot be less than the total cost of the car")
         return value
 
+    @atomic()
     def create(self, validated_data):
         car: Car = validated_data["car"]
         price_per_slot = self.calculate_price_per_slot(car.resale_price, validated_data["slots_available"])
-        return Trade.objects.create(slots_purchased=0, **validated_data, price_per_slot=price_per_slot)
+        return Trade.objects.create(**validated_data, price_per_slot=price_per_slot)
 
     def complete_trade(self, trade: Trade):
         successful_disbursements = trade \
@@ -228,8 +235,6 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             trade.save(update_fields=["trade_status"])
             car: Car = trade.car
             car.update_on_sold()
-
-
 
     @atomic()
     def update(self, instance: Trade, validated_data):
