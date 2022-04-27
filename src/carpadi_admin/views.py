@@ -5,6 +5,8 @@ from rest_framework.views import status
 from rest_framework.permissions import IsAdminUser
 from django_filters import rest_framework as filters
 
+from src.carpadi_api.views import TransactionViewSet
+
 from src.carpadi_admin.filters import (
     TransactionsFilterAdmin,
     WalletFilterAdmin,
@@ -109,7 +111,8 @@ class ActivityViewSetAdmin(viewsets.ReadOnlyModelViewSet):
 
 
 class SparePartsViewSet(viewsets.ModelViewSet):
-    permissions = {'default': (IsAdminUser,)}
+    permission_classes = TransactionViewSet.get_permissions()
+    # permissions = TransactionViewSet.get_permissions()
     serializer_class = SparePartsSerializer
     queryset = SpareParts.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
