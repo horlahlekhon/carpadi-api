@@ -274,6 +274,7 @@ def validate_inspector(value: User):
             params={'value': value},
         )
 
+
 class CarTransmissionTypes(models.TextChoices):
     Manual = "manual", _(
         "Manual",
@@ -418,7 +419,7 @@ class Trade(Base):
         default=Decimal(0.00),
         max_length=10,
         help_text="max price at which the car " "can be sold",
-    )                                                                                   
+    )
     bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days")
 
 

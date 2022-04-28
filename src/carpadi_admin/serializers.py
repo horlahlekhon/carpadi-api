@@ -100,8 +100,14 @@ class DashboardSerializerAdmin(serializers.Serializer):
     graph_name = serializers.StringRelatedField()
 
     @staticmethod
-    def filter_data(model_name, model_field: str = None, value: str = None, created: bool = False, month: datetime.date.month = None,
-                    year: datetime.date.year = None):
+    def filter_data(
+        model_name,
+        model_field: str = None,
+        value: str = None,
+        created: bool = False,
+        month: datetime.date.month = None,
+        year: datetime.date.year = None,
+    ):
         date = datetime.date.today()
 
         if created and not month and not year:
@@ -116,7 +122,7 @@ class DashboardSerializerAdmin(serializers.Serializer):
         elif not created and month and year:
             return model_name.objects.filter(model_field=value, modified__month=month, created__year=year)
 
-        elif not created  and not month:
+        elif not created and not month:
             return model_name.objects.filter(model__field=value, modified__year=year)
 
         elif created and not month:
@@ -134,14 +140,12 @@ class DashboardSerializerAdmin(serializers.Serializer):
         # data = model.objects.filter(model_field=f"{value}", month=month, year=year)
 
     def get_average_bts(self, trade: Trade, month, year):
-        return self.filter_data(trade, 'trade_status', 'completed', month, year)\
-                   .aggregate(data=Avg('bts_time')), 200
+        return self.filter_data(trade, 'trade_status', 'completed', month, year).aggregate(data=Avg('bts_time')), 200
 
     def get_total_available_shares(self, trade: Trade, month, year):
-        return self.filter_data(trade, 'trade_status', 'ongoing', True, month, year)\
-            .aggregate(data=Avg('remaining_slots')), 200
+        return self.filter_data(trade, 'trade_status', 'ongoing', True, month, year).aggregate(data=Avg('remaining_slots')), 200
 
-    def get_number_of_users_trading(self, trade_unit: TradeUnit,  month, year):
+    def get_number_of_users_trading(self, trade_unit: TradeUnit, month, year):
         return self.filter_data(trade_unit, year, month, created=True).aggregate(data=Sum('merchant')), 200
 
     def get_total_trading_cash(self, trade_unit: TradeUnit, month, year):
@@ -152,7 +156,7 @@ class DashboardSerializerAdmin(serializers.Serializer):
 
         if month:
             total_value = self.models.DecimalFields
-            for trade_data.modified.day in range (1, 32):
+            for trade_data.modified.day in range(1, 32):
                 value = trade_data.remaining_slots * trade_data.price_per_slot
                 total_value = total_value + value
             return total_value
@@ -164,10 +168,7 @@ class DashboardSerializerAdmin(serializers.Serializer):
         trade_data = self.filter_data(trade, month, year)
 
         if month:
-            weekly = {
-                "ttc": [0.00] * 4,
-                "rot": [0.00] * 4
-            }
+            weekly = {"ttc": [0.00] * 4, "rot": [0.00] * 4}
 
             for i in range(31):
                 for trade_data.modified.day in range(1, 8):
@@ -189,10 +190,7 @@ class DashboardSerializerAdmin(serializers.Serializer):
             return weekly
 
         if not month:
-            monthly = {
-                "ttc": [0.00] * 12,
-                "rot": [0.00] * 12
-            }
+            monthly = {"ttc": [0.00] * 12, "rot": [0.00] * 12}
 
             for trade_data.modified.month in range(1, 13):
                 m = 0
@@ -204,4 +202,3 @@ class DashboardSerializerAdmin(serializers.Serializer):
     def get_recent_trade_activities(self, trade_unit: TradeUnit, month, year):
         recent_trade = self.filter_data(trade_unit, created=True, month=month, year=year).order_by('created')[10]
         return recent_trade
-

@@ -253,6 +253,7 @@ class TokenObtainModSerializer(serializers.Serializer):
         data = {'refresh': str(refresh), 'access': str(refresh.access_token), "merchant": car_merch.data}
         return data
 
+
 class OtpSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
 
