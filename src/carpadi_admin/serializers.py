@@ -87,7 +87,7 @@ class ActivitySerializerAdmin(serializers.ModelSerializer):
 
 
 class DashboardSerializerAdmin(serializers.Serializer):
-    average_bts = serializers.IntegerField()
+    average_bts = serializers.FloatField()
     number_of_users_trading = serializers.IntegerField()
     total_trading_cash = serializers.DecimalField(max_digits=15, decimal_places=5)
     total_available_shares = serializers.IntegerField()
@@ -96,6 +96,10 @@ class DashboardSerializerAdmin(serializers.Serializer):
     recent_trade_activities = serializers.JSONField()
     cars_summary = serializers.JSONField()
     rot_vs_ttc = serializers.JSONField()
+    graph_type = serializers.StringRelatedField()
+    graph_name = serializers.StringRelatedField()
+    graph_month_data = [0.00] * 4
+    graph_year_data = [0.00] * 12
 
     @staticmethod
     def filter_data(model_name, model_field: str = None, value: str = None, created: bool = False, month: datetime.date.month = None,
@@ -152,5 +156,43 @@ class DashboardSerializerAdmin(serializers.Serializer):
     def get_cars_with_available_shares(self, trade: Trade, month, year):
         return self.filter_data(trade, 'trade__status', 'ongoing', month, year).aggregate(data=Sum('car')), 200
 
-    # def get_rot_vs_ttc(self):
-    #     return self.filter_data()
+    def get_rot_vs_ttc(self, trade: Trade, month, year):
+        trade_data = self.filter_data(trade, month, year)
+
+        if month:
+            weekly = {
+                "ttc": [0.00] * 4,
+                "rot": [0.00] * 4
+            }
+
+            for i in range(31):
+                for trade_data.modified.day in range(1, 8):
+                    weekly.ttc[0] = weekly.ttc[0] + (trade_data.slots_purchased * trade_data.price_per_slot)
+                    weekly.rot[0] = weekly.rot[0] + trade_data.return_on_trade
+
+                for trade_data.modified.day in (8, 16):
+                    weekly.ttc[1] = weekly.ttc[1] + (trade_data.slots_purchased * trade_data.price_per_slot)
+                    weekly.rot[1] = weekly.rot[1] + trade_data.return_on_trade
+
+                for trade_data.modified.day in (16, 24):
+                    weekly.ttc[2] = weekly.ttc[2] + (trade_data.slots_purchased * trade_data.price_per_slot)
+                    weekly.rot[2] = weekly.rot[2] + trade_data.return_on_trade
+
+                for trade_data.modified.day in (24, 32):
+                    weekly.ttc[3] = weekly.ttc[3] + (trade_data.slots_purchased * trade_data.price_per_slot)
+                    weekly.rot[3] = weekly.rot[3] + trade_data.return_on_trade
+
+            return weekly
+
+        if not month:
+            monthly = {
+                "ttc": [0.00] * 12,
+                "rot": [0.00] * 12
+            }
+
+            for trade_data.modified.month in range(1, 13):
+                m = 0
+                monthly.ttc[m] = monthly.ttc[m] + (trade_data.slots_purchased * trade_data.price_per_slot)
+                monthly.rot[m] = monthly.rot[m] + trade_data.return_on_trade
+                m += 1
+            return monthly
