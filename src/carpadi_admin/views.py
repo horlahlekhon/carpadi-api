@@ -1,5 +1,7 @@
+import datetime
+
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import status
 from rest_framework.permissions import IsAdminUser
@@ -19,6 +21,8 @@ from src.carpadi_admin.serializers import (
     DisbursementSerializerAdmin,
     ActivitySerializerAdmin,
     TradeSerializer,
+    DashboardSerializerAdmin,
+
 )
 from src.models.serializers import CarBrandSerializer, CarMerchantSerializer
 from src.models.models import (
@@ -103,3 +107,62 @@ class ActivityViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     queryset = Activity.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ActivityFilterAdmin
+
+
+class DashboardViewSetAdmin(viewsets.ViewSet):
+    permissions = {'default': (IsAdminUser,)}
+    serializer_class = DashboardSerializerAdmin,
+
+    @staticmethod
+    def get_graph(request):
+        date = request.GET.get("date")
+        data = DashboardSerializerAdmin.get_rot_vs_ttc(month=date.month, year=date.year)
+        return Response(data=data, status=200)
+
+    @staticmethod
+    def get_summary(request):
+        date = request.GET.get("date")
+        data = DashboardSerializerAdmin.get_cars_summary(month=date.month, year=date.year)
+        return Response(data=data, status=200)
+
+    @staticmethod
+    def get_bts(request):
+        date = request.GET.get("date")
+        data = DashboardSerializerAdmin.get_average_bts(month=date.month, year=date.year)
+        return Response(data=data, status=200)
+
+    @staticmethod
+    def get_trading_users(request):
+        date = request.GET.get("date")
+        data = DashboardSerializerAdmin.get_number_of_users_trading(month=date.month, year=date.year)
+        return Response(data=data, status=200)
+
+    @staticmethod
+    def get_shares(request):
+        date: datetime.date = request.GET.get("date")
+        data = DashboardSerializerAdmin.get_total_available_shares(month=date.month, year=date.year)
+        return Response(data=data, status=200)
+
+    @staticmethod
+    def get_shares_value(request):
+        date = request.GET.get("date")
+        data = DashboardSerializerAdmin.get_available_shares_value(month=date.month, year=date.year)
+        return Response(data=data, status=200)
+
+    @staticmethod
+    def get_total_trading_cash(request):
+        date = request.GET.get("date")
+        data = DashboardSerializerAdmin.get_total_trading_cash(month=date.month, year=date.year)
+        return Response(data=data, status=200)
+
+    @staticmethod
+    def get_cars_with_shares(request):
+        date = request.GET.get("date")
+        data = DashboardSerializerAdmin.get_cars_with_available_share(month=date.month, year=date.year)
+        return Response(data=data, status=200)
+
+    @staticmethod
+    def get_recent_trading_activities(request):
+        date = request.GET.get("date")
+        data = DashboardSerializerAdmin.get_available_shares_value(month=date.month, year=date.year)
+        return Response(data=data, status=200)
