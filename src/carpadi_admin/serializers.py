@@ -2,7 +2,7 @@ from dataclasses import fields
 from pyexpat import model
 from rest_framework import serializers
 
-from src.models.models import CarMerchant, Car, Wallet, Transaction, Trade, Disbursement, Activity
+from src.models.models import CarMerchant, Car, Wallet, Transaction, Trade, Disbursement, Activity, SpareParts
 
 
 class SocialSerializer(serializers.Serializer):
@@ -81,3 +81,9 @@ class ActivitySerializerAdmin(serializers.ModelSerializer):
         model = Activity
         fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
         read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
+
+
+class SparePartsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpareParts
+        fields = "__all__"

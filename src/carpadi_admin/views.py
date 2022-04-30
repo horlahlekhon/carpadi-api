@@ -5,12 +5,15 @@ from rest_framework.views import status
 from rest_framework.permissions import IsAdminUser
 from django_filters import rest_framework as filters
 
+from src.carpadi_api.views import TransactionViewSet
+
 from src.carpadi_admin.filters import (
     TransactionsFilterAdmin,
     WalletFilterAdmin,
     DisbursementFilterAdmin,
     ActivityFilterAdmin,
     TradeFilterAdmin,
+    SparePartsFilter
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
@@ -19,6 +22,7 @@ from src.carpadi_admin.serializers import (
     DisbursementSerializerAdmin,
     ActivitySerializerAdmin,
     TradeSerializer,
+    SparePartsSerializer
 )
 from src.models.serializers import CarBrandSerializer, CarMerchantSerializer
 from src.models.models import (
@@ -30,6 +34,7 @@ from src.models.models import (
     Trade,
     Disbursement,
     Activity,
+    SpareParts
 )
 
 
@@ -103,3 +108,12 @@ class ActivityViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     queryset = Activity.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ActivityFilterAdmin
+
+
+class SparePartsViewSet(viewsets.ModelViewSet):
+    permission_classes = TransactionViewSet.get_permissions()
+    # permissions = TransactionViewSet.get_permissions()
+    serializer_class = SparePartsSerializer
+    queryset = SpareParts.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = SparePartsFilter
