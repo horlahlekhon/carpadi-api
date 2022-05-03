@@ -113,3 +113,4 @@ media/*
 !media/.gitkeep
 dump.rdb
 *.db
+.env.export

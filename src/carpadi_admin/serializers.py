@@ -2,6 +2,7 @@ from dataclasses import fields
 from decimal import Decimal
 from pyexpat import model
 
+<<<<<<< HEAD
 from rest_framework import serializers, exceptions
 from src.models.models import CarMerchant, Car, Wallet, Transaction, Trade, Disbursement, Activity, TradeStates, \
     TradeUnit, CarStates, CarMaintenance, CarMaintenanceTypes, SpareParts, MiscellaneousExpenses, DisbursementStates
@@ -10,6 +11,9 @@ from django.db.transaction import atomic
 from django.db.models import Sum
 
 from src.notifications.services import logger
+=======
+from src.models.models import CarMerchant, Car, Wallet, Transaction, Trade, Disbursement, Activity, SpareParts
+>>>>>>> master
 
 
 class SocialSerializer(serializers.Serializer):
@@ -297,3 +301,7 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
             misc = MiscellaneousExpenses.objects.create(estimated_price=cost,
                                                         description=description, name=validated_data["name"])
             return CarMaintenance.objects.create(car=car, type=maintenance_type, cost=cost, maintenance=misc)
+class SparePartsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpareParts
+        fields = "__all__"
