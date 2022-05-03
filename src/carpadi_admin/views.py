@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import status
 from rest_framework.permissions import IsAdminUser
 from django_filters import rest_framework as filters
-
+from rest_framework.decorators import action
+from django.db.transaction import atomic
 from src.carpadi_admin.filters import (
     TransactionsFilterAdmin,
     WalletFilterAdmin,
@@ -29,7 +30,7 @@ from src.models.models import (
     Wallet,
     Trade,
     Disbursement,
-    Activity, CarMaintenance,
+    Activity, CarMaintenance, TradeUnit, TradeStates, DisbursementStates,
 )
 
 
@@ -96,6 +97,19 @@ class TradeViewSetAdmin(viewsets.ModelViewSet):
     queryset = Trade.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = TradeFilterAdmin
+
+    @action(detail=False, methods=['post'], url_path='disburse-rots', url_name='verify_transaction')
+    def disburse_trade(self, request):
+        """
+        This method is used to disburse a trade that has been verified by the admin and money is ready to be disbursed
+        to merchants.
+        """
+        trade = get_object_or_404(Trade, pk=request.query_params.get("trade"))
+        if trade.trade_status != TradeStates.Completed:
+            return Response({"message": "Trade is not completed, please complete this trade before disbursing"},
+                            status=status.HTTP_400_BAD_REQUEST)
+        trade.close()
+        return Response({"message": "Trade disbursed successfully"}, status=status.HTTP_200_OK)
 
 
 class DisbursementViewSetAdmin(viewsets.ReadOnlyModelViewSet):

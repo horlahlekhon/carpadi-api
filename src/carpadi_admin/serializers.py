@@ -9,6 +9,8 @@ from django.utils import timezone
 from django.db.transaction import atomic
 from django.db.models import Sum
 
+from src.notifications.services import logger
+
 
 class SocialSerializer(serializers.Serializer):
     """
@@ -19,12 +21,6 @@ class SocialSerializer(serializers.Serializer):
         allow_blank=False,
         trim_whitespace=True,
     )
-
-
-# class CarMerchantSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = CarMerchant
-#         fields = "__all__"
 
 
 class CarSerializer(serializers.ModelSerializer):
@@ -88,8 +84,8 @@ class CarSerializer(serializers.ModelSerializer):
         car = Car.objects.create(**validated_data)
         return car
 
+    @atomic()
     def update(self, instance: Car, validated_data):
-        # car_merchant = validated_data.get("car_merchant", instance.car_merchant)
         if validated_data.get("status") == CarStates.Available:
             validated_data["total_cost"] = instance.total_cost_calc()
             validated_data["maintenance_cost"] = instance.maintenance_cost_calc()
@@ -140,6 +136,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     return_on_trade = serializers.SerializerMethodField()
     return_on_trade_percentage = serializers.SerializerMethodField()
     car = CarSerializerField(queryset=Car.objects.all())
+    return_on_trade_per_unit = serializers.SerializerMethodField()
 
     class Meta:
         model = Trade
@@ -157,20 +154,14 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
                             {"error_messages": {"required": "Car to trade on is required", "unique": "Car already "
                                                                                                      "traded"}}}
 
+    def get_return_on_trade_per_unit(self, obj: Trade):
+        return obj.return_on_trade_per_slot()
+
     def get_return_on_trade(self, obj: Trade):
         return obj.return_on_trade_calc()
 
     def get_return_on_trade_percentage(self, obj: Trade):
         return obj.return_on_trade_calc_percent()
-
-    # def get_trade_status(self, obj: Trade):
-    #     sum_of_slots = sum([unit.slots_quantity for unit in obj.units.all()])
-    #     if obj.units.count() == obj.slots_available:
-    #         return TradeStates.Purchased
-    #     elif sum_of_slots >= 0 and obj.units.count() != obj.slots_available:
-    #         return TradeStates.Ongoing
-    #     else:
-    #         raise exceptions.APIException("Error, cannot determine trade status")
 
     def calculate_price_per_slot(self, car_price, slots_availble):
         return car_price / slots_availble
@@ -195,6 +186,9 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
                 if not trade.car.resale_price:
                     raise serializers \
                         .ValidationError("Please add resale price to the car first before completing the trade")
+                if trade.trade_status != TradeStates.Purchased:
+                    raise serializers.ValidationError(
+                        "Cannot change trade status to {}, trade is {}".format(attr, trade.trade_status))
         return attr
 
     def validate_car(self, value):
@@ -221,29 +215,32 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         return Trade.objects.create(**validated_data, price_per_slot=price_per_slot)
 
     def complete_trade(self, trade: Trade):
+        """
+        Completes the trade by setting the trade status to completed and updating the car status.
+        we also try to do some validation to make sure trade and its corresponding objects are valid
+        :param trade: Trade object
+        """
         successful_disbursements = trade \
             .units \
-            .annotate(is_disbursed="disbursement__disbursement_status") \
-            .filter(is_disbursed=DisbursementStates.Completed).count()
-        total_disbursed = trade.units \
-            .annotate(total_disbursed=Sum('disbursements__amount')) \
-            .aggregate(total_disbursed=Sum('total_disbursed')) \
-            .get('total_disbursed')
-
+            .filter(disbursement__disbursement_status=DisbursementStates.Unsettled).count()
+        query = trade.units.annotate(total_disbursed=Sum('disbursement__amount'))
+        total_disbursed = query.aggregate(sum=Sum('total_disbursed')).get('sum') or Decimal(0)
         if successful_disbursements == trade.units.count() and total_disbursed == trade.total_payout():
-            trade.trade_status = TradeStates.Closed
-            trade.save(update_fields=["trade_status"])
             car: Car = trade.car
             car.update_on_sold()
+        else:
+            raise exceptions.APIException("Error, cannot complete trade, because calculated"
+                                          " payout seems to be unbalanced with the disbursements")
 
     @atomic()
     def update(self, instance: Trade, validated_data):
-        resp = super(TradeSerializerAdmin, self).update(instance, validated_data)
+        if instance.trade_status == TradeStates.Closed:
+            raise serializers.ValidationError("Cannot update a closed trade.. Geez!!")
         if validated_data.get("trade_status") and validated_data.get("trade_status") == TradeStates.Completed:
             instance.run_disbursement()
             # check disbursements and update trade state
             self.complete_trade(instance)
-        return resp
+        return super(TradeSerializerAdmin, self).update(instance, validated_data)
 
 
 class DisbursementSerializerAdmin(serializers.ModelSerializer):

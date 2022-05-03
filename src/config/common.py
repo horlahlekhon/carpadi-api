@@ -115,7 +115,6 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST', 'db'),
         'PORT': os.getenv('DB_PORT'),
-        'ATOMIC_REQUESTS ': True,
     }
 }
 
@@ -378,3 +377,5 @@ FLW_REDIRECT_URL = os.getenv('PAYMENT_REDIRECT_URL',
                              'https://ef24-102-91-5-139.ngrok.io/api/v1/merchants/transactions/verify-transaction')
 FLW_PAYMENT_URL = os.getenv('PAYMENT_URL', "https://api.flutterwave.com/v3/payments")
 FLW_PAYMENT_VERIFY_URL = "https://api.flutterwave.com/v3/transactions/{}/verify".format
+
+LOG_DIRECTORY = os.getenv('LOG_DIRECTORY', 'logs')

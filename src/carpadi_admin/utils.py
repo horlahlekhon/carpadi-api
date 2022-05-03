@@ -18,3 +18,12 @@ def checkout_transaction_validator(transaction):
     if transaction.transaction_kind != "disbursement":
         raise ValidationError(_(f'Transaction {transaction.id} is not a disbursement'), params={'value': transaction})
     return True
+
+
+def disbursement_trade_unit_validator(trade_unit):
+    """
+    validate the trade unit before disbursement
+    """
+    if trade_unit.disbursement:
+        raise ValidationError(_(f'Trade unit {trade_unit.id} profits and capital has already been disbursed'), params={'value': trade_unit})
+    return True

@@ -123,16 +123,13 @@ class WalletSerializer(serializers.ModelSerializer):
         return wallet.withdrawable_cash
 
     def get_unsettled_cash(self, wallet: Wallet):
-        return wallet.unsettled_cash
+        return wallet.get_unsettled_cash()
 
     def get_total_cash(self, wallet: Wallet):
-        return wallet.total_cash
-
-    def get_total_cash(self, wallet: Wallet):
-        return wallet.total_cash
+        return wallet.get_total_cash()
 
     def get_trading_cash(self, wallet: Wallet):
-        return wallet.trading_cash
+        return wallet.get_trading_cash()
 
     class Meta:
         model = Wallet
@@ -282,7 +279,8 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         model = TradeUnit
         fields = "__all__"
         read_only_fields = (
-            'created', 'modified', "id", "unit_value", "vat_percentage", "share_percentage", "estimated_rot")
+            'created', 'modified', "id", "unit_value",
+            "vat_percentage", "share_percentage", "estimated_rot", "buy_transaction")
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -294,11 +292,9 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         remaining_slots = trade.remaining_slots()
         if remaining_slots < attrs["slots_quantity"]:
             raise serializers.ValidationError({"trade": "Trade does not have enough slots available"})
-        # unit_value = self._unit_value(merchant, trade, wallet, attrs)
         rot = trade.return_on_trade_per_slot() * attrs["slots_quantity"]
-        # attrs["unit_value"] = unit_value
         unit_value = trade.price_per_slot * attrs["slots_quantity"]
-        if unit_value > wallet.balance:
+        if unit_value > wallet.get_withdrawable_cash():
             raise serializers.ValidationError("Wallet balance is insufficient for this transaction")
         attrs["trade"] = trade
         attrs["merchant"] = merchant
@@ -330,8 +326,8 @@ class TradeUnitSerializer(serializers.ModelSerializer):
                 wallet=merchant.wallet,
                 transaction_payment_link=None,
             )
-        unit.transaction = tx
-        unit.save(update_fields=["transaction"])
+        unit.buy_transaction = tx
+        unit.save(update_fields=["buy_transaction"])
         unit.refresh_from_db()
-        tx.wallet.update_balance(transaction=tx)
+        tx.wallet.update_balance(tx=tx)
         return unit
