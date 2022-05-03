@@ -132,7 +132,7 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         user: User = self.request.user
         serializer.save(merchant=user.merchant)
 
-    @transaction.atomic
+    @transaction.atomic()
     @action(detail=False, methods=['get'], url_path='verify-transaction', url_name='verify_transaction')
     def verify_transaction(self, request):
         tx_ref = request.query_params.get('tx_ref')
@@ -161,6 +161,7 @@ class BankAccountViewSet(viewsets.ModelViewSet):
 class CarBrandSerializerViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = CarBrandSerializer
     queryset = CarBrand.objects.all()
+    permission_classes = (IsCarMerchantAndAuthed,)
 
 
 class CarViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -249,7 +250,7 @@ class TradeUnitViewSet(viewsets.ModelViewSet):
     permission_classes = (IsCarMerchantAndAuthed,)
 
     def get_serializer_context(self):
-        ctx = super(CarMerchantViewSet, self).get_serializer_context()
+        ctx = super(TradeUnitViewSet, self).get_serializer_context()
         if self.action != "list":
             ctx["merchant"] = self.request.user.merchant
         return ctx

@@ -10,7 +10,7 @@ db_reset:
 	python manage.py migrate
 
 install:
-	 python virtualenv python3 .
+	python virtualenv python3 .
 	cd carpadi-api
 	pip3 install -r requirements/dev.txt
 	./manage.py migrate
@@ -25,6 +25,9 @@ shell:
 
 run_stage:
 	docker-compose -f docker-compose.yml up --force-recreate
+
+celery:
+	celery -A src.config worker --beat --loglevel=debug --pidfile="./celerybeat.pid" --scheduler django_celery_beat.schedulers:DatabaseScheduler
 
 teardown:
 	docker-compose -f  docker-compose.yml down --remove-orphans -v

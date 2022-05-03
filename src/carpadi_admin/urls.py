@@ -11,7 +11,7 @@ from src.carpadi_admin.views import (
     WalletViewSetAdmin,
     TradeViewSetAdmin,
     DisbursementViewSetAdmin,
-    ActivityViewSetAdmin,
+    ActivityViewSetAdmin, CarMaintenanceViewSetAdmin,
     SparePartsViewSet
 )
 
@@ -27,6 +27,7 @@ router.register(r'wallets', WalletViewSetAdmin)
 router.register(r'trades', TradeViewSetAdmin)
 router.register(r'disbursements', DisbursementViewSetAdmin)
 router.register(r'activities', ActivityViewSetAdmin)
+router.register(r'maintenances', CarMaintenanceViewSetAdmin)
 router.register(r'spareparts', SparePartsViewSet)
 
 # urlpatterns = transactions_router_admin.urls

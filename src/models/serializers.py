@@ -60,7 +60,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
     merchant_id = serializers.SerializerMethodField()
 
     def get_merchant_id(self, user: User):
-        return user.merchant.id
+        if user.is_merchant:
+            return user.merchant.id
+        return None
 
     def get_tokens(self, user):
         return user.get_tokens()
