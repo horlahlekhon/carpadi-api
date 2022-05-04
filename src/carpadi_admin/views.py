@@ -134,7 +134,6 @@ class ActivityViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     filter_class = ActivityFilterAdmin
 
 
-<<<<<<< HEAD
 class CarMaintenanceViewSetAdmin(viewsets.ModelViewSet):
     serializer_class = CarMaintenanceSerializerAdmin
     permission_classes = (IsAdminUser,)
@@ -148,12 +147,9 @@ class CarMaintenanceViewSetAdmin(viewsets.ModelViewSet):
         return queryset
 
 
-=======
 class SparePartsViewSet(viewsets.ModelViewSet):
-    permission_classes = TransactionViewSet.get_permissions()
-    # permissions = TransactionViewSet.get_permissions()
+    permission_classes = (IsAdminUser,)
     serializer_class = SparePartsSerializer
     queryset = SpareParts.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = SparePartsFilter
->>>>>>> master

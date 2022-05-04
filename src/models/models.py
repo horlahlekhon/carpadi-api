@@ -455,6 +455,9 @@ class SpareParts(Base):
     car_brand = models.ForeignKey(CarBrand, on_delete=models.CASCADE)
     estimated_price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    class Meta:
+        unique_together = ('name', 'car_brand')
+
 
 class MiscellaneousExpenses(Base):
     name = models.CharField(max_length=100)
