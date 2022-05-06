@@ -1,6 +1,6 @@
 from django.conf import settings
-from rest_framework.serializers import ImageField as ApiImageField
 from easy_thumbnails.files import get_thumbnailer
+from rest_framework.serializers import ImageField as ApiImageField
 
 THUMBNAIL_ALIASES = getattr(settings, 'THUMBNAIL_ALIASES', {})
 
@@ -16,7 +16,8 @@ def get_url(request, instance, alias_obj, alias=None):
 
 def image_sizes(request, instance, alias_obj):
     i_sizes = list(alias_obj.keys())
-    return {'original': get_url(request, instance, alias_obj), **{k: get_url(request, instance, alias_obj, k) for k in i_sizes}}
+    return {'original': get_url(request, instance, alias_obj),
+            **{k: get_url(request, instance, alias_obj, k) for k in i_sizes}}
 
 
 class ThumbnailerJSONSerializer(ApiImageField):

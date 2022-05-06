@@ -1,13 +1,10 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, mixins
+from django_filters import rest_framework as filters
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import status
-from rest_framework.permissions import IsAdminUser
-from django_filters import rest_framework as filters
-from rest_framework.decorators import action
-from django.db.transaction import atomic
-
-from src.carpadi_api.views import TransactionViewSet
 
 from src.carpadi_admin.filters import (
     TransactionsFilterAdmin,
@@ -26,7 +23,6 @@ from src.carpadi_admin.serializers import (
     TradeSerializerAdmin, CarMaintenanceSerializerAdmin,
     SparePartsSerializer
 )
-from src.models.serializers import CarBrandSerializer, CarMerchantSerializer
 from src.models.models import (
     Transaction,
     CarBrand,
@@ -35,9 +31,9 @@ from src.models.models import (
     Wallet,
     Trade,
     Disbursement,
-    Activity, CarMaintenance, TradeUnit, TradeStates, DisbursementStates,
-    SpareParts
+    Activity, CarMaintenance, TradeStates, SpareParts
 )
+from src.models.serializers import CarBrandSerializer, CarMerchantSerializer
 
 
 # Create your views here.
@@ -78,7 +74,6 @@ class CarViewSet(viewsets.ModelViewSet):
     serializer_class = CarSerializer
     permission_classes = (IsAdminUser,)
     queryset = Car.objects.all()
-
 
     # def update(self, request, *args, **kwargs):
     #     car = self.get_object()

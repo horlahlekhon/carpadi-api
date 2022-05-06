@@ -1,27 +1,28 @@
 import datetime
 from decimal import Decimal
-from email.policy import default
-from django.core.validators import MinValueValidator
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Sum
+from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from easy_thumbnails.signal_handlers import generate_aliases_global
 from easy_thumbnails.signals import saved_file
 from model_utils.models import UUIDModel, TimeStampedModel
+from rest_framework.exceptions import APIException
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.db.transaction import atomic
 
 from src.carpadi_admin.utils import validate_inspector, checkout_transaction_validator, \
     disbursement_trade_unit_validator
 from src.config.common import OTP_EXPIRY
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.db.models import Sum
-from rest_framework.exceptions import APIException
+
 
 class Base(UUIDModel, TimeStampedModel):
     pass
@@ -168,7 +169,6 @@ class Wallet(Base):
                       .aggregate(total=Sum("unit_value")).get("total") or Decimal(0.00)
         return trading
 
-
     def get_withdrawable_cash(self):
         return self.withdrawable_cash
 
@@ -184,20 +184,23 @@ class Wallet(Base):
         #     FIXME we cant really determine the status of the transaction of withdrawal
         #      from here since there is third party integration. so we allow the caller to set it.
         elif tx.transaction_kind == TransactionKinds.Withdrawal and tx.transaction_type == TransactionTypes.Debit:
-            balance_after_deduction = Decimal(0.0) if self.withdrawable_cash - tx.amount < 0 else self.withdrawable_cash - tx.amount
+            balance_after_deduction = Decimal(
+                0.0) if self.withdrawable_cash - tx.amount < 0 else self.withdrawable_cash - tx.amount
             self.withdrawable_cash = balance_after_deduction
             updated_fields_wallet.append("withdrawable_cash")
             tx.transaction_status = TransactionStatus.Pending
         elif tx.transaction_kind == TransactionKinds.Disbursement and tx.transaction_type == TransactionTypes.Credit:
             db: "Disbursement" = tx.disbursement
             if db.disbursement_status == DisbursementStates.Unsettled:
-                balance_after_deduction = Decimal(0.0) if self.trading_cash - db.trade_unit.unit_value < 0 else self.trading_cash - db.trade_unit.unit_value
+                balance_after_deduction = Decimal(
+                    0.0) if self.trading_cash - db.trade_unit.unit_value < 0 else self.trading_cash - db.trade_unit.unit_value
                 self.unsettled_cash += tx.amount
                 self.trading_cash = balance_after_deduction
                 updated_fields_wallet = updated_fields_wallet + ["unsettled_cash", "trading_cash"]
                 tx.transaction_status = TransactionStatus.Unsettled
             elif db.disbursement_status == DisbursementStates.Settled:
-                balance_after_deduction = Decimal(0.0) if self.unsettled_cash - tx.amount < 0 else self.unsettled_cash - tx.amount
+                balance_after_deduction = Decimal(
+                    0.0) if self.unsettled_cash - tx.amount < 0 else self.unsettled_cash - tx.amount
                 self.withdrawable_cash += tx.amount
                 self.unsettled_cash = balance_after_deduction
                 updated_fields_wallet = updated_fields_wallet + ["withdrawable_cash", "unsettled_cash"]
@@ -208,7 +211,8 @@ class Wallet(Base):
                 tx.transaction_type == TransactionTypes.Debit:
             # self.trading_cash += tx.amount
             balance_after_deduction = Decimal(0.0)
-            self.withdrawable_cash = Decimal(0.0) if self.withdrawable_cash - tx.amount < 0 else self.withdrawable_cash - tx.amount
+            self.withdrawable_cash = Decimal(
+                0.0) if self.withdrawable_cash - tx.amount < 0 else self.withdrawable_cash - tx.amount
             updated_fields_wallet.append("withdrawable_cash")
             tx.transaction_status = TransactionStatus.Success
         else:
@@ -239,15 +243,18 @@ class Transaction(Base):
     transaction_description = models.CharField(max_length=50, null=True, blank=True)
     transaction_status = models.CharField(max_length=10, choices=TransactionStatus.choices,
                                           default=TransactionStatus.Pending)
-    transaction_response = models.JSONField(null=True, blank=True)
+    transaction_response = models.JSONField(null=True, blank=True,
+                                            help_text="Transaction response from payment gateway")
     transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices,
                                         default=TransactionKinds.Deposit)
     transaction_payment_link = models.URLField(max_length=200, null=True, blank=True)
+    transaction_fees = models.DecimalField(
+        max_digits=10, decimal_places=4, default=0.0, help_text="Transaction fees for withdrawal transactions")
 
     @classmethod
-    def verify_transaction(cls, response, tx):
+    def verify_deposit(cls, response, tx):
         data = response.json()
-        if response.status_code == 200 and data['status'] == 'success':
+        if response.status_code == 200 and (data['status'] in ('success', "successful", 'SUCCESSFUL')):
             tx.transaction_status = TransactionStatus.Success
             tx.transaction_response = data
             tx.save(update_fields=['transaction_status', 'transaction_response'])
@@ -260,14 +267,33 @@ class Transaction(Base):
             return {"message": "Payment Failed"}, 400
 
 
+class Banks(Base):
+    bank_name = models.CharField(max_length=50, null=True, blank=True)
+    bank_code = models.CharField(max_length=10, null=False, blank=False)
+    bank_id = models.CharField(max_length=50, null=False, blank=False)
+
+    def __str__(self):
+        return self.bank_name
+
+    def __repr__(self):
+        return f"<Bank(bank_name={self.bank_name}, bank_code={self.bank_code})>"
+
+    class Meta:
+        unique_together = ('bank_name', 'bank_code')
+
+    # def __eq__(self, other):
+    #     return self.bank_name == other.bank_name and self.bank_code == other.bank_code
+
+
 class BankAccount(Base):
-    name = models.CharField(max_length=100)
-    bank_name = models.CharField(max_length=50)
-    account_number = models.CharField(max_length=10)
+    name = models.CharField(max_length=100, null=True, blank=True, help_text="An alias for the bank account")
+    bank = models.ForeignKey(Banks, on_delete=models.CASCADE, related_name="bank_accounts")
+    account_number = models.CharField(max_length=50, null=False, blank=False)
     merchant = models.ForeignKey(
         CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts",
         help_text="Bank account to remit merchant money to"
     )
+    is_default = models.BooleanField(default=False)
 
 
 class CarBrand(Base):
@@ -375,7 +401,7 @@ class Car(Base):
     vin = models.CharField(max_length=17)
     # TODO try upload_to to upload to the car folder using ImageField
     pictures = models.URLField(help_text="url of the folder where the images for the car is located.", null=True,
-                                 blank=True)
+                               blank=True)
     car_inspector = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,

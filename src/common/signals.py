@@ -1,8 +1,11 @@
 import datetime
 from collections import defaultdict
+
 from django.db.models import signals
+from django_rest_passwordreset.models import ResetPasswordToken
 
 from src.common.helpers import build_absolute_uri
+from src.config.common import OTP_EXPIRY
 from src.models.models import (
     Disbursement,
     TradeUnit,
@@ -12,13 +15,8 @@ from src.models.models import (
     Transaction,
     TransactionStatus,
     Activity,
-    ActivityTypes, Trade, TradeStates, DisbursementStates, CarStates,
-)
-from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
-from django_rest_passwordreset.models import ResetPasswordToken
-from src.config.common import OTP_EXPIRY
-from django.db.models import Sum
-from rest_framework.exceptions import APIException
+    ActivityTypes, Trade, TradeStates, )
+
 
 class DisableSignals(object):
     """
@@ -57,9 +55,6 @@ class DisableSignals(object):
     def reconnect(self, signal):
         signal.receivers = self.stashed_signals.get(signal, [])
         del self.stashed_signals[signal]
-
-
-from django_rest_passwordreset.tokens import RandomNumberTokenGenerator
 
 
 def complete_user_registeration(sender, **kwargs):
@@ -125,8 +120,8 @@ def complete_transaction(sender, **kwargs):
             # notify(ACTIVITY_MERCHANT_PAYMENT_SUCCESS, context=context, email_to=[tx.wallet.merchant.user.email])
 
     if tx.transaction_status in (
-        TransactionStatus.Success,
-        TransactionStatus.Failed,
+            TransactionStatus.Success,
+            TransactionStatus.Failed,
     ):
         activity = Activity.objects.create(
             activity_type=ActivityTypes.Transaction,
@@ -168,4 +163,3 @@ def disbursement_completed(sender, instance, created, **kwargs):
                         f" {dis.trade_unit.trade.car.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
         )
 #         update trade status
-

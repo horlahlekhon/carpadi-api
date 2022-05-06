@@ -1,8 +1,12 @@
+import requests
+from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
 from rest_framework import viewsets, mixins
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import status
-from django_filters import rest_framework as filters
+
 from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter
 from src.carpadi_api.serializers import (
     CarSerializer,
@@ -12,22 +16,9 @@ from src.carpadi_api.serializers import (
     WalletSerializer,
     TransactionSerializer,
     TradeSerializer,
-    TradeUnitSerializer,
+    TradeUnitSerializer, BankAccountSerializer, BankSerializer,
 )
-
-from src.models.serializers import ActivitySerializer
-from django.db import transaction
-
 from src.config import common
-from src.models.permissions import IsCarMerchantAndAuthed
-from src.models.serializers import (
-    CarMerchantSerializer,
-    BankAccountSerializer,
-    CarBrandSerializer,
-    ActivitySerializer,
-)
-from rest_framework.decorators import action
-import requests
 from src.models.models import (
     Transaction,
     CarMerchant,
@@ -37,10 +28,15 @@ from src.models.models import (
     TransactionPin,
     TransactionPinStatus,
     Wallet,
-    TransactionStatus,
     Trade,
     TradeUnit,
-    Activity,
+    Activity, Banks,
+)
+from src.models.permissions import IsCarMerchantAndAuthed
+from src.models.serializers import (
+    CarMerchantSerializer,
+    CarBrandSerializer,
+    ActivitySerializer,
 )
 
 
@@ -66,7 +62,8 @@ class DefaultGenericViewset(viewsets.GenericViewSet):
         serializer.save(user=self.request.user)
 
 
-class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+                         viewsets.GenericViewSet):
     queryset = CarMerchant.objects.all()
     serializers = {"default": CarMerchantSerializer, "partial_update": CarMerchantUpdateSerializer}
     permission_classes = (IsCarMerchantAndAuthed,)
@@ -102,7 +99,8 @@ class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         return Response(ser.data)
 
 
-class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
+                         viewsets.GenericViewSet):
     """
     handles basic CRUD functionalities for transaction model
     """
@@ -133,19 +131,30 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         serializer.save(merchant=user.merchant)
 
     @transaction.atomic()
-    @action(detail=False, methods=['get'], url_path='verify-transaction', url_name='verify_transaction')
+    @action(detail=False, methods=['get', 'post'], url_path='verify-transaction', url_name='verify_transaction')
     def verify_transaction(self, request):
-        tx_ref = request.query_params.get('tx_ref')
-        transaction_id = request.query_params.get('transaction_id')
-        payment_status = request.query_params.get('status')
-        if tx_ref and transaction_id:
-            transaction = get_object_or_404(self.queryset, transaction_reference=tx_ref)
+        """
+        verify transaction
+        """
+        if request.method == 'POST' and request.data.get("event.type") == "Transfer":
+            data = request.data
+            tx_ref = data.get("transfer").get("reference")
+            transaction_id = data.get("transfer").get("id")
+            tx = get_object_or_404(self.queryset, transaction_reference=tx_ref)
+            headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
+            response = requests.get(url=common.FLW_GET_TRANSFER_URL(transaction_id), headers=headers)
+            res, code = Transaction.verify_deposit(response, tx)
+            return Response(res, status=code)
+        elif request.method == 'GET':
+            tx_ref = request.query_params.get('tx_ref')
+            transaction_id = request.query_params.get('transaction_id')
+            tx = get_object_or_404(self.queryset, transaction_reference=tx_ref)
             headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
             response = requests.get(url=common.FLW_PAYMENT_VERIFY_URL(transaction_id), headers=headers)
-            res, code = Transaction.verify_transaction(response, transaction)
+            res, code = Transaction.verify_deposit(response, tx)
             return Response(res, code)
         else:
-            return Response({"message": "tx_ref and transaction_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid request"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class BankAccountViewSet(viewsets.ModelViewSet):
@@ -156,6 +165,14 @@ class BankAccountViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         self.permission_classes = self.permissions.get(self.action, self.permissions['default'])
         return super().get_permissions()
+
+    def get_queryset(self):
+        return self.queryset.filter(merchant=self.request.user.merchant)
+
+    @action(detail=False, methods=['get'], url_path='get-banks', url_name='get_banks')
+    def get_banks(self, request):
+        serialize = BankSerializer(instance=Banks.objects.all(), many=True)
+        return Response(serialize.data, status=status.HTTP_200_OK)
 
 
 class CarBrandSerializerViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):

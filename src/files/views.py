@@ -2,8 +2,8 @@ from rest_framework import viewsets, mixins
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import FileSerializer
 from .models import File
+from .serializers import FileSerializer
 
 
 class FilesViewset(mixins.CreateModelMixin, viewsets.GenericViewSet):

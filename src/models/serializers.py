@@ -2,34 +2,26 @@ import datetime
 import re
 from decimal import Decimal
 
-from rest_framework import serializers, exceptions
-import requests
-from src.config.common import OTP_EXPIRY
-from src.models.models import (
-    Transaction,
-    Wallet,
-    CarMerchant,
-    BankAccount,
-    CarBrand,
-    Car,
-    UserTypes,
-    TransactionPinStatus,
-    TransactionPin,
-    Otp,
-    Disbursement,
-    Activity,
-)
-from src.common.serializers import ThumbnailerJSONSerializer
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, PasswordField
-from django.db.utils import IntegrityError
 from django.contrib.auth import get_user_model, authenticate
+from django.db import transaction
+from django.db.utils import IntegrityError
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
-from django.db import transaction
-
-from src.notifications.services import USER_PHONE_VERIFICATION, notify
+from rest_framework import serializers, exceptions
+from rest_framework_simplejwt.serializers import PasswordField
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from src.config.common import OTP_EXPIRY
+from src.models.models import (
+    Wallet,
+    CarMerchant,
+    CarBrand,
+    UserTypes,
+    TransactionPinStatus,
+    Otp,
+    Disbursement,
+    Activity, )
 
 User = get_user_model()
 
@@ -73,7 +65,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
         # the password will be stored in plain text.
         try:
             validated_data['username'] = (
-                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get("email")
+                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get(
+                    "email")
             )
             validated_data["is_active"] = False
             if validated_data.get("user_type") == UserTypes.CarMerchant:
@@ -171,12 +164,6 @@ class CarMerchantSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class BankAccountSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BankAccount
-        fields = "__all__"
-
-
 class CarBrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarBrand
@@ -255,6 +242,7 @@ class TokenObtainModSerializer(serializers.Serializer):
         data = {'refresh': str(refresh), 'access': str(refresh.access_token), "merchant": car_merch.data}
         return data
 
+
 class OtpSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
 
@@ -300,6 +288,3 @@ class ActivitySerializer(serializers.ModelSerializer):
         model = Activity
         fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
         read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
-
-
-from rest_framework.renderers import JSONRenderer

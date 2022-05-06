@@ -1,9 +1,9 @@
+from PIL import UnidentifiedImageError
 from django.db import models
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from easy_thumbnails.exceptions import EasyThumbnailsError
 from easy_thumbnails.files import get_thumbnailer
-from PIL import UnidentifiedImageError
 
 
 class File(models.Model):

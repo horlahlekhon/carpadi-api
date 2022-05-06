@@ -1,4 +1,3 @@
-from dataclasses import field, fields
 from django_filters import rest_framework as filters
 
 from src.models.models import Transaction, Wallet, Trade, Disbursement, Activity, SpareParts

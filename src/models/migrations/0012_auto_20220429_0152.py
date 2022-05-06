@@ -2,15 +2,16 @@
 
 import datetime
 from decimal import Decimal
+
 import django.core.validators
-from django.db import migrations, models
 import django.db.models.deletion
+from django.db import migrations, models
 from django.utils.timezone import utc
+
 import src.carpadi_admin.utils
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('models', '0011_auto_20220424_0917'),
     ]
@@ -23,31 +24,47 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='tradeunit',
             name='buy_transaction',
-            field=models.ForeignKey(blank=True, help_text='the transaction that bought this unit', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='trade_units_buy', to='models.transaction'),
+            field=models.ForeignKey(blank=True, help_text='the transaction that bought this unit', null=True,
+                                    on_delete=django.db.models.deletion.PROTECT, related_name='trade_units_buy',
+                                    to='models.transaction'),
         ),
         migrations.AddField(
             model_name='tradeunit',
             name='checkout_transaction',
-            field=models.ForeignKey(blank=True, help_text='the transaction that materialized out this unit', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='trade_units_checkout', to='models.transaction', validators=[django.core.validators.MinValueValidator(Decimal('0')), src.carpadi_admin.utils.checkout_transaction_validator]),
+            field=models.ForeignKey(blank=True, help_text='the transaction that materialized out this unit', null=True,
+                                    on_delete=django.db.models.deletion.PROTECT, related_name='trade_units_checkout',
+                                    to='models.transaction',
+                                    validators=[django.core.validators.MinValueValidator(Decimal('0')),
+                                                src.carpadi_admin.utils.checkout_transaction_validator]),
         ),
         migrations.AlterField(
             model_name='disbursement',
             name='disbursement_status',
-            field=models.CharField(choices=[('Ongoing', 'Ongoing'), ('Completed', 'Completed'), ('Unsettled', 'Unsettled. The disbursement has been created but not yet settled by the admin'), ('Settled', 'Settled. The disbursement has been settled by the admin')], default='Unsettled', max_length=20),
+            field=models.CharField(choices=[('Ongoing', 'Ongoing'), ('Completed', 'Completed'), (
+            'Unsettled', 'Unsettled. The disbursement has been created but not yet settled by the admin'),
+                                            ('Settled', 'Settled. The disbursement has been settled by the admin')],
+                                   default='Unsettled', max_length=20),
         ),
         migrations.AlterField(
             model_name='otp',
             name='expiry',
-            field=models.DateTimeField(default=datetime.datetime(2022, 4, 29, 2, 22, 1, 87586, tzinfo=utc), editable=False),
+            field=models.DateTimeField(default=datetime.datetime(2022, 4, 29, 2, 22, 1, 87586, tzinfo=utc),
+                                       editable=False),
         ),
         migrations.AlterField(
             model_name='transaction',
             name='transaction_kind',
-            field=models.CharField(choices=[('deposit', 'Deposit'), ('withdrawal', 'Withdrawal'), ('transfer', 'Transfer'), ('trade_unit_purchases', 'Wallet Deduction for trade unit purchases'), ('disbursement', 'Disbursement')], default='deposit', max_length=50),
+            field=models.CharField(
+                choices=[('deposit', 'Deposit'), ('withdrawal', 'Withdrawal'), ('transfer', 'Transfer'),
+                         ('trade_unit_purchases', 'Wallet Deduction for trade unit purchases'),
+                         ('disbursement', 'Disbursement')], default='deposit', max_length=50),
         ),
         migrations.AlterField(
             model_name='transaction',
             name='transaction_status',
-            field=models.CharField(choices=[('unsettled', 'Transaction that are yet to be resolved due to a dispute or disbursement delay, typically pending credit'), ('success', 'Success'), ('failed', 'Failed'), ('pending', 'Pending')], default='pending', max_length=10),
+            field=models.CharField(choices=[('unsettled',
+                                             'Transaction that are yet to be resolved due to a dispute or disbursement delay, typically pending credit'),
+                                            ('success', 'Success'), ('failed', 'Failed'), ('pending', 'Pending')],
+                                   default='pending', max_length=10),
         ),
     ]

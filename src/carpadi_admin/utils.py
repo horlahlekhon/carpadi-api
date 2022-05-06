@@ -25,5 +25,6 @@ def disbursement_trade_unit_validator(trade_unit):
     validate the trade unit before disbursement
     """
     if trade_unit.disbursement:
-        raise ValidationError(_(f'Trade unit {trade_unit.id} profits and capital has already been disbursed'), params={'value': trade_unit})
+        raise ValidationError(_(f'Trade unit {trade_unit.id} profits and capital has already been disbursed'),
+                              params={'value': trade_unit})
     return True

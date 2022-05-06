@@ -1,4 +1,4 @@
-from rest_framework.routers import SimpleRouter, DefaultRouter
+from rest_framework.routers import DefaultRouter
 
 from src.carpadi_api.views import (
     CarMerchantViewSet,
@@ -10,8 +10,6 @@ from src.carpadi_api.views import (
     WalletViewSet,
     ActivityViewSet, TradeViewSet, TradeUnitViewSet,
 )
-from src.models.views import UserViewSet
-
 
 router = DefaultRouter()
 router.register(r'merchants', CarMerchantViewSet)
@@ -23,6 +21,6 @@ router.register(r'cars', CarViewSet)
 router.register('pins', TransactionPinsViewSet)
 router.register('wallets', WalletViewSet)
 router.register('activities', ActivityViewSet)
-router.register('trades',  TradeViewSet)
+router.register('trades', TradeViewSet)
 router.register('trade-units', TradeUnitViewSet)
 # urlpatterns = router.urls

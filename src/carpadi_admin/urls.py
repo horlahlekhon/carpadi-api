@@ -1,8 +1,5 @@
-from rest_framework.routers import SimpleRouter, DefaultRouter
+from rest_framework.routers import DefaultRouter
 
-from src.models.views import UserViewSet
-
-from rest_framework.routers import SimpleRouter
 from src.carpadi_admin.views import (
     TransactionsViewSetAdmin,
     CarMerchantsViewSetAdmin,
@@ -14,7 +11,6 @@ from src.carpadi_admin.views import (
     ActivityViewSetAdmin, CarMaintenanceViewSetAdmin,
     SparePartsViewSet
 )
-
 from src.models.views import UserViewSet
 
 router = DefaultRouter()
