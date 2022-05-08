@@ -114,6 +114,12 @@ class DashboardViewSetAdmin(viewsets.ViewSet):
     serializer_class = DashboardSerializerAdmin,
 
     @staticmethod
+    def get_bts(request):
+        date = request.GET.get("date")
+        data = DashboardSerializerAdmin.get_average_bts(month=date.month, year=date.year)
+        return Response(data=data, status=200)
+
+    @staticmethod
     def get_graph(request):
         date = request.GET.get("date")
         data = DashboardSerializerAdmin.get_rot_vs_ttc(month=date.month, year=date.year)
@@ -123,12 +129,6 @@ class DashboardViewSetAdmin(viewsets.ViewSet):
     def get_summary(request):
         date = request.GET.get("date")
         data = DashboardSerializerAdmin.get_cars_summary(month=date.month, year=date.year)
-        return Response(data=data, status=200)
-
-    @staticmethod
-    def get_bts(request):
-        date = request.GET.get("date")
-        data = DashboardSerializerAdmin.get_average_bts(month=date.month, year=date.year)
         return Response(data=data, status=200)
 
     @staticmethod

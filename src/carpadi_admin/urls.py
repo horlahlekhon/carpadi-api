@@ -26,16 +26,16 @@ router.register(r'trades', TradeViewSetAdmin)
 router.register(r'disbursements', DisbursementViewSetAdmin)
 router.register(r'activities', ActivityViewSetAdmin)
 
-dashboard = SimpleRouter()
-dashboard.register("dashboard/graph", DashboardViewSetAdmin.get_graph)
-dashboard.register("dashboard/summary", DashboardViewSetAdmin.get_summary)
-dashboard.register("dashboard/bts", DashboardViewSetAdmin.get_bts)
-dashboard.register("dashboard/trading_users", DashboardViewSetAdmin.get_trading_users)
-dashboard.register("dashboard/shares", DashboardViewSetAdmin.get_shares)
-dashboard.register("dashboard/shares_value", DashboardViewSetAdmin.get_shares_value)
-dashboard.register("dashboard/cars_with_shares", DashboardViewSetAdmin.get_cars_with_shares)
-dashboard.register("dashboard/total_trading_cash", DashboardViewSetAdmin.get_total_trading_cash)
-dashboard.register("dashboard/recent_trade_activities", DashboardViewSetAdmin.get_recent_trading_activities)
+# admin dashboard
+router.register(r'dashboard/bts', DashboardViewSetAdmin.get_bts, basename='dashboard-bts')
+# router.register(r'dashboard/graph', DashboardViewSetAdmin.get_graph, basename='dashboard-graph')
+# router.register(r'dashboard/summary', DashboardViewSetAdmin.get_summary, basename='dashboard-summary')
+# router.register(r'dashboard/trading_users', DashboardViewSetAdmin.get_trading_users, basename='dashboard-trading_users')
+# router.register(r'dashboard/shares', DashboardViewSetAdmin.get_shares, basename='dashboard-shares')
+# router.register(r'dashboard/shares_value', DashboardViewSetAdmin.get_shares_value, basename='dashboard-shares_value')
+# router.register(r'dashboard/cars_with_shares', DashboardViewSetAdmin.get_cars_with_shares, basename='dashboard-cars_with_shares')
+# router.register(r'dashboard/total_trading_cash', DashboardViewSetAdmin.get_total_trading_cash, basename='dashboard-total_trading_cash')
+# router.register(r'dashboard/recent_trade_activities', DashboardViewSetAdmin.get_recent_trading_activities, basename='dashboard-recent_trade_activities')
 
 
 
