@@ -1,11 +1,14 @@
+import itertools
+from datetime import datetime
 from decimal import Decimal
 
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.db.transaction import atomic
 from django.utils import timezone
 from rest_framework import serializers, exceptions
 
-from src.models.models import Car, Wallet, Transaction, Trade, Disbursement, Activity, SpareParts
+from src.models.models import Car, Wallet, Transaction, Trade, Disbursement, Activity, SpareParts, TradeUnit, \
+    TransactionStatus, TransactionTypes, TransactionKinds, CarMerchant, Assets
 from src.models.models import TradeStates, \
     CarStates, CarMaintenance, CarMaintenanceTypes, MiscellaneousExpenses, DisbursementStates
 
@@ -24,11 +27,16 @@ class SocialSerializer(serializers.Serializer):
 class CarSerializer(serializers.ModelSerializer):
     maintenance_cost = serializers.SerializerMethodField()
     total_cost = serializers.SerializerMethodField()
+    pictures =  serializers.SerializerMethodField()
 
     class Meta:
         model = Car
         fields = "__all__"
         ref_name = "car_serializer_admin"
+
+    def get_pictures(self, obj: Car):
+        pictures = Assets.objects.filter(object_id=obj.id).values_list("asset", flat=True)
+        return pictures
 
     def get_total_cost(self, obj: Car):
         return obj.total_cost_calc()
@@ -208,9 +216,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
 
     @atomic()
     def create(self, validated_data):
-        car: Car = validated_data["car"]
-        price_per_slot = self.calculate_price_per_slot(car.resale_price, validated_data["slots_available"])
-        return Trade.objects.create(**validated_data, price_per_slot=price_per_slot)
+        return super().create(validated_data)
 
     def complete_trade(self, trade: Trade):
         """
@@ -234,10 +240,10 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     def update(self, instance: Trade, validated_data):
         if instance.trade_status == TradeStates.Closed:
             raise serializers.ValidationError("Cannot update a closed trade.. Geez!!")
-        if validated_data.get("trade_status") and validated_data.get("trade_status") == TradeStates.Completed:
-            instance.run_disbursement()
-            # check disbursements and update trade state
-            self.complete_trade(instance)
+        # if validated_data.get("trade_status") and validated_data.get("trade_status") == TradeStates.Completed:
+        #     instance.run_disbursement()
+        #     # check disbursements and update trade state
+        #     self.complete_trade(instance)
         return super(TradeSerializerAdmin, self).update(instance, validated_data)
 
 
@@ -301,3 +307,183 @@ class SparePartsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpareParts
         fields = "__all__"
+
+
+class TradeDashboardSerializer(serializers.Serializer):
+    active_trades = serializers.SerializerMethodField()
+    sold_trades = serializers.SerializerMethodField()
+    closed_trades = serializers.SerializerMethodField()
+
+    def get_active_trades(self, obj):
+        trds = Trade.objects.filter(trade_status__in=(TradeStates.Ongoing, TradeStates.Purchased))
+        trading_users = trds.annotate(trading_user=Count('units')) \
+                            .aggregate(trading_users=Sum('trading_user')).get('trading_users') or Decimal(0)
+        return dict(trading_users=trading_users, active_trades=trds.count())
+
+    def get_sold_trades(self, obj):
+        trds = Trade.objects.filter(trade_status=TradeStates.Completed)
+        trading_users = [trd.get_trade_merchants() for trd in trds]
+        users = list(itertools.chain(*trading_users))
+        return dict(trading_users=len(users), sold_trades=len(trds))
+
+    def get_closed_trades(self, obj):
+        trds = Trade.objects.filter(trade_status=TradeStates.Closed)
+        trading_users = [trd.get_trade_merchants() for trd in trds]
+        users = list(itertools.chain(*trading_users))
+        return dict(trading_users=len(users), closed_trades=len(trds))
+
+
+class AccountDashboardSerializer(serializers.Serializer):
+    start_date = serializers.DateField(required=False, write_only=True)
+    end_date = serializers.DateField(required=False, write_only=True)
+    total_trading_cash = serializers.SerializerMethodField()
+    total_withdrawable_cash = serializers.SerializerMethodField()
+    total_unsettled_cash = serializers.SerializerMethodField()
+    total_transfer_charges = serializers.SerializerMethodField()
+    total_withdrawals_count = serializers.SerializerMethodField()
+    total_deposits_count = serializers.SerializerMethodField()
+    total_assets = serializers.SerializerMethodField()
+
+    def __init__(self, instance=None, data=None, **kwargs):
+        super().__init__(instance, data, **kwargs)
+        self.start_date = self.initial_data["start_date"]
+        self.end_date = self.initial_data["end_date"]
+
+    def get_total_trading_cash(self, value):
+        """
+        Total trading cash is the amount of cash that is used to trade cars currently.
+        It is the sum of all units bought on trades that are not completed.
+        """
+        units = TradeUnit.objects.filter(trade__trade_status__in=(TradeStates.Ongoing, TradeStates.Purchased,), )
+        total_trading_cash = units.aggregate(value=Sum("unit_value")).get("value") or Decimal(0)
+        users_trading_count = units.values("merchant").distinct().count()
+        return dict(total_trading_cash=total_trading_cash, users_trading_count=users_trading_count)
+
+    def get_total_withdrawable_cash(self, value):
+        """The total amount of cash that can be withdrawn from user accounts accross the system"""
+        wallets = Wallet.objects.filter(merchant__user__is_active=True)
+        total_withdrawable_cash = sum(i.get_withdrawable_cash() for i in wallets)
+        users_withdrawable_count = wallets.count()
+        return dict(total_withdrawable_cash=total_withdrawable_cash, users=users_withdrawable_count)
+
+    def get_total_unsettled_cash(self, value):
+        """The total amount of cash that is unsettled across the system.
+         unsettled cash are for now the trades rots that are yet to be moved to withdrawable cash
+                 """
+        wallets = Wallet.objects.filter(merchant__user__is_active=True)
+        total_unsettled_cash = sum(i.get_unsettled_cash() for i in wallets)
+        users_unsettled_count = wallets.count()
+        return dict(total_unsettled_cash=total_unsettled_cash, users=users_unsettled_count)
+
+    def get_total_transfer_charges(self, value):
+        """The total amount of transfer charges that was paid for withdrawals across the system"""
+        transactions = Transaction.objects \
+            .filter(transaction_status=TransactionStatus.Success,
+                    transaction_type=TransactionTypes.Debit,
+                    transaction_kind=TransactionKinds.Withdrawal,
+                    created__date__gte=self.start_date, created__date__lte=self.end_date)
+        total_transfer_charges = transactions.aggregate(value=Sum("transaction_fees")).get("value") or Decimal(0)
+        users = transactions.values("wallet__merchant").distinct().count()
+        return dict(total_transfer_charges=total_transfer_charges, users=users)
+
+    def get_total_deposits_count(self, value):
+        """The total amount of deposits made across the system"""
+        transactions = Transaction.objects \
+            .filter(transaction_status=TransactionStatus.Success,
+                    transaction_type=TransactionTypes.Credit,
+                    transaction_kind=TransactionKinds.Deposit,
+                    created__date__gte=self.start_date, created__date__lte=self.end_date)
+        total_deposits_count = transactions.count()
+        users = transactions.values("wallet__merchant").distinct().count()
+        return dict(total_deposits_count=total_deposits_count, users=users)
+
+    def get_total_withdrawals_count(self, value):
+        """The total amount of withdrawals made across the system"""
+        transactions = Transaction.objects \
+            .filter(transaction_status=TransactionStatus.Success,
+                    transaction_type=TransactionTypes.Debit,
+                    transaction_kind=TransactionKinds.Withdrawal,
+                    created__date__gte=self.start_date, created__date__lte=self.end_date)
+        total_withdrawals_count = transactions.count()
+        users = transactions.values("wallet__merchant").distinct().count()
+        return dict(total_withdrawals_count=total_withdrawals_count, users=users)
+
+    def get_total_assets(self, value):
+        """The total amount of assets across the system"""
+        wallets = Wallet.objects.filter(merchant__user__is_active=True)
+        total_asset = sum(i.get_total_cash() for i in wallets)
+        users = wallets.count()
+        return dict(total_assets=total_asset, users=users)
+
+    def get_asset_pie_chart(self, value):
+        """ the distribution of assets by their transaction type across the system"""
+        result = {}
+        deposits = Transaction.objects.filter(transaction_status=TransactionStatus.Success,
+                                              transaction_type=TransactionTypes.Credit,
+                                              transaction_kind=TransactionKinds.Deposit)
+        withdrawals = Transaction.objects.filter(transaction_status=TransactionStatus.Success,
+                                                 transaction_type=TransactionTypes.Debit,
+                                                 transaction_kind=TransactionKinds.Withdrawal)
+        disbursements = Transaction.objects.filter(transaction_status=TransactionStatus.Success,
+                                                   transaction_type=TransactionTypes.Debit,
+                                                   transaction_kind=TransactionKinds.Disbursement)
+        result["deposits"] = deposits.aggregate(value=Sum("transaction_amount")).get("value") or Decimal(0)
+        result["withdrawals"] = withdrawals.aggregate(value=Sum("transaction_amount")).get("value") or Decimal(0)
+        result["disbursements"] = disbursements.aggregate(value=Sum("transaction_amount")).get("value") or Decimal(0)
+        result['chart_data'] = []  # TODO clarification on this is still needed
+        return result
+
+
+class InventoryDashboardSerializer(serializers.Serializer):
+    car_listing = serializers.SerializerMethodField()
+    under_inspection = serializers.SerializerMethodField()
+    passed_for_trade = serializers.SerializerMethodField()
+    ongoing_trade = serializers.SerializerMethodField()
+    sold = serializers.SerializerMethodField()
+    archived = serializers.SerializerMethodField()
+
+    def get_car_listing(self, value):
+        """The total amount of cars in the system"""
+        return Car.objects.filter(status=CarStates.Available).count()
+
+    def get_under_inspection(self, value):
+        """The total amount of cars under inspection"""
+        return Car.objects.filter(status=CarStates.New).count()
+
+    def get_passed_for_trade(self, value):
+        """The total amount of cars passed for trade"""
+        return Car.objects.filter(status=CarStates.Available).count()
+
+    def get_ongoing_trade(self, value):
+        """The total amount of cars in trade"""
+        return Trade.objects.filter(trade_status=TradeStates.Ongoing).count()
+
+    def get_sold(self, value):
+        """The total amount of cars sold"""
+        return Car.objects.filter(status=CarStates.Sold).count()
+
+    def get_archived(self, value):
+        """The total amount of cars archived"""
+        return Car.objects.filter(status=CarStates.Archived).count()
+
+
+class MerchantDashboardSerializer(serializers.Serializer):
+    total_users = serializers.SerializerMethodField()
+    active_users = serializers.SerializerMethodField()
+    inactive_users = serializers.SerializerMethodField()
+
+    def get_total_users(self, value):
+        """The total amount of users in the system"""
+        return CarMerchant.objects.count()
+
+    def get_active_users(self, value):
+        """The total amount of active users in the system"""
+        return TradeUnit.objects.filter(merchant__user__is_active=True).values('merchant').distinct().count()
+
+    def get_inactive_users(self, value):
+        """The total amount of inactive users in the system"""
+        return CarMerchant.objects.filter(user__is_active=False, user__is_staff=False).count()
+
+    def get_non_trading_users(self, value):
+        """The total amount of non trading users in the system"""
+        return self.get_total_users(None) - self.get_active_users(None)

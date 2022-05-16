@@ -31,7 +31,7 @@ INSTALLED_APPS = (
     'django_filters',  # for filtering rest endpoints
     'django_rest_passwordreset',  # for reset password endpoints
     'drf_yasg',  # swagger api
-    'easy_thumbnails',  # image lib
+    'easy_thumbnails',  # asset lib
     'social_django',  # social login
     'corsheaders',  # cors handling
     'django_inlinecss',  # inline css in templates
@@ -379,6 +379,13 @@ FLW_REDIRECT_URL = os.getenv('PAYMENT_REDIRECT_URL',
 FLW_PAYMENT_URL = os.getenv('PAYMENT_URL', "https://api.flutterwave.com/v3/payments")
 FLW_PAYMENT_VERIFY_URL = "https://api.flutterwave.com/v3/transactions/{}/verify".format
 FLW_GET_TRANSFER_URL = "https://api.flutterwave.com/v3/transfers/{}".format
+FLW_ACCOUNT_VERIFY_URL = "https://api.flutterwave.com/v3/accounts/resolve"
 LOG_DIRECTORY = os.getenv('LOG_DIRECTORY', 'logs')
 
 FLW_WITHDRAW_URL = os.getenv('FLW_WITHDRAW_URL', "https://api.flutterwave.com/v3/transfers")
+
+import cloudinary
+
+cloudinary.config(cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME', ''),
+                  api_key=os.getenv('CLOUDINARY_API_KEY', ''),
+                  api_secret=os.getenv('CLOUDINARY_API_SECRET', ''))

@@ -373,14 +373,7 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         trade: Trade = validated_data["trade"]
         merchant: CarMerchant = validated_data["merchant"]
         share_percentage = (trade.slots_available / validated_data["slots_quantity"]) * 100
-        unit = TradeUnit.objects.create(
-            trade=trade,
-            merchant=merchant,
-            share_percentage=share_percentage,
-            slots_quantity=validated_data["slots_quantity"],
-            estimated_rot=validated_data["estimated_rot"],
-            unit_value=trade.price_per_slot * validated_data["slots_quantity"],
-        )
+        unit_value = trade.calculate_price_per_slot() * validated_data["slots_quantity"]
         ref = f"CP-{uuid4()}"
         tx = Transaction.objects.create(
             transaction_reference=ref,
@@ -389,13 +382,19 @@ class TradeUnitSerializer(serializers.ModelSerializer):
             transaction_description="Trade Unit Purchase",
             # noqa
             transaction_type=TransactionTypes.Debit,
-            amount=unit.unit_value,
+            amount=unit_value,
             wallet=merchant.wallet,
             transaction_payment_link=None,
         )
-        unit.buy_transaction = tx
-        unit.save(update_fields=["buy_transaction"])
-        unit.refresh_from_db()
+        unit = TradeUnit.objects.create(
+            trade=trade,
+            merchant=merchant,
+            share_percentage=share_percentage,
+            slots_quantity=validated_data["slots_quantity"],
+            estimated_rot=validated_data["estimated_rot"],
+            unit_value=trade.price_per_slot * validated_data["slots_quantity"],
+            buy_transaction=tx,
+        )
         tx.wallet.update_balance(tx=tx)
         return unit
 
@@ -418,7 +417,7 @@ class BankAccountSerializer(serializers.ModelSerializer):
             "account_number": account_number,
             "account_bank": bank_code,
         }
-        resp = requests.post("https://api.flutterwave.com/v3/accounts/resolve", json=bdy, headers=headers)
+        resp = requests.post(common.FLW_ACCOUNT_VERIFY_URL, json=bdy, headers=headers)
         data = resp.json()
         if resp.status_code != 200:
             raise serializers.ValidationError("Invalid account details")

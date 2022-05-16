@@ -21,7 +21,7 @@ from src.models.models import (
     TransactionPinStatus,
     Otp,
     Disbursement,
-    Activity, )
+    Activity, Assets, AssetEntityType, Car, )
 
 User = get_user_model()
 
@@ -52,7 +52,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     merchant_id = serializers.SerializerMethodField()
 
     def get_merchant_id(self, user: User):
-        if user.is_merchant:
+        if user.is_merchant():
             return user.merchant.id
         return None
 
@@ -288,3 +288,35 @@ class ActivitySerializer(serializers.ModelSerializer):
         model = Activity
         fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
         read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
+
+
+class AssetsSerializer(serializers.ModelSerializer):
+    content_object = serializers.HiddenField(default=None)
+    object_id = serializers.HiddenField(default=None)
+    content_type = serializers.HiddenField(default=None)
+    asset = serializers.URLField(required=True)
+    entity_type = serializers.ChoiceField(choices=AssetEntityType.choices, required=True)
+    entity_id = serializers.UUIDField(required=True, write_only=True)
+
+    class Meta:
+        model = Assets
+        fields = "__all__"
+        read_only_fields = ("id", "created")
+
+    def validate(self, attrs):
+        if attrs["entity_type"] == AssetEntityType.Car:
+            entity = Car.objects.filter(id=attrs["entity_id"]).first()
+            if not entity:
+                raise serializers.ValidationError("Car does not exist")
+        elif attrs["entity_type"] == AssetEntityType.Merchant:
+            entity = User.objects.filter(id=attrs["entity_id"]).first()
+            if not entity:
+                raise serializers.ValidationError("Merchant does not exist")
+        else:
+            raise serializers.ValidationError("Invalid entity type")
+        attrs["content_object"] = entity
+        return attrs
+
+    def create(self, validated_data):
+        return Assets.objects.create(content_object=validated_data["content_object"],
+                                     asset=validated_data["asset"], entity_type=validated_data["entity_type"])

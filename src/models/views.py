@@ -4,12 +4,12 @@ from rest_framework import status
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAcceptable
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.views import TokenViewBase
 
-from src.models.models import User, UserTypes
+from src.models.models import User, UserTypes, Assets
 from src.models.permissions import IsUserOrReadOnly
 from src.models.serializers import (
     CreateUserSerializer,
@@ -17,8 +17,9 @@ from src.models.serializers import (
     PhoneVerificationSerializer,
     TokenObtainModSerializer,
     CarMerchantSerializer,
-    OtpSerializer,
+    OtpSerializer, AssetsSerializer,
 )
+from django.db import transaction
 
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -78,6 +79,10 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         except Exception as reason:
             return Response(reason.args, status=status.HTTP_400_BAD_REQUEST)
 
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
     def get_object(self):
         user = self.request.user
         if user.is_anonymous or not user.is_authenticated or not user.is_active:
@@ -98,3 +103,23 @@ class TokenObtainPairViewMod(TokenViewBase):
     """
 
     serializer_class = TokenObtainModSerializer
+
+
+class AssetsViewSet(viewsets.ModelViewSet):
+    """
+    Retrieves and Updates - User Pictures
+    """
+
+    queryset = Assets.objects.all()
+    serializer_class = AssetsSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        user = self.request.user
+        if user.is_anonymous or not user.is_authenticated or not user.is_active:
+            raise Http404('No user matches the given query.')
+        return user
+
+    # @action(detail=False, methods=['patch'], url_path='update', url_name='patch_user')
+    # def patch_user(self, request, *args, **kwargs):
+    #     return super(PicturesViewSet, self).update(request, *args, **kwargs)

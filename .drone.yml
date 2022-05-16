@@ -34,7 +34,7 @@ steps:
       - docker push registry.vivifyideas.com/<namespace>/web:${DRONE_BRANCH}
       - docker build -f Dockerfile-static -t registry.vivifyideas.com/<namespace>/static:${DRONE_BRANCH} --pull=true .
       - docker push registry.vivifyideas.com/<namespace>/static:${DRONE_BRANCH}
-      - docker image prune -f
+      - docker asset prune -f
 
   - name: deploy
     image: alpine

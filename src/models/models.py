@@ -23,6 +23,8 @@ from src.carpadi_admin.utils import validate_inspector, checkout_transaction_val
     disbursement_trade_unit_validator
 from src.config.common import OTP_EXPIRY
 
+from rest_framework import exceptions
+
 
 class Base(UUIDModel, TimeStampedModel):
     pass
@@ -38,7 +40,7 @@ class UserTypes(models.TextChoices):
 
 class User(AbstractUser, Base):
     username_validator = UnicodeUsernameValidator()
-    profile_picture = models.URLField(blank=True, null=True)
+    profile_picture = models.OneToOneField("Assets", on_delete=models.SET_NULL, null=True, blank=True)
     user_type = models.CharField(choices=UserTypes.choices, max_length=20)
     phone = models.CharField(max_length=15, unique=True, help_text="International format phone number")
     username = models.CharField(max_length=50, validators=[username_validator], unique=True, null=True)
@@ -364,6 +366,8 @@ class CarStates(models.TextChoices):
     )
     New = "new", _("New car waiting to be inspected")
 
+    Archived = "archived", _("Archived")
+
 
 class CarTransmissionTypes(models.TextChoices):
     Manual = "manual", _(
@@ -398,10 +402,9 @@ class FuelTypes(models.TextChoices):
 class Car(Base):
     brand = models.ForeignKey(CarBrand, on_delete=models.SET_NULL, null=True)
     status = models.CharField(choices=CarStates.choices, max_length=30, default=CarStates.New)
+    # TODO validate vin from vin api
     vin = models.CharField(max_length=17)
-    # TODO try upload_to to upload to the car folder using ImageField
-    pictures = models.URLField(help_text="url of the folder where the images for the car is located.", null=True,
-                               blank=True)
+    pictures = models.ForeignKey("Assets", on_delete=models.SET_NULL, null=True, related_name="cars")
     car_inspector = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,
@@ -470,6 +473,9 @@ class Car(Base):
     def margin_calc(self):
         return self.total_cost_calc() - self.offering_price
 
+    # def get_resale_price(self):
+    #     return self.total_cost_calc() if not self.resale_price else self.resale_price
+
     def update_on_sold(self):
         self.status = CarStates.Sold
         self.margin = self.margin_calc()
@@ -524,7 +530,7 @@ class Trade(Base):
     return_on_trade = models.DecimalField(
         decimal_places=2,
         max_digits=10,
-        default=Decimal(0.00),
+        null=True, blank=True,
         validators=[MinValueValidator(Decimal(0.00))], help_text="The actual profit that was made from car ",
     )
     estimated_return_on_trade = models.DecimalField(
@@ -533,7 +539,6 @@ class Trade(Base):
     )
     price_per_slot = models.DecimalField(
         decimal_places=2,
-        editable=False,
         validators=[MinValueValidator(Decimal(0.00))],
         max_digits=10,
         default=Decimal(0.00),
@@ -545,7 +550,8 @@ class Trade(Base):
         decimal_places=2,
         max_digits=10,
         default=Decimal(0.00),
-        help_text="min price at which the car " "can be sold",
+        help_text="min price at which the car can be sold, given the expenses we already made. "
+                  "this should be determined by who is creating the sales by checking the expenses made on the car"
     )
     max_sale_price = models.DecimalField(
         validators=[MinValueValidator(Decimal(0.00))],
@@ -554,12 +560,12 @@ class Trade(Base):
         default=Decimal(0.00),
         help_text="max price at which the car " "can be sold",
     )
-    bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days")
+    bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days", null=True, blank=True)
     date_of_sale = models.DateField(null=True, blank=True)
 
     @property
     def resale_price(self):
-        return self.car.resale_price if self.car.resale_price else self.min_sale_price
+        return self.min_sale_price if not self.car.resale_price else self.car.resale_price
 
     def return_on_trade_calc(self):
         return self.resale_price - self.car.total_cost_calc()
@@ -595,11 +601,17 @@ class Trade(Base):
         return (self.return_on_trade_per_slot() * self.slots_available) + total_unit_value
 
     def run_disbursement(self):
-        if self.trade_status == TradeStates.Purchased:
+        if self.trade_status == TradeStates.Completed:
             for unit in self.units.all():
                 unit.disburse()
         else:
-            raise ValueError("Trade is not in completed state")
+            raise ValueError(f"Trade is not in {self.trade_status} state")
+
+    def calculate_price_per_slot(self):
+        return self.resale_price / self.slots_available
+
+    def get_trade_merchants(self):
+        return self.units.values_list('merchant', flat=True).distinct()
 
     @atomic()
     def close(self):
@@ -609,6 +621,44 @@ class Trade(Base):
         self.trade_status = TradeStates.Closed
         self.save(update_fields=["trade_status"])
         return None
+
+    @atomic()
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.price_per_slot = self.calculate_price_per_slot()
+            self.estimated_return_on_trade = self.return_on_trade_calc()
+        else:
+            self.check_updates(kwargs.get("update_fields", []))
+        return super().save(*args, **kwargs)
+
+    def check_updates(self, update_fields):
+        if "trade_status" in update_fields and self.trade_status == TradeStates.Completed:
+            if self.trade_status == TradeStates.Completed:
+                self.date_of_sale = timezone.now()
+                self.run_disbursement()
+                self.complete_trade()
+        return None
+
+    def complete_trade(self):
+        """
+                Completes the trade by setting the trade status to completed and updating the car status.
+                we also try to do some validation to make sure trade and its corresponding objects are valid
+        """
+        successful_disbursements = self \
+            .units \
+            .filter(disbursement__disbursement_status=DisbursementStates.Unsettled).count()
+        query = self.units.annotate(total_disbursed=Sum('disbursement__amount'))
+        total_disbursed = query.aggregate(sum=Sum('total_disbursed')).get('sum') or Decimal(0)
+        if successful_disbursements == self.units.count() and total_disbursed == self.total_payout():
+            car: Car = self.car
+            car.update_on_sold()
+        else:
+            raise exceptions.APIException("Error, cannot complete trade, because calculated"
+                                          " payout seems to be unbalanced with the disbursements")
+
+    def __repr__(self):
+        return f"<Trade(car={self.car}, slots_available={self.slots_available}," \
+               f" status={self.trade_status}, date_of_sale={self.date_of_sale})>"
 
 
 class TradeUnit(Base):
@@ -725,3 +775,20 @@ class Activity(Base):
     object_id = models.UUIDField()
     activity = GenericForeignKey("content_type", "object_id")
     description = models.TextField(default="")
+
+
+class AssetEntityType(models.TextChoices):
+    Car = "car", _("car picture")
+    Merchant = "merchant", _("user profile picture")
+    Trade = "trade", _("Trade pictures of a car")
+    Inspection = "car_inspection", _("Car inspection pictures")
+    Features = "feature", _("Picture of a feature of a car")
+    InspectionReport = "inspection_report", _("Pdf report of an inspected vehicle")
+
+
+class Assets(Base):
+    asset = models.URLField(null=False, blank=False)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.UUIDField()
+    content_object = GenericForeignKey("content_type", "object_id")
+    entity_type = models.CharField(choices=AssetEntityType.choices, max_length=20)

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
@@ -21,7 +23,8 @@ from src.carpadi_admin.serializers import (
     DisbursementSerializerAdmin,
     ActivitySerializerAdmin,
     TradeSerializerAdmin, CarMaintenanceSerializerAdmin,
-    SparePartsSerializer
+    SparePartsSerializer, AccountDashboardSerializer, TradeDashboardSerializer, InventoryDashboardSerializer,
+    MerchantDashboardSerializer
 )
 from src.models.models import (
     Transaction,
@@ -148,3 +151,42 @@ class SparePartsViewSet(viewsets.ModelViewSet):
     queryset = SpareParts.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = SparePartsFilter
+
+
+
+class DashboardViewSet(viewsets.GenericViewSet):
+    permission_classes = (IsAdminUser,)
+    serializer_class = AccountDashboardSerializer
+
+    @action(detail=False, methods=['get'], url_path='accounts', url_name='account_dashboard')
+    def accounts(self, request, *args, **kwargs):
+        data = dict(
+            start_date=request.query_params.get('start_date', datetime.now().date().replace(day=1)),
+            end_date=request.query_params.get('end_date',  datetime.now().date())
+        )
+        serializer = self.get_serializer(data=data)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='trades', url_name='trade_dashboard')
+    def trades(self, request, *args, **kwargs):
+        ser = TradeDashboardSerializer(data=request.query_params)
+        if ser.is_valid():
+            return Response(ser.data, status=status.HTTP_200_OK)
+        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='inventory', url_name='inventory_dashboard')
+    def inventory(self, request, *args, **kwargs):
+        ser = InventoryDashboardSerializer(data=request.query_params)
+        if ser.is_valid():
+            return Response(ser.data, status=status.HTTP_200_OK)
+        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='merchants', url_name='merchants_dashboard')
+    def merchants(self, request, *args, **kwargs):
+        ser = MerchantDashboardSerializer(data=request.query_params)
+        if ser.is_valid():
+            return Response(ser.data, status=status.HTTP_200_OK)
+        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
