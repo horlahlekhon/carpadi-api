@@ -30,9 +30,9 @@ steps:
         path: /var/run/docker.sock
     commands:
       - docker login -u $REGISTRY_USER -p $REGISTRY_PASS registry.vivifyideas.com
-      - docker build -f Dockerfile -t registry.vivifyideas.com/<namespace>/web:${DRONE_BRANCH} --build-arg REQUIREMENTS_FILE=prod.txt --pull=true .
+      - docker build -f Dockerfile.prod -t registry.vivifyideas.com/<namespace>/web:${DRONE_BRANCH} --build-arg REQUIREMENTS_FILE=prod.txt --pull=true .
       - docker push registry.vivifyideas.com/<namespace>/web:${DRONE_BRANCH}
-      - docker build -f Dockerfile-static -t registry.vivifyideas.com/<namespace>/static:${DRONE_BRANCH} --pull=true .
+      - docker build -f Dockerfile.prod-static -t registry.vivifyideas.com/<namespace>/static:${DRONE_BRANCH} --pull=true .
       - docker push registry.vivifyideas.com/<namespace>/static:${DRONE_BRANCH}
       - docker asset prune -f
 

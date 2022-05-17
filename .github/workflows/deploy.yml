@@ -1,32 +1,18 @@
-#on:
-#  push:
-#    branches:
-#      - master
-#
-#name: Deploy Application
-#
-#jobs:
-#  build:
-#    name: build and push asset
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Deploy asset to server
-#        uses: appleboy/ssh-action@master
-#        env:
-#          IMAGE_NAME: "bloverseinc/speedgov-web"
-#          IMAGE_TAG: ${{ steps.tag.outputs.tag }}
-#          CONTAINER_NAME: "speedgov-web-app"
-#        with:
-#          host: ${{ secrets.SSH_STAGING_HOST }}
-#          username: ${{ secrets.SSH_USERNAME }}
-#          key: ${{ secrets.SSH_PEM }}
-#          port: ${{ secrets.SSH_PORT }}
-#          envs: IMAGE_NAME,IMAGE_TAG,CONTAINER_NAME
-#          script: |
-#
-#            docker container stop $CONTAINER_NAME
-#            docker container rm $CONTAINER_NAME
-#            docker pull $IMAGE_NAME:$IMAGE_TAG
-#            docker run -d -p 8000:80 --name $CONTAINER_NAME --env-file /var/www/speedgov-web.env $IMAGE_NAME:$IMAGE_TAG
-#            docker image prune -a --force
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: "carpadi" #Must be unique in Heroku
+          heroku_email: "horlahlekhon@gmail.com"
+          usedocker: true
