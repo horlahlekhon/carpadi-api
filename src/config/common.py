@@ -79,15 +79,12 @@ WSGI_APPLICATION = 'src.wsgi.application'
 
 # Email
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
-EMAIL_PORT = os.getenv('EMAIL_PORT', 1025)
+EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+EMAIL_PORT = os.getenv('EMAIL_PORT', 587)
 EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
 EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_USER = "emailapikey"
-EMAIL_HOST_PASSWORD = "wSsVR60k8kT4XK99mmarJLs+nlpVU17zFE990VHw73StH6+T9sdqxUDGBAX2G6QeQ2NrEDJArL1/nhdUhDYHi9wlmQlSACiF9mqRe1U4J3x17qnvhDzNV2VVlxKML4IAzw5tmmVhFMEj+g=="
-
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 # Celery
 BROKER_URL = os.getenv('BROKER_URL', 'redis://redis:6379')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379')

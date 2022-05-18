@@ -19,6 +19,7 @@ from src.models.models import (
     Trade,
     TradeStates,
 )
+from src.notifications.services import notify, USER_PHONE_VERIFICATION
 
 
 class DisableSignals(object):
@@ -68,13 +69,13 @@ def complete_user_registeration(sender, **kwargs):
             expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
             ot = Otp.objects.create(otp="123456", expiry=expiry, user=user)
             context = dict(username=user.username, otp=ot.otp)
-            # notify(
-            #     USER_PHONE_VERIFICATION,
-            #     context=context,
-            #     email_to=[
-            #         user.email,
-            #     ],
-            # )
+            notify(
+                USER_PHONE_VERIFICATION,
+                context=context,
+                email_to=[
+                    user.email,
+                ],
+            )
 
 
 from django.urls import reverse
