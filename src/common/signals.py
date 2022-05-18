@@ -19,7 +19,7 @@ from src.models.models import (
     Trade,
     TradeStates,
 )
-from src.notifications.services import notify, USER_PHONE_VERIFICATION
+from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
 
 
 class DisableSignals(object):
@@ -107,7 +107,7 @@ def password_reset_token_created(sender, instance, reset_password_token: ResetPa
         'token': "123456",  # reset_password_token.key,
     }
 
-    # notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
+    notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
 
 
 def complete_transaction(sender, **kwargs):
