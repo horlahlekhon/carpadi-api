@@ -15,7 +15,10 @@ from src.models.models import (
     Transaction,
     TransactionStatus,
     Activity,
-    ActivityTypes, Trade, TradeStates, )
+    ActivityTypes,
+    Trade,
+    TradeStates,
+)
 
 
 class DisableSignals(object):
@@ -120,8 +123,8 @@ def complete_transaction(sender, **kwargs):
             # notify(ACTIVITY_MERCHANT_PAYMENT_SUCCESS, context=context, email_to=[tx.wallet.merchant.user.email])
 
     if tx.transaction_status in (
-            TransactionStatus.Success,
-            TransactionStatus.Failed,
+        TransactionStatus.Success,
+        TransactionStatus.Failed,
     ):
         activity = Activity.objects.create(
             activity_type=ActivityTypes.Transaction,
@@ -141,9 +144,9 @@ def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
             activity_type=ActivityTypes.TradeUnit,
             activity=instance,
             description=f"Activity Type: Purchase of Unit Description: "
-                        f"{instance.slots_quantity} ({instance.share_percentage})  of \
+            f"{instance.slots_quantity} ({instance.share_percentage})  of \
                     {instance.trade.car.brand.name} {instance.trade.car.brand.model}"
-                        f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
+            f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
         )
         trade: Trade = instance.trade
         if trade.slots_available == trade.slots_purchased():
@@ -158,8 +161,10 @@ def disbursement_completed(sender, instance, created, **kwargs):
             activity_type=ActivityTypes.Disbursement,
             activity=dis,
             description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} "
-                        f"naira for {dis.trade_unit.slots_quantity} units \
+            f"naira for {dis.trade_unit.slots_quantity} units \
                     owned in {dis.trade_unit.trade.car.brand.name}"
-                        f" {dis.trade_unit.trade.car.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
+            f" {dis.trade_unit.trade.car.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
         )
+
+
 #         update trade status

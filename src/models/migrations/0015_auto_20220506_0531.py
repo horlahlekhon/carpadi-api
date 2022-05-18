@@ -20,8 +20,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='transaction',
             name='transaction_fees',
-            field=models.DecimalField(decimal_places=4, default=0.0,
-                                      help_text='Transaction fees for withdrawal transactions', max_digits=10),
+            field=models.DecimalField(
+                decimal_places=4, default=0.0, help_text='Transaction fees for withdrawal transactions', max_digits=10
+            ),
         ),
         migrations.AlterField(
             model_name='bankaccount',
@@ -36,8 +37,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='otp',
             name='expiry',
-            field=models.DateTimeField(default=datetime.datetime(2022, 5, 6, 6, 1, 27, 598167, tzinfo=utc),
-                                       editable=False),
+            field=models.DateTimeField(default=datetime.datetime(2022, 5, 6, 6, 1, 27, 598167, tzinfo=utc), editable=False),
         ),
         migrations.AlterField(
             model_name='transaction',

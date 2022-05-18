@@ -22,6 +22,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='trade',
             name='min_sale_price',
-            field=models.DecimalField(decimal_places=2, default=Decimal('0'), help_text='min price at which the car can be sold, given the expenses we already made. this should be determined by who is creating the sales by checking the expenses made on the car', max_digits=10, validators=[django.core.validators.MinValueValidator(Decimal('0'))]),
+            field=models.DecimalField(
+                decimal_places=2,
+                default=Decimal('0'),
+                help_text='min price at which the car can be sold, given the expenses we already made. this should be determined by who is creating the sales by checking the expenses made on the car',
+                max_digits=10,
+                validators=[django.core.validators.MinValueValidator(Decimal('0'))],
+            ),
         ),
     ]

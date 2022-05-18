@@ -15,14 +15,17 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='car',
             name='margin',
-            field=models.DecimalField(blank=True, decimal_places=2,
-                                      help_text='The profit that was made from car after sales in percentage of the total cost',
-                                      max_digits=10, null=True),
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=2,
+                help_text='The profit that was made from car after sales in percentage of the total cost',
+                max_digits=10,
+                null=True,
+            ),
         ),
         migrations.AlterField(
             model_name='otp',
             name='expiry',
-            field=models.DateTimeField(default=datetime.datetime(2022, 4, 12, 22, 57, 28, 749280, tzinfo=utc),
-                                       editable=False),
+            field=models.DateTimeField(default=datetime.datetime(2022, 4, 12, 22, 57, 28, 749280, tzinfo=utc), editable=False),
         ),
     ]

@@ -17,7 +17,8 @@ from src.models.serializers import (
     PhoneVerificationSerializer,
     TokenObtainModSerializer,
     CarMerchantSerializer,
-    OtpSerializer, AssetsSerializer,
+    OtpSerializer,
+    AssetsSerializer,
 )
 from django.db import transaction
 

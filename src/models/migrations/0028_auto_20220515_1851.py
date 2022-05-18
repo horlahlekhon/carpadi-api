@@ -22,6 +22,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='trade',
             name='return_on_trade',
-            field=models.DecimalField(blank=True, decimal_places=2, help_text='The actual profit that was made from car ', max_digits=10, null=True, validators=[django.core.validators.MinValueValidator(Decimal('0'))]),
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=2,
+                help_text='The actual profit that was made from car ',
+                max_digits=10,
+                null=True,
+                validators=[django.core.validators.MinValueValidator(Decimal('0'))],
+            ),
         ),
     ]

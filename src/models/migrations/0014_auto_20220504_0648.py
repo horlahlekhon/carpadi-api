@@ -27,8 +27,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='otp',
             name='expiry',
-            field=models.DateTimeField(default=datetime.datetime(2022, 5, 4, 7, 17, 52, 631819, tzinfo=utc),
-                                       editable=False),
+            field=models.DateTimeField(default=datetime.datetime(2022, 5, 4, 7, 17, 52, 631819, tzinfo=utc), editable=False),
         ),
         migrations.AlterUniqueTogether(
             name='spareparts',
@@ -37,12 +36,19 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Banks',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False,
-                                                                verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False,
-                                                                      verbose_name='modified')),
-                ('id',
-                 model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
+                ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('bank_name', models.CharField(max_length=50)),
                 ('bank_code', models.CharField(max_length=10)),
                 ('bank_id', models.CharField(max_length=50)),
@@ -54,8 +60,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='bankaccount',
             name='bank',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE,
-                                    related_name='bank_accounts', to='models.banks'),
+            field=models.ForeignKey(
+                default=1, on_delete=django.db.models.deletion.CASCADE, related_name='bank_accounts', to='models.banks'
+            ),
             preserve_default=False,
         ),
     ]

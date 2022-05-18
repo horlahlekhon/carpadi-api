@@ -16,7 +16,9 @@ from src.carpadi_api.serializers import (
     WalletSerializer,
     TransactionSerializer,
     TradeSerializer,
-    TradeUnitSerializer, BankAccountSerializer, BankSerializer,
+    TradeUnitSerializer,
+    BankAccountSerializer,
+    BankSerializer,
 )
 from src.config import common
 from src.models.models import (
@@ -30,7 +32,8 @@ from src.models.models import (
     Wallet,
     Trade,
     TradeUnit,
-    Activity, Banks,
+    Activity,
+    Banks,
 )
 from src.models.permissions import IsCarMerchantAndAuthed
 from src.models.serializers import (
@@ -62,8 +65,7 @@ class DefaultGenericViewset(viewsets.GenericViewSet):
         serializer.save(user=self.request.user)
 
 
-class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-                         viewsets.GenericViewSet):
+class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = CarMerchant.objects.all()
     serializers = {"default": CarMerchantSerializer, "partial_update": CarMerchantUpdateSerializer}
     permission_classes = (IsCarMerchantAndAuthed,)
@@ -99,8 +101,7 @@ class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         return Response(ser.data)
 
 
-class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
-                         viewsets.GenericViewSet):
+class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     handles basic CRUD functionalities for transaction model
     """

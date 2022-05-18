@@ -8,7 +8,9 @@ from src.carpadi_api.views import (
     TransactionPinsViewSet,
     TransactionViewSet,
     WalletViewSet,
-    ActivityViewSet, TradeViewSet, TradeUnitViewSet,
+    ActivityViewSet,
+    TradeViewSet,
+    TradeUnitViewSet,
 )
 
 router = DefaultRouter()

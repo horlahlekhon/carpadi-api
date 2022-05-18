@@ -19,7 +19,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='pictures',
             name='entity_type',
-            field=models.CharField(choices=[('car', 'car picture'), ('merchant', 'user profile picture')], default='car', max_length=20),
+            field=models.CharField(
+                choices=[('car', 'car picture'), ('merchant', 'user profile picture')], default='car', max_length=20
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(

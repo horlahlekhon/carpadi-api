@@ -14,7 +14,7 @@ from src.carpadi_admin.filters import (
     DisbursementFilterAdmin,
     ActivityFilterAdmin,
     TradeFilterAdmin,
-    SparePartsFilter
+    SparePartsFilter,
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
@@ -22,9 +22,13 @@ from src.carpadi_admin.serializers import (
     TransactionSerializer,
     DisbursementSerializerAdmin,
     ActivitySerializerAdmin,
-    TradeSerializerAdmin, CarMaintenanceSerializerAdmin,
-    SparePartsSerializer, AccountDashboardSerializer, TradeDashboardSerializer, InventoryDashboardSerializer,
-    MerchantDashboardSerializer
+    TradeSerializerAdmin,
+    CarMaintenanceSerializerAdmin,
+    SparePartsSerializer,
+    AccountDashboardSerializer,
+    TradeDashboardSerializer,
+    InventoryDashboardSerializer,
+    MerchantDashboardSerializer,
 )
 from src.models.models import (
     Transaction,
@@ -34,7 +38,10 @@ from src.models.models import (
     Wallet,
     Trade,
     Disbursement,
-    Activity, CarMaintenance, TradeStates, SpareParts
+    Activity,
+    CarMaintenance,
+    TradeStates,
+    SpareParts,
 )
 from src.models.serializers import CarBrandSerializer, CarMerchantSerializer
 
@@ -110,8 +117,10 @@ class TradeViewSetAdmin(viewsets.ModelViewSet):
         """
         trade = get_object_or_404(Trade, pk=request.query_params.get("trade"))
         if trade.trade_status != TradeStates.Completed:
-            return Response({"message": "Trade is not completed, please complete this trade before disbursing"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Trade is not completed, please complete this trade before disbursing"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         trade.close()
         return Response({"message": "Trade disbursed successfully"}, status=status.HTTP_200_OK)
 
@@ -153,7 +162,6 @@ class SparePartsViewSet(viewsets.ModelViewSet):
     filter_class = SparePartsFilter
 
 
-
 class DashboardViewSet(viewsets.GenericViewSet):
     permission_classes = (IsAdminUser,)
     serializer_class = AccountDashboardSerializer
@@ -162,7 +170,7 @@ class DashboardViewSet(viewsets.GenericViewSet):
     def accounts(self, request, *args, **kwargs):
         data = dict(
             start_date=request.query_params.get('start_date', datetime.now().date().replace(day=1)),
-            end_date=request.query_params.get('end_date',  datetime.now().date())
+            end_date=request.query_params.get('end_date', datetime.now().date()),
         )
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
@@ -189,4 +197,3 @@ class DashboardViewSet(viewsets.GenericViewSet):
         if ser.is_valid():
             return Response(ser.data, status=status.HTTP_200_OK)
         return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
-

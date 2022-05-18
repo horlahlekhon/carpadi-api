@@ -22,6 +22,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='trade',
             name='price_per_slot',
-            field=models.DecimalField(decimal_places=2, default=Decimal('0'), help_text='price per slot', max_digits=10, validators=[django.core.validators.MinValueValidator(Decimal('0'))]),
+            field=models.DecimalField(
+                decimal_places=2,
+                default=Decimal('0'),
+                help_text='price per slot',
+                max_digits=10,
+                validators=[django.core.validators.MinValueValidator(Decimal('0'))],
+            ),
         ),
     ]

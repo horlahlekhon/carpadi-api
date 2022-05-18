@@ -7,10 +7,29 @@ from django.db.transaction import atomic
 from django.utils import timezone
 from rest_framework import serializers, exceptions
 
-from src.models.models import Car, Wallet, Transaction, Trade, Disbursement, Activity, SpareParts, TradeUnit, \
-    TransactionStatus, TransactionTypes, TransactionKinds, CarMerchant, Assets
-from src.models.models import TradeStates, \
-    CarStates, CarMaintenance, CarMaintenanceTypes, MiscellaneousExpenses, DisbursementStates
+from src.models.models import (
+    Car,
+    Wallet,
+    Transaction,
+    Trade,
+    Disbursement,
+    Activity,
+    SpareParts,
+    TradeUnit,
+    TransactionStatus,
+    TransactionTypes,
+    TransactionKinds,
+    CarMerchant,
+    Assets,
+)
+from src.models.models import (
+    TradeStates,
+    CarStates,
+    CarMaintenance,
+    CarMaintenanceTypes,
+    MiscellaneousExpenses,
+    DisbursementStates,
+)
 
 
 class SocialSerializer(serializers.Serializer):
@@ -27,7 +46,7 @@ class SocialSerializer(serializers.Serializer):
 class CarSerializer(serializers.ModelSerializer):
     maintenance_cost = serializers.SerializerMethodField()
     total_cost = serializers.SerializerMethodField()
-    pictures =  serializers.SerializerMethodField()
+    pictures = serializers.SerializerMethodField()
 
     class Meta:
         model = Car
@@ -47,16 +66,18 @@ class CarSerializer(serializers.ModelSerializer):
     def validate_status(self, value):
         if self.instance:  # we are doing update
             if value == CarStates.Inspected:
-                if not self.instance.inspection_report and not self.initial_data.get("inspection_report") and \
-                        not self.instance.inspector and not self.initial_data.get("inspector"):
-                    raise serializers.ValidationError(
-                        "Inspection report is required for a car with status of inspected")
+                if (
+                    not self.instance.inspection_report
+                    and not self.initial_data.get("inspection_report")
+                    and not self.instance.inspector
+                    and not self.initial_data.get("inspector")
+                ):
+                    raise serializers.ValidationError("Inspection report is required for a car with status of inspected")
             if value == CarStates.Available:
                 # you can only change the status to available if the car is inspected and all the cost have been
                 # accounted for
                 if not self.instance.inspection_report and not self.initial_data.get("inspection_report"):
-                    raise serializers.ValidationError(
-                        "Inspection report is required for a car with status of available")
+                    raise serializers.ValidationError("Inspection report is required for a car with status of available")
                 if not self.instance.resale_price and not self.initial_data.get("resale_price"):
                     raise serializers.ValidationError("Resale price is required for a car with status of available")
             return value
@@ -64,15 +85,12 @@ class CarSerializer(serializers.ModelSerializer):
             # we are doing create
             if value == CarStates.Inspected:
                 if not self.initial_data.get("inspection_report"):
-                    raise serializers.ValidationError(
-                        "Inspection report is required for a car with status of inspected")
+                    raise serializers.ValidationError("Inspection report is required for a car with status of inspected")
                 if not self.initial_data.get("car_inspector"):
-                    raise serializers.ValidationError(
-                        "A valid car inspector is required for cars that have been inspected")
+                    raise serializers.ValidationError("A valid car inspector is required for cars that have been inspected")
             if value == CarStates.Available:
                 if not self.initial_data.get("inspection_report"):
-                    raise serializers.ValidationError(
-                        "Inspection report is required for a car with status of available")
+                    raise serializers.ValidationError("Inspection report is required for a car with status of available")
                 if not self.initial_data.get("resale_price"):
                     raise serializers.ValidationError("Resale price is required for a car with status of available")
             return value
@@ -122,7 +140,6 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class CarSerializerField(serializers.RelatedField):
-
     def to_internal_value(self, data):
         car: Car = Car.objects.get(id=data)
         try:
@@ -154,11 +171,9 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             "traded_slots",
             "remaining_slots",
             "total_slots",
-            "price_per_slot"
+            "price_per_slot",
         )
-        extra_kwargs = {"car":
-                            {"error_messages": {"required": "Car to trade on is required", "unique": "Car already "
-                                                                                                     "traded"}}}
+        extra_kwargs = {"car": {"error_messages": {"required": "Car to trade on is required", "unique": "Car already " "traded"}}}
 
     def get_return_on_trade_per_unit(self, obj: Trade):
         return obj.return_on_trade_per_slot()
@@ -190,11 +205,11 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         else:
             if attr == TradeStates.Completed:
                 if not trade.car.resale_price:
-                    raise serializers \
-                        .ValidationError("Please add resale price to the car first before completing the trade")
+                    raise serializers.ValidationError("Please add resale price to the car first before completing the trade")
                 if trade.trade_status != TradeStates.Purchased:
                     raise serializers.ValidationError(
-                        "Cannot change trade status to {}, trade is {}".format(attr, trade.trade_status))
+                        "Cannot change trade status to {}, trade is {}".format(attr, trade.trade_status)
+                    )
         return attr
 
     def validate_car(self, value):
@@ -224,17 +239,16 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         we also try to do some validation to make sure trade and its corresponding objects are valid
         :param trade: Trade object
         """
-        successful_disbursements = trade \
-            .units \
-            .filter(disbursement__disbursement_status=DisbursementStates.Unsettled).count()
+        successful_disbursements = trade.units.filter(disbursement__disbursement_status=DisbursementStates.Unsettled).count()
         query = trade.units.annotate(total_disbursed=Sum('disbursement__amount'))
         total_disbursed = query.aggregate(sum=Sum('total_disbursed')).get('sum') or Decimal(0)
         if successful_disbursements == trade.units.count() and total_disbursed == trade.total_payout():
             car: Car = trade.car
             car.update_on_sold()
         else:
-            raise exceptions.APIException("Error, cannot complete trade, because calculated"
-                                          " payout seems to be unbalanced with the disbursements")
+            raise exceptions.APIException(
+                "Error, cannot complete trade, because calculated" " payout seems to be unbalanced with the disbursements"
+            )
 
     @atomic()
     def update(self, instance: Trade, validated_data):
@@ -263,8 +277,9 @@ class ActivitySerializerAdmin(serializers.ModelSerializer):
 
 class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
     spare_part_id = serializers.UUIDField(required=False)
-    cost = serializers.DecimalField(required=False, help_text="Cost of the maintenance in case it is a misc expenses",
-                                    max_digits=10, decimal_places=2)
+    cost = serializers.DecimalField(
+        required=False, help_text="Cost of the maintenance in case it is a misc expenses", max_digits=10, decimal_places=2
+    )
     description = serializers.CharField(required=False, help_text="Description of the maintenance")
     name = serializers.CharField(required=False, help_text="Name of the maintenance, in case it is a misc expenses")
     object_id = serializers.HiddenField(required=False, default=None)
@@ -298,8 +313,9 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
         else:
             cost = validated_data["cost"]
             description = validated_data["description"]
-            misc = MiscellaneousExpenses.objects.create(estimated_price=cost,
-                                                        description=description, name=validated_data["name"])
+            misc = MiscellaneousExpenses.objects.create(
+                estimated_price=cost, description=description, name=validated_data["name"]
+            )
             return CarMaintenance.objects.create(car=car, type=maintenance_type, cost=cost, maintenance=misc)
 
 
@@ -316,8 +332,9 @@ class TradeDashboardSerializer(serializers.Serializer):
 
     def get_active_trades(self, obj):
         trds = Trade.objects.filter(trade_status__in=(TradeStates.Ongoing, TradeStates.Purchased))
-        trading_users = trds.annotate(trading_user=Count('units')) \
-                            .aggregate(trading_users=Sum('trading_user')).get('trading_users') or Decimal(0)
+        trading_users = trds.annotate(trading_user=Count('units')).aggregate(trading_users=Sum('trading_user')).get(
+            'trading_users'
+        ) or Decimal(0)
         return dict(trading_users=trading_users, active_trades=trds.count())
 
     def get_sold_trades(self, obj):
@@ -354,7 +371,12 @@ class AccountDashboardSerializer(serializers.Serializer):
         Total trading cash is the amount of cash that is used to trade cars currently.
         It is the sum of all units bought on trades that are not completed.
         """
-        units = TradeUnit.objects.filter(trade__trade_status__in=(TradeStates.Ongoing, TradeStates.Purchased,), )
+        units = TradeUnit.objects.filter(
+            trade__trade_status__in=(
+                TradeStates.Ongoing,
+                TradeStates.Purchased,
+            ),
+        )
         total_trading_cash = units.aggregate(value=Sum("unit_value")).get("value") or Decimal(0)
         users_trading_count = units.values("merchant").distinct().count()
         return dict(total_trading_cash=total_trading_cash, users_trading_count=users_trading_count)
@@ -368,8 +390,8 @@ class AccountDashboardSerializer(serializers.Serializer):
 
     def get_total_unsettled_cash(self, value):
         """The total amount of cash that is unsettled across the system.
-         unsettled cash are for now the trades rots that are yet to be moved to withdrawable cash
-                 """
+        unsettled cash are for now the trades rots that are yet to be moved to withdrawable cash
+        """
         wallets = Wallet.objects.filter(merchant__user__is_active=True)
         total_unsettled_cash = sum(i.get_unsettled_cash() for i in wallets)
         users_unsettled_count = wallets.count()
@@ -377,33 +399,39 @@ class AccountDashboardSerializer(serializers.Serializer):
 
     def get_total_transfer_charges(self, value):
         """The total amount of transfer charges that was paid for withdrawals across the system"""
-        transactions = Transaction.objects \
-            .filter(transaction_status=TransactionStatus.Success,
-                    transaction_type=TransactionTypes.Debit,
-                    transaction_kind=TransactionKinds.Withdrawal,
-                    created__date__gte=self.start_date, created__date__lte=self.end_date)
+        transactions = Transaction.objects.filter(
+            transaction_status=TransactionStatus.Success,
+            transaction_type=TransactionTypes.Debit,
+            transaction_kind=TransactionKinds.Withdrawal,
+            created__date__gte=self.start_date,
+            created__date__lte=self.end_date,
+        )
         total_transfer_charges = transactions.aggregate(value=Sum("transaction_fees")).get("value") or Decimal(0)
         users = transactions.values("wallet__merchant").distinct().count()
         return dict(total_transfer_charges=total_transfer_charges, users=users)
 
     def get_total_deposits_count(self, value):
         """The total amount of deposits made across the system"""
-        transactions = Transaction.objects \
-            .filter(transaction_status=TransactionStatus.Success,
-                    transaction_type=TransactionTypes.Credit,
-                    transaction_kind=TransactionKinds.Deposit,
-                    created__date__gte=self.start_date, created__date__lte=self.end_date)
+        transactions = Transaction.objects.filter(
+            transaction_status=TransactionStatus.Success,
+            transaction_type=TransactionTypes.Credit,
+            transaction_kind=TransactionKinds.Deposit,
+            created__date__gte=self.start_date,
+            created__date__lte=self.end_date,
+        )
         total_deposits_count = transactions.count()
         users = transactions.values("wallet__merchant").distinct().count()
         return dict(total_deposits_count=total_deposits_count, users=users)
 
     def get_total_withdrawals_count(self, value):
         """The total amount of withdrawals made across the system"""
-        transactions = Transaction.objects \
-            .filter(transaction_status=TransactionStatus.Success,
-                    transaction_type=TransactionTypes.Debit,
-                    transaction_kind=TransactionKinds.Withdrawal,
-                    created__date__gte=self.start_date, created__date__lte=self.end_date)
+        transactions = Transaction.objects.filter(
+            transaction_status=TransactionStatus.Success,
+            transaction_type=TransactionTypes.Debit,
+            transaction_kind=TransactionKinds.Withdrawal,
+            created__date__gte=self.start_date,
+            created__date__lte=self.end_date,
+        )
         total_withdrawals_count = transactions.count()
         users = transactions.values("wallet__merchant").distinct().count()
         return dict(total_withdrawals_count=total_withdrawals_count, users=users)
@@ -416,17 +444,23 @@ class AccountDashboardSerializer(serializers.Serializer):
         return dict(total_assets=total_asset, users=users)
 
     def get_asset_pie_chart(self, value):
-        """ the distribution of assets by their transaction type across the system"""
+        """the distribution of assets by their transaction type across the system"""
         result = {}
-        deposits = Transaction.objects.filter(transaction_status=TransactionStatus.Success,
-                                              transaction_type=TransactionTypes.Credit,
-                                              transaction_kind=TransactionKinds.Deposit)
-        withdrawals = Transaction.objects.filter(transaction_status=TransactionStatus.Success,
-                                                 transaction_type=TransactionTypes.Debit,
-                                                 transaction_kind=TransactionKinds.Withdrawal)
-        disbursements = Transaction.objects.filter(transaction_status=TransactionStatus.Success,
-                                                   transaction_type=TransactionTypes.Debit,
-                                                   transaction_kind=TransactionKinds.Disbursement)
+        deposits = Transaction.objects.filter(
+            transaction_status=TransactionStatus.Success,
+            transaction_type=TransactionTypes.Credit,
+            transaction_kind=TransactionKinds.Deposit,
+        )
+        withdrawals = Transaction.objects.filter(
+            transaction_status=TransactionStatus.Success,
+            transaction_type=TransactionTypes.Debit,
+            transaction_kind=TransactionKinds.Withdrawal,
+        )
+        disbursements = Transaction.objects.filter(
+            transaction_status=TransactionStatus.Success,
+            transaction_type=TransactionTypes.Debit,
+            transaction_kind=TransactionKinds.Disbursement,
+        )
         result["deposits"] = deposits.aggregate(value=Sum("transaction_amount")).get("value") or Decimal(0)
         result["withdrawals"] = withdrawals.aggregate(value=Sum("transaction_amount")).get("value") or Decimal(0)
         result["disbursements"] = disbursements.aggregate(value=Sum("transaction_amount")).get("value") or Decimal(0)

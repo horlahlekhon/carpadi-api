@@ -242,8 +242,7 @@ AUTHENTICATION_BACKENDS = (
     'src.models.backends.EmailOrUsernameOrPhoneModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
-for key in ['GOOGLE_OAUTH2_KEY', 'GOOGLE_OAUTH2_SECRET', 'FACEBOOK_KEY', 'FACEBOOK_SECRET', 'TWITTER_KEY',
-            'TWITTER_SECRET']:
+for key in ['GOOGLE_OAUTH2_KEY', 'GOOGLE_OAUTH2_SECRET', 'FACEBOOK_KEY', 'FACEBOOK_SECRET', 'TWITTER_KEY', 'TWITTER_SECRET']:
     exec("SOCIAL_AUTH_{key} = os.environ.get('{key}', '')".format(key=key))
 
 # FB
@@ -302,8 +301,7 @@ THUMBNAIL_ALIASES = {
 # Django Rest Framework
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend',
-                                'rest_framework.filters.OrderingFilter'],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend', 'rest_framework.filters.OrderingFilter'],
     'PAGE_SIZE': int(os.getenv('DJANGO_PAGINATION_LIMIT', 18)),
     'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S.%fZ',
     'DEFAULT_RENDERER_CLASSES': (
@@ -376,8 +374,9 @@ DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
 
 FLW_PUBLIC_KEY = os.getenv('FLUTTER_WAVE_PUBLIC_KEY', '')
 FLW_SECRET_KEY = os.getenv('FLUTTER_WAVE_SECRET_KEY', '')
-FLW_REDIRECT_URL = os.getenv('PAYMENT_REDIRECT_URL',
-                             'https://36db-197-210-55-73.ngrok.io/api/v1/merchants/transactions/verify-transaction/')
+FLW_REDIRECT_URL = os.getenv(
+    'PAYMENT_REDIRECT_URL', 'https://36db-197-210-55-73.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
+)
 FLW_PAYMENT_URL = os.getenv('PAYMENT_URL', "https://api.flutterwave.com/v3/payments")
 FLW_PAYMENT_VERIFY_URL = "https://api.flutterwave.com/v3/transactions/{}/verify".format
 FLW_GET_TRANSFER_URL = "https://api.flutterwave.com/v3/transfers/{}".format
@@ -388,6 +387,8 @@ FLW_WITHDRAW_URL = os.getenv('FLW_WITHDRAW_URL', "https://api.flutterwave.com/v3
 
 import cloudinary
 
-cloudinary.config(cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME', ''),
-                  api_key=os.getenv('CLOUDINARY_API_KEY', ''),
-                  api_secret=os.getenv('CLOUDINARY_API_SECRET', ''))
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME', ''),
+    api_key=os.getenv('CLOUDINARY_API_KEY', ''),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET', ''),
+)

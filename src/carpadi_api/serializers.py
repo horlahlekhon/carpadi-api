@@ -8,6 +8,7 @@ from rest_framework import serializers, exceptions
 
 from src.config import common
 from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
+
 # from .models import Transaction
 from ..models.models import (
     CarMerchant,
@@ -19,7 +20,9 @@ from ..models.models import (
     Transaction,
     Trade,
     TradeUnit,
-    TradeStates, BankAccount, Banks,
+    TradeStates,
+    BankAccount,
+    Banks,
 )
 from ..models.serializers import UserSerializer
 
@@ -228,12 +231,9 @@ class TransactionSerializer(serializers.ModelSerializer):
             "currency": "NGN",
             "reference": ref,
             "callback_url": common.FLW_REDIRECT_URL,
-            "debit_currency": "NGN"
+            "debit_currency": "NGN",
         }
-        headers = {
-            "Authorization": f"Bearer {common.FLW_SECRET_KEY}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {common.FLW_SECRET_KEY}", "Content-Type": "application/json"}
         try:
             tx = None
             response: requests.Response = requests.post(url=common.FLW_WITHDRAW_URL, json=payload, headers=headers)
@@ -346,8 +346,15 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         model = TradeUnit
         fields = "__all__"
         read_only_fields = (
-            'created', 'modified', "id", "unit_value",
-            "vat_percentage", "share_percentage", "estimated_rot", "buy_transaction")
+            'created',
+            'modified',
+            "id",
+            "unit_value",
+            "vat_percentage",
+            "share_percentage",
+            "estimated_rot",
+            "buy_transaction",
+        )
 
     def validate(self, attrs):
         attrs = super().validate(attrs)

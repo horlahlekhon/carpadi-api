@@ -20,7 +20,20 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='car',
             name='status',
-            field=models.CharField(choices=[('failed_inspection', 'Failed Inspection'), ('inspected', 'inspected'), ('available', 'available for trading and sale'), ('ongoing_trade', 'Car is an ongoing trade'), ('bought', 'bought'), ('sold', 'sold'), ('new', 'New car waiting to be inspected'), ('archived', 'Archived')], default='new', max_length=30),
+            field=models.CharField(
+                choices=[
+                    ('failed_inspection', 'Failed Inspection'),
+                    ('inspected', 'inspected'),
+                    ('available', 'available for trading and sale'),
+                    ('ongoing_trade', 'Car is an ongoing trade'),
+                    ('bought', 'bought'),
+                    ('sold', 'sold'),
+                    ('new', 'New car waiting to be inspected'),
+                    ('archived', 'Archived'),
+                ],
+                default='new',
+                max_length=30,
+            ),
         ),
         migrations.AlterField(
             model_name='otp',
@@ -30,8 +43,18 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Pictures',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('asset', models.ImageField(blank=True, null=True, upload_to='pictures')),
                 ('object_id', models.UUIDField()),
