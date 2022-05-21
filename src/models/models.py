@@ -696,3 +696,17 @@ class Activity(Base):
     object_id = models.UUIDField()
     activity = GenericForeignKey("content_type", "object_id")
     description = models.TextField(default="")
+
+
+
+class CarProduct(Base):
+    car = models.OneToOneField(Car, on_delete=models.CASCADE, related_name="product")
+    selling_price = models.DecimalField(decimal_places=5, editable=False, max_digits=10)
+    highlights = models.ForeignKey(CarFeature, on_delete=models.CASCADE)
+    sales_image = models.URLField(help_text="url of the folder where the sales images for the car is located.", blank=True)
+
+
+class CarFeature(Base):
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="feature")
+    name = models.CharField(max_length=100)
+    image = models.URLField(help_text="url of the folder where the feature image for the car is located.", blank=True)

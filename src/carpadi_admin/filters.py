@@ -1,7 +1,7 @@
 from dataclasses import field, fields
 from django_filters import rest_framework as filters
 
-from src.models.models import Transaction, Wallet, Trade, Disbursement, Activity, SpareParts
+from src.models.models import Transaction, Wallet, Trade, Disbursement, Activity, SpareParts, CarProduct, CarFeature
 
 
 class TransactionsFilterAdmin(filters.FilterSet):
@@ -90,3 +90,11 @@ class SparePartsFilter(filters.FilterSet):
     class Meta:
         model = SpareParts
         fields = ["car_brand"]
+
+
+class CarProductFilter(filters.FilterSet):
+    selling_price = filters.NumericRangeFilter(field_name="selling_price")
+
+    class Meta:
+        model = CarProduct
+        fields = ["selling_price"]
