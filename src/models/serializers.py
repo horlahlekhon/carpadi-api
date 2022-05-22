@@ -287,6 +287,9 @@ class DisbursementSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
+    content_type = serializers.HiddenField(default=None)
+    object_id = serializers.HiddenField(default=None)
+
     class Meta:
         model = Activity
         fields = ("created", "id", "activity_type", "object_id", "content_type", "description")

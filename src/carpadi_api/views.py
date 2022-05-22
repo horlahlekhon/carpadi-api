@@ -288,3 +288,7 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsCarMerchantAndAuthed,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ActivityFilter
+
+    def get_queryset(self):
+        user: CarMerchant = self.request.user.merchant
+        return user.activity_set.all()

@@ -804,6 +804,7 @@ class Activity(Base):
     object_id = models.UUIDField()
     activity = GenericForeignKey("content_type", "object_id")
     description = models.TextField(default="")
+    merchant = models.ForeignKey(CarMerchant, on_delete=models.CASCADE)
 
 
 class AssetEntityType(models.TextChoices):

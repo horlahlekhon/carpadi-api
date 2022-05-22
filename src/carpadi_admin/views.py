@@ -21,7 +21,6 @@ from src.carpadi_admin.serializers import (
     WalletSerializerAdmin,
     TransactionSerializer,
     DisbursementSerializerAdmin,
-    ActivitySerializerAdmin,
     TradeSerializerAdmin,
     CarMaintenanceSerializerAdmin,
     SparePartsSerializer,
@@ -43,7 +42,7 @@ from src.models.models import (
     TradeStates,
     SpareParts,
 )
-from src.models.serializers import CarBrandSerializer, CarMerchantSerializer
+from src.models.serializers import CarBrandSerializer, CarMerchantSerializer, ActivitySerializer
 
 
 # Create your views here.
@@ -135,7 +134,7 @@ class DisbursementViewSetAdmin(viewsets.ReadOnlyModelViewSet):
 
 class ActivityViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAdminUser,)
-    serializer_class = ActivitySerializerAdmin
+    serializer_class = ActivitySerializer
     queryset = Activity.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ActivityFilterAdmin

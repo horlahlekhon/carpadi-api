@@ -299,13 +299,6 @@ class DisbursementSerializerAdmin(serializers.ModelSerializer):
         read_only_fields = ("created", "id", "amount", "trade_unit")
 
 
-class ActivitySerializerAdmin(serializers.ModelSerializer):
-    class Meta:
-        model = Activity
-        fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
-        read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
-
-
 class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
     spare_part_id = serializers.UUIDField(required=False)
     cost = serializers.DecimalField(

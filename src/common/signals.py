@@ -131,6 +131,7 @@ def complete_transaction(sender, **kwargs):
             activity_type=ActivityTypes.Transaction,
             activity=tx,
             description=f"Activity Type: Transaction, Status: {tx.transaction_status}, Description: {tx.transaction_kind} of {tx.amount} naira.",
+            merchant=tx.wallet.merchant
         )
 
 
@@ -144,6 +145,7 @@ def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
         activity = Activity.objects.create(
             activity_type=ActivityTypes.TradeUnit,
             activity=instance,
+            merchant=instance.merchant,
             description=f"Activity Type: Purchase of Unit Description: "
             f"{instance.slots_quantity} ({instance.share_percentage})  of \
                     {instance.trade.car.information.make} {instance.trade.car.information.model}"
@@ -161,6 +163,7 @@ def disbursement_completed(sender, instance, created, **kwargs):
         activity = Activity.objects.create(
             activity_type=ActivityTypes.Disbursement,
             activity=dis,
+            merchant=dis.trade_unit.merchant,
             description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} "
             f"naira for {dis.trade_unit.slots_quantity} units \
                     owned in {dis.trade_unit.trade.car.information.make}"
