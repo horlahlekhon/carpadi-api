@@ -242,11 +242,14 @@ class WalletViewSet(viewsets.ModelViewSet):
         serialize = self.serializer_class(wallet)
         return Response(serialize.data, status=status.HTTP_200_OK)
 
+    def get_queryset(self):
+        return [self.request.user.merchant.wallet]
+
     def create(self, request, *args, **kwargs):
         return Response({"message": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def list(self, request, *args, **kwargs):
-        return Response({"message": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    # def list(self, request, *args, **kwargs):
+    #     return Response({"message": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 from django.contrib.auth import get_user_model as User
