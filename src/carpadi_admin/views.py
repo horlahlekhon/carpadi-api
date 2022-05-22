@@ -14,7 +14,7 @@ from src.carpadi_admin.filters import (
     DisbursementFilterAdmin,
     ActivityFilterAdmin,
     TradeFilterAdmin,
-    SparePartsFilter
+    SparePartsFilter,
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
@@ -28,7 +28,8 @@ from src.carpadi_admin.serializers import (
     TradeDashboardSerializer,
     InventoryDashboardSerializer,
     MerchantDashboardSerializer,
-    TradeSerializerAdmin, CarMaintenanceSerializerAdmin,
+    TradeSerializerAdmin,
+    CarMaintenanceSerializerAdmin,
     SparePartsSerializer,
 )
 from src.carpadi_market.filters import CarProductFilter
@@ -41,10 +42,14 @@ from src.models.models import (
     Wallet,
     Trade,
     Disbursement,
-    Activity, CarMaintenance, TradeUnit, TradeStates, DisbursementStates,
+    Activity,
+    CarMaintenance,
+    TradeUnit,
+    TradeStates,
+    DisbursementStates,
     SpareParts,
     CarProduct,
-    CarFeature
+    CarFeature,
 )
 from src.models.serializers import CarBrandSerializer, CarMerchantSerializer, ActivitySerializer
 
@@ -207,4 +212,4 @@ class CarProductViewSetAdmin(viewsets.ModelViewSet):
     serializer_class = CarProductSerializer
     queryset = CarProduct.objects.all()
     filter_class = CarProductFilter
-    filter_backends = (filters.DjangoFilterBackend, )
+    filter_backends = (filters.DjangoFilterBackend,)

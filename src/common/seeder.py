@@ -17,7 +17,9 @@ from src.models.models import (
     CarStates,
     Trade,
     TradeStates,
-    TradeUnit, VehicleInfo, FuelTypes,
+    TradeUnit,
+    VehicleInfo,
+    FuelTypes,
 )
 from django.db.transaction import atomic
 
@@ -26,7 +28,6 @@ PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00
 
 class PadiSeeder:
     seeder = Seed.seeder()
-
 
     def __init__(self, command):
         self.admin = None
@@ -201,18 +202,22 @@ class PadiSeeder:
 
     def seed_vehicle_info(self, vin):
         vehicle = self.seeder.faker.vehicle_object()
-        self.seeder.add_entity(VehicleInfo, 1, {
-            "vin": vin,
-            "engine": "L4, 1.8L; DOHC; 16V",
-            "transmission": "STANDARD",
-            "car_type": vehicle["Category"],
-            "fuel_type": FuelTypes.Petrol,
-            "description": None,
-            "trim": "BASE",
-            "year": vehicle["Year"],
-            "model": vehicle['Model'],
-            "manufacturer": vehicle['Make'],
-            "make": vehicle['Make']
-        })
+        self.seeder.add_entity(
+            VehicleInfo,
+            1,
+            {
+                "vin": vin,
+                "engine": "L4, 1.8L; DOHC; 16V",
+                "transmission": "STANDARD",
+                "car_type": vehicle["Category"],
+                "fuel_type": FuelTypes.Petrol,
+                "description": None,
+                "trim": "BASE",
+                "year": vehicle["Year"],
+                "model": vehicle['Model'],
+                "manufacturer": vehicle['Make'],
+                "make": vehicle['Make'],
+            },
+        )
         ret = self.seeder.execute()[VehicleInfo][0]
         return VehicleInfo.objects.get(id=ret)

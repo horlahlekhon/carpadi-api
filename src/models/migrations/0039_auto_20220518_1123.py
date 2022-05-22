@@ -16,7 +16,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='car',
             name='pictures',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='cars', to='models.assets'),
+            field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='cars', to='models.assets'
+            ),
         ),
         migrations.AlterField(
             model_name='otp',

@@ -14,4 +14,4 @@ class CarProductView(viewsets.ReadOnlyModelViewSet):
     serializer_class = CarProductSerializer
     queryset = CarProduct.objects.all()
     filter_class = CarProductFilter
-    filter_backends = (filters.DjangoFilterBackend, )
+    filter_backends = (filters.DjangoFilterBackend,)

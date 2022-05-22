@@ -89,5 +89,3 @@ class SparePartsFilter(filters.FilterSet):
     class Meta:
         model = SpareParts
         fields = ["car_brand"]
-
-

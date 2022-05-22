@@ -11,7 +11,8 @@ from src.carpadi_admin.views import (
     ActivityViewSetAdmin,
     CarMaintenanceViewSetAdmin,
     SparePartsViewSet,
-    DashboardViewSet, CarProductViewSetAdmin,
+    DashboardViewSet,
+    CarProductViewSetAdmin,
 )
 from src.models.views import UserViewSet
 

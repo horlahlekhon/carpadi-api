@@ -23,7 +23,18 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='assets',
             name='entity_type',
-            field=models.CharField(choices=[('car_product', 'Pictures of a car on the sales platform'), ('car', 'car picture'), ('merchant', 'user profile picture'), ('trade', 'Trade pictures of a car'), ('car_inspection', 'Car inspection pictures'), ('feature', 'Picture of a feature of a car'), ('inspection_report', 'Pdf report of an inspected vehicle')], max_length=20),
+            field=models.CharField(
+                choices=[
+                    ('car_product', 'Pictures of a car on the sales platform'),
+                    ('car', 'car picture'),
+                    ('merchant', 'user profile picture'),
+                    ('trade', 'Trade pictures of a car'),
+                    ('car_inspection', 'Car inspection pictures'),
+                    ('feature', 'Picture of a feature of a car'),
+                    ('inspection_report', 'Pdf report of an inspected vehicle'),
+                ],
+                max_length=20,
+            ),
         ),
         migrations.AlterField(
             model_name='otp',
@@ -33,11 +44,24 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CarProduct',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('selling_price', models.DecimalField(decimal_places=5, editable=False, max_digits=10)),
-                ('car', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='product', to='models.car')),
+                (
+                    'car',
+                    models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='product', to='models.car'),
+                ),
             ],
             options={
                 'abstract': False,
@@ -46,8 +70,18 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CarFeature',
             fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                (
+                    'created',
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                    ),
+                ),
                 ('id', model_utils.fields.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=100)),
                 ('car', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='feature', to='models.car')),

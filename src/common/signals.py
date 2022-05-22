@@ -131,7 +131,7 @@ def complete_transaction(sender, **kwargs):
             activity_type=ActivityTypes.Transaction,
             activity=tx,
             description=f"Activity Type: Transaction, Status: {tx.transaction_status}, Description: {tx.transaction_kind} of {tx.amount} naira.",
-            merchant=tx.wallet.merchant
+            merchant=tx.wallet.merchant,
         )
 
 

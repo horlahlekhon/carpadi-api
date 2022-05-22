@@ -21,7 +21,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='carproduct',
             name='car',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='product', to='models.vehicleinfo'),
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE, related_name='product', to='models.vehicleinfo'
+            ),
         ),
         migrations.AlterField(
             model_name='otp',
