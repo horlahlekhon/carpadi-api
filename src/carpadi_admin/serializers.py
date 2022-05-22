@@ -7,6 +7,7 @@ from django.db.transaction import atomic
 from django.utils import timezone
 from rest_framework import serializers, exceptions
 
+from src.common.helpers import check_vin
 from src.models.models import (
     Car,
     Wallet,
@@ -20,7 +21,7 @@ from src.models.models import (
     TransactionTypes,
     TransactionKinds,
     CarMerchant,
-    Assets,
+    Assets, VehicleInfo,
 )
 from src.models.models import (
     TradeStates,
@@ -43,15 +44,27 @@ class SocialSerializer(serializers.Serializer):
     )
 
 
+class VehicleInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VehicleInfo
+        fields = "__all__"
+
+
 class CarSerializer(serializers.ModelSerializer):
     maintenance_cost = serializers.SerializerMethodField()
     total_cost = serializers.SerializerMethodField()
     pictures = serializers.SerializerMethodField()
+    vin = serializers.CharField(max_length=17, min_length=17)
+    information = serializers.SerializerMethodField()
 
     class Meta:
         model = Car
         fields = "__all__"
         ref_name = "car_serializer_admin"
+        read_only_fields = ('information',)
+
+    def get_information(self, obj: Car):
+        return VehicleInfoSerializer(instance=obj.information).data
 
     def get_pictures(self, obj: Car):
         pictures = Assets.objects.filter(object_id=obj.id).values_list("asset", flat=True)
@@ -67,17 +80,19 @@ class CarSerializer(serializers.ModelSerializer):
         if self.instance:  # we are doing update
             if value == CarStates.Inspected:
                 if (
-                    not self.instance.inspection_report
-                    and not self.initial_data.get("inspection_report")
-                    and not self.instance.inspector
-                    and not self.initial_data.get("inspector")
+                        not self.instance.inspection_report
+                        and not self.initial_data.get("inspection_report")
+                        and not self.instance.inspector
+                        and not self.initial_data.get("inspector")
                 ):
-                    raise serializers.ValidationError("Inspection report is required for a car with status of inspected")
+                    raise serializers.ValidationError(
+                        "Inspection report is required for a car with status of inspected")
             if value == CarStates.Available:
                 # you can only change the status to available if the car is inspected and all the cost have been
                 # accounted for
                 if not self.instance.inspection_report and not self.initial_data.get("inspection_report"):
-                    raise serializers.ValidationError("Inspection report is required for a car with status of available")
+                    raise serializers.ValidationError(
+                        "Inspection report is required for a car with status of available")
                 if not self.instance.resale_price and not self.initial_data.get("resale_price"):
                     raise serializers.ValidationError("Resale price is required for a car with status of available")
             return value
@@ -85,12 +100,15 @@ class CarSerializer(serializers.ModelSerializer):
             # we are doing create
             if value == CarStates.Inspected:
                 if not self.initial_data.get("inspection_report"):
-                    raise serializers.ValidationError("Inspection report is required for a car with status of inspected")
+                    raise serializers.ValidationError(
+                        "Inspection report is required for a car with status of inspected")
                 if not self.initial_data.get("car_inspector"):
-                    raise serializers.ValidationError("A valid car inspector is required for cars that have been inspected")
+                    raise serializers.ValidationError(
+                        "A valid car inspector is required for cars that have been inspected")
             if value == CarStates.Available:
                 if not self.initial_data.get("inspection_report"):
-                    raise serializers.ValidationError("Inspection report is required for a car with status of available")
+                    raise serializers.ValidationError(
+                        "Inspection report is required for a car with status of available")
                 if not self.initial_data.get("resale_price"):
                     raise serializers.ValidationError("Resale price is required for a car with status of available")
             return value
@@ -103,9 +121,19 @@ class CarSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Aye! You cannot create set the resale price of a car while creating it")
         return value
 
+    def validate_vin(self, attr):
+        try:
+            return VehicleInfo.objects.get(vin=attr)
+        except VehicleInfo.DoesNotExist as reason:
+            vin = check_vin(attr)
+            if not vin:
+                raise serializers.ValidationError("Invalid vin number")
+            return VehicleInfo.objects.create(vin=attr, **vin)
+
     @atomic()
     def create(self, validated_data):
-        car = Car.objects.create(**validated_data)
+        info = validated_data.pop("vin")
+        car = Car.objects.create(vin=info.vin, information=info, **validated_data)
         return car
 
     @atomic()
@@ -173,7 +201,8 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             "total_slots",
             "price_per_slot",
         )
-        extra_kwargs = {"car": {"error_messages": {"required": "Car to trade on is required", "unique": "Car already " "traded"}}}
+        extra_kwargs = {
+            "car": {"error_messages": {"required": "Car to trade on is required", "unique": "Car already " "traded"}}}
 
     def get_return_on_trade_per_unit(self, obj: Trade):
         return obj.return_on_trade_per_slot()
@@ -205,7 +234,8 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         else:
             if attr == TradeStates.Completed:
                 if not trade.car.resale_price:
-                    raise serializers.ValidationError("Please add resale price to the car first before completing the trade")
+                    raise serializers.ValidationError(
+                        "Please add resale price to the car first before completing the trade")
                 if trade.trade_status != TradeStates.Purchased:
                     raise serializers.ValidationError(
                         "Cannot change trade status to {}, trade is {}".format(attr, trade.trade_status)
@@ -239,7 +269,8 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         we also try to do some validation to make sure trade and its corresponding objects are valid
         :param trade: Trade object
         """
-        successful_disbursements = trade.units.filter(disbursement__disbursement_status=DisbursementStates.Unsettled).count()
+        successful_disbursements = trade.units.filter(
+            disbursement__disbursement_status=DisbursementStates.Unsettled).count()
         query = trade.units.annotate(total_disbursed=Sum('disbursement__amount'))
         total_disbursed = query.aggregate(sum=Sum('total_disbursed')).get('sum') or Decimal(0)
         if successful_disbursements == trade.units.count() and total_disbursed == trade.total_payout():
@@ -278,7 +309,8 @@ class ActivitySerializerAdmin(serializers.ModelSerializer):
 class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
     spare_part_id = serializers.UUIDField(required=False)
     cost = serializers.DecimalField(
-        required=False, help_text="Cost of the maintenance in case it is a misc expenses", max_digits=10, decimal_places=2
+        required=False, help_text="Cost of the maintenance in case it is a misc expenses", max_digits=10,
+        decimal_places=2
     )
     description = serializers.CharField(required=False, help_text="Description of the maintenance")
     name = serializers.CharField(required=False, help_text="Name of the maintenance, in case it is a misc expenses")

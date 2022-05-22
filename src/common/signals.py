@@ -146,7 +146,7 @@ def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
             activity=instance,
             description=f"Activity Type: Purchase of Unit Description: "
             f"{instance.slots_quantity} ({instance.share_percentage})  of \
-                    {instance.trade.car.brand.name} {instance.trade.car.brand.model}"
+                    {instance.trade.car.information.make} {instance.trade.car.information.model}"
             f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
         )
         trade: Trade = instance.trade
@@ -163,8 +163,8 @@ def disbursement_completed(sender, instance, created, **kwargs):
             activity=dis,
             description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} "
             f"naira for {dis.trade_unit.slots_quantity} units \
-                    owned in {dis.trade_unit.trade.car.brand.name}"
-            f" {dis.trade_unit.trade.car.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
+                    owned in {dis.trade_unit.trade.car.information.make}"
+            f" {dis.trade_unit.trade.car.information.model} VIN: {dis.trade_unit.trade.car.vin}",
         )
 
 

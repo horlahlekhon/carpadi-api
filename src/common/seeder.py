@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django_seed import Seed
-
+from faker_vehicle import VehicleProvider
 from src.carpadi_admin.serializers import CarMaintenanceSerializerAdmin
 from src.carpadi_api.serializers import TradeUnitSerializer
 from src.models.models import (
@@ -17,7 +17,7 @@ from src.models.models import (
     CarStates,
     Trade,
     TradeStates,
-    TradeUnit,
+    TradeUnit, VehicleInfo, FuelTypes,
 )
 from django.db.transaction import atomic
 
@@ -27,9 +27,11 @@ PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00
 class PadiSeeder:
     seeder = Seed.seeder()
 
+
     def __init__(self, command):
         self.admin = None
         self.command = command
+        self.seeder.faker.add_provider(VehicleProvider)
 
     def seed_merchants(self, count=1):
         self.seeder.add_entity(
@@ -108,22 +110,19 @@ class PadiSeeder:
         exp = self.seeder.execute()[MiscellaneousExpenses][0]
         exp = MiscellaneousExpenses.objects.get(pk=exp)
         carbrand = CarBrand.objects.get(pk=brands)
+        vin = self.seeder.faker.random_number(digits=17)
         self.seeder.add_entity(
             Car,
             1,
             {
-                'brand': carbrand,
                 'status': CarStates.Inspected if self.admin else CarStates.New,
                 'car_inspector': self.admin,
                 'offering_price': Decimal(100000.0),
                 'inspection_report': 'good' if self.admin else None,
-                'fuel_type': 'petrol',
-                'transmission_type': 'automatic',
-                'mileage': self.seeder.faker.random_number(digits=4),
-                'age': self.seeder.faker.random_number(digits=2),
-                'vin': self.seeder.faker.random_number(digits=15),
+                'vin': vin,
                 'resale_price': None,
-                'color': self.seeder.faker.color_name(),
+                'colour': self.seeder.faker.color_name(),
+                'information': self.seed_vehicle_info(vin)
                 # 'maintenance_cost': Decimal(cost),
             },
         )
@@ -199,3 +198,21 @@ class PadiSeeder:
         self.seed_completed_trade(merch_ids, should_close=False)
         self.seed_completed_trade(merch_ids[:3])
         self.seed_completed_trade(merch_ids[:2])
+
+    def seed_vehicle_info(self, vin):
+        vehicle = self.seeder.faker.vehicle_object()
+        self.seeder.add_entity(VehicleInfo, 1, {
+            "vin": vin,
+            "engine": "L4, 1.8L; DOHC; 16V",
+            "transmission": "STANDARD",
+            "car_type": vehicle["Category"],
+            "fuel_type": FuelTypes.Petrol,
+            "description": None,
+            "trim": "BASE",
+            "year": vehicle["Year"],
+            "model": vehicle['Model'],
+            "manufacturer": vehicle['Make'],
+            "make": vehicle['Make']
+        })
+        ret = self.seeder.execute()[VehicleInfo][0]
+        return VehicleInfo.objects.get(id=ret)
