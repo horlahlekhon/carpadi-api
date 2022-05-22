@@ -1,5 +1,7 @@
 import datetime
+import uuid
 from decimal import Decimal
+from typing import List
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -413,7 +415,7 @@ class Car(Base):
     status = models.CharField(choices=CarStates.choices, max_length=30, default=CarStates.New)
     # TODO validate vin from vin api
     vin = models.CharField(max_length=17)
-    pictures = models.ForeignKey("Assets", on_delete=models.SET_NULL, null=True, related_name="cars")
+    # pictures = models.ForeignKey("Assets", on_delete=models.SET_NULL, null=True, related_name="cars")
     car_inspector = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,
@@ -808,6 +810,7 @@ class Activity(Base):
 
 
 class AssetEntityType(models.TextChoices):
+    CarProduct = "car_product", _("Pictures of a car on the sales platform")
     Car = "car", _("car picture")
     Merchant = "merchant", _("user profile picture")
     Trade = "trade", _("Trade pictures of a car")
@@ -822,6 +825,16 @@ class Assets(Base):
     object_id = models.UUIDField()
     content_object = GenericForeignKey("content_type", "object_id")
     entity_type = models.CharField(choices=AssetEntityType.choices, max_length=20)
+
+    @classmethod
+    def create_many(cls, images: List[str], feature, entity_type: AssetEntityType):
+        if isinstance(images, list) and len(images) > 0:
+            ims = [Assets(id=uuid.uuid4(),
+                          content_object=feature,
+                          asset=image,
+                          entity_type=entity_type) for image in images]
+            return Assets.objects.bulk_create(objs=ims)
+
 
 
 class VehicleInfo(Base):
@@ -839,3 +852,12 @@ class VehicleInfo(Base):
     manufacturer = models.CharField(max_length=50)
     make = models.CharField(max_length=50)
 
+
+class CarProduct(Base):
+    car = models.OneToOneField(VehicleInfo, on_delete=models.CASCADE, related_name="product")
+    selling_price = models.DecimalField(decimal_places=2, max_digits=25)
+
+
+class CarFeature(Base):
+    car = models.ForeignKey(CarProduct, on_delete=models.CASCADE, related_name="features")
+    name = models.CharField(max_length=100)

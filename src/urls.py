@@ -15,6 +15,7 @@ from src.carpadi_admin.urls import router as admin_router
 from src.carpadi_api.urls import router as api_router
 from src.files.urls import files_router
 from src.models.urls import model_router
+from src.carpadi_market.urls import router as market_router
 from src.models.views import TokenObtainPairViewMod
 from src.social.views import exchange_token, complete_twitter_login
 
@@ -23,6 +24,8 @@ schema_view = get_schema_view(
     public=True,
 )
 
+market_router_set = DefaultRouter()
+market_router_set.registry.extend(market_router.registry)
 admin_router_set = DefaultRouter()
 admin_router_set.registry.extend(admin_router.registry)
 api_router_set = DefaultRouter()
@@ -41,6 +44,7 @@ urlpatterns = [
     path('api/v1/', include(generic_router.urls)),
     path('api/v1/merchants/', include(api_router_set.urls)),
     path('api/v1/admins/', include(admin_router_set.urls)),
+    path('api/v1/market/', include(market_router.urls)),
     url(r'^api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     # auth
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),

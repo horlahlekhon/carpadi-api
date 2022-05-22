@@ -1,3 +1,4 @@
+from dataclasses import fields
 import datetime
 import re
 from decimal import Decimal

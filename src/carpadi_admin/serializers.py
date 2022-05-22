@@ -2,35 +2,16 @@ import itertools
 from datetime import datetime
 from decimal import Decimal
 
-from django.db.models import Sum, Count
+from src.common.helpers import check_vin
+from src.models.models import CarMerchant, Car, Wallet, Transaction, Trade, Disbursement, Activity, SpareParts, \
+    CarProduct, CarFeature, CarStates, CarMaintenance, MiscellaneousExpenses, CarMaintenanceTypes, TradeStates, \
+    DisbursementStates, VehicleInfo, Assets, TradeUnit, TransactionStatus, TransactionTypes, TransactionKinds, \
+    AssetEntityType
+from rest_framework import serializers
 from django.db.transaction import atomic
 from django.utils import timezone
-from rest_framework import serializers, exceptions
-
-from src.common.helpers import check_vin
-from src.models.models import (
-    Car,
-    Wallet,
-    Transaction,
-    Trade,
-    Disbursement,
-    Activity,
-    SpareParts,
-    TradeUnit,
-    TransactionStatus,
-    TransactionTypes,
-    TransactionKinds,
-    CarMerchant,
-    Assets, VehicleInfo,
-)
-from src.models.models import (
-    TradeStates,
-    CarStates,
-    CarMaintenance,
-    CarMaintenanceTypes,
-    MiscellaneousExpenses,
-    DisbursementStates,
-)
+from django.db.models import Sum, Count
+from rest_framework import exceptions
 
 
 class SocialSerializer(serializers.Serializer):
@@ -56,6 +37,7 @@ class CarSerializer(serializers.ModelSerializer):
     pictures = serializers.SerializerMethodField()
     vin = serializers.CharField(max_length=17, min_length=17)
     information = serializers.SerializerMethodField()
+    car_pictures = serializers.ListField(write_only=True, child=serializers.URLField(), default=[], required=False)
 
     class Meta:
         model = Car
@@ -133,7 +115,9 @@ class CarSerializer(serializers.ModelSerializer):
     @atomic()
     def create(self, validated_data):
         info = validated_data.pop("vin")
+        images = validated_data.pop("car_pictures")
         car = Car.objects.create(vin=info.vin, information=info, **validated_data)
+        Assets.create_many(images=images, feature=car, entity_type=AssetEntityType.Car)
         return car
 
     @atomic()
@@ -546,3 +530,7 @@ class MerchantDashboardSerializer(serializers.Serializer):
     def get_non_trading_users(self, value):
         """The total amount of non trading users in the system"""
         return self.get_total_users(None) - self.get_active_users(None)
+
+
+
+
