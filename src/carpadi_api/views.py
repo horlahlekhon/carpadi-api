@@ -65,8 +65,7 @@ class DefaultGenericViewset(viewsets.GenericViewSet):
         serializer.save(user=self.request.user)
 
 
-class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-                         viewsets.GenericViewSet):
+class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = CarMerchant.objects.all()
     serializers = {"default": CarMerchantSerializer, "partial_update": CarMerchantUpdateSerializer}
     permission_classes = (IsCarMerchantAndAuthed,)
@@ -102,8 +101,7 @@ class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         return Response(ser.data)
 
 
-class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
-                         viewsets.GenericViewSet):
+class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     handles basic CRUD functionalities for transaction model
     """

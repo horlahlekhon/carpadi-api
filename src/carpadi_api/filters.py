@@ -53,4 +53,3 @@ class TradeFilter(filters.FilterSet):
     class Meta:
         model = Trade
         fields = ['created', 'trade_status', 'make']
-
