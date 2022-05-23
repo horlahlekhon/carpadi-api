@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import status
 
-from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter
+from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter, TradeFilter
 from src.carpadi_api.serializers import (
     CarSerializer,
     TransactionPinSerializers,
@@ -65,7 +65,8 @@ class DefaultGenericViewset(viewsets.GenericViewSet):
         serializer.save(user=self.request.user)
 
 
-class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+                         viewsets.GenericViewSet):
     queryset = CarMerchant.objects.all()
     serializers = {"default": CarMerchantSerializer, "partial_update": CarMerchantUpdateSerializer}
     permission_classes = (IsCarMerchantAndAuthed,)
@@ -101,7 +102,8 @@ class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         return Response(ser.data)
 
 
-class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
+                         viewsets.GenericViewSet):
     """
     handles basic CRUD functionalities for transaction model
     """
@@ -259,10 +261,14 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TradeSerializer
     queryset = Trade.objects.all()
     permission_classes = (IsCarMerchantAndAuthed,)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = TradeFilter
 
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     return self.queryset.filter(user=user)
+    def get_queryset(self):
+        queryset = super(TradeViewSet, self).get_queryset()
+        if self.request.query_params.get("self") and bool(self.request.query_params.get("self")) == True:
+            return queryset.filter(units__merchant__id=self.request.user.merchant.id)
+        return queryset
 
 
 class TradeUnitViewSet(viewsets.ModelViewSet):

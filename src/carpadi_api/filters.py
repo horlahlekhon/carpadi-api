@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from src.models.models import Activity, Disbursement, Transaction, Car
+from src.models.models import Activity, Disbursement, Transaction, Car, Trade
 
 
 class TransactionsFilter(filters.FilterSet):
@@ -45,3 +45,12 @@ class ActivityFilter(filters.FilterSet):
     class Meta:
         model = Activity
         fields = ["created", "activity_type"]
+
+
+class TradeFilter(filters.FilterSet):
+    make = filters.CharFilter(field_name="car__information__make", lookup_expr='iexact')
+
+    class Meta:
+        model = Trade
+        fields = ['created', 'trade_status', 'make']
+

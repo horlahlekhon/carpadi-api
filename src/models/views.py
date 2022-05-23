@@ -80,6 +80,8 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         except Exception as reason:
             return Response(reason.args, status=status.HTTP_400_BAD_REQUEST)
 
+    # @action()
+
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
