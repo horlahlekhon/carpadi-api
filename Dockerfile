@@ -19,6 +19,8 @@ RUN pip install -r ./requirements/dev.txt
 
 COPY . ./
 
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
 ENTRYPOINT ["/bin/bash", "./run.sh"]
 
 
