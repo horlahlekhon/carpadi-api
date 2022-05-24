@@ -25,7 +25,7 @@ from django.db.transaction import atomic
 
 PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00PVbKK4Nu2YLpiK3OliA="
 
-shouldseed = False
+shouldseed = True
 
 
 class PadiSeeder:
