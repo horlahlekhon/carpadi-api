@@ -87,9 +87,14 @@ class PadiSeeder:
             self.seeder.add_entity(
                 User,
                 1,
-                {"is_staff": True, "is_superuser": True,
-                 "is_active": True, 'username': 'lekan',
-                 'user_type': UserTypes.Admin, 'password': PASSWORD},
+                {
+                    "is_staff": True,
+                    "is_superuser": True,
+                    "is_active": True,
+                    'username': 'lekan',
+                    'user_type': UserTypes.Admin,
+                    'password': PASSWORD,
+                },
             )
             user_ids = self.seeder.execute()[User]
             print(f"Seeded {user_ids[0]} users")

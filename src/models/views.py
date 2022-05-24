@@ -140,4 +140,3 @@ class AssetsViewSet(viewsets.ModelViewSet):
     # @action(detail=False, methods=['patch'], url_path='update', url_name='patch_user')
     # def patch_user(self, request, *args, **kwargs):
     #     return super(PicturesViewSet, self).update(request, *args, **kwargs)
-
