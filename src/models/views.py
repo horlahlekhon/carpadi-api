@@ -1,3 +1,6 @@
+import asyncio
+import threading
+
 from django.http.response import Http404
 from rest_framework import serializers
 from rest_framework import status
@@ -107,7 +110,10 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         """
         try:
             seed_data = PadiSeeder(request=request)
-            seed_data.seed()
+            # seed_data.seed()
+            t = threading.Thread(target=seed_data.seed)
+            t.setDaemon(True)
+            t.start()
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

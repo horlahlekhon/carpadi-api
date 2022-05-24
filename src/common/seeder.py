@@ -1,3 +1,5 @@
+import asyncio
+from asyncio import AbstractEventLoop
 from decimal import Decimal
 
 from django_seed import Seed
@@ -105,16 +107,6 @@ class PadiSeeder:
             return [admin.id]
 
     def seed_cars(self):
-        self.seeder.add_entity(
-            CarBrand,
-            1,
-            {
-                'name': lambda x: 'Toyota',
-                'model': lambda x: 'Camry',
-                'year': lambda x: self.seeder.faker.year(),
-            },
-        )
-        brands = self.seeder.execute()[CarBrand][0]
         cost = self.seeder.faker.random_number(digits=4)
         self.seeder.add_entity(
             MiscellaneousExpenses,
@@ -124,8 +116,7 @@ class PadiSeeder:
             },
         )
         exp = self.seeder.execute()[MiscellaneousExpenses][0]
-        exp = MiscellaneousExpenses.objects.get(pk=exp)
-        carbrand = CarBrand.objects.get(pk=brands)
+        # exp = MiscellaneousExpenses.objects.get(pk=exp)
         vin = self.seeder.faker.random_number(digits=17)
         self.seeder.add_entity(
             Car,
@@ -238,3 +229,8 @@ class PadiSeeder:
         )
         ret = self.seeder.execute()[VehicleInfo][0]
         return VehicleInfo.objects.get(id=ret)
+
+    async def seed_async(self, loop: AbstractEventLoop):
+        self.seed()
+        await asyncio.sleep(20)
+        loop.stop() 
