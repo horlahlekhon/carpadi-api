@@ -25,31 +25,36 @@ from django.db.transaction import atomic
 
 PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00PVbKK4Nu2YLpiK3OliA="
 
+shouldseed = False
+
 
 class PadiSeeder:
     seeder = Seed.seeder()
 
-    def __init__(self, command):
+    def __init__(self, command=None, request=None):
+        self.request = request
         self.admin = None
         self.command = command
         self.seeder.faker.add_provider(VehicleProvider)
 
-    def seed_merchants(self, count=1):
-        self.seeder.add_entity(
-            User,
-            count,
-            {
-                "is_staff": False,
-                "is_superuser": False,
-                "is_active": True,
-                'user_type': UserTypes.CarMerchant,
-                'password': PASSWORD,
-            },
-        )
-        user_ids = self.seeder.execute()[User]
-        self.command.stdout.write(self.command.style.SUCCESS(f"Seeded {user_ids[1]} users"))
+    def seed_merchants(self):
+        usernames = {'gsherman', 'brettmyers', 'curtishanson', 'russell48', "salk"}
+        in_db = User.objects.filter(username__in=usernames).values_list('username', flat=True)
+        missing = usernames.difference(set(in_db))
+        user_ids = []
+        if len(missing) > 0:
+            self.seeder.add_entity(
+                User,
+                len(missing),
+                {
+                    'username': lambda x: missing.pop(),
+                    'user_type': UserTypes.CarMerchant,
+                    'password': PASSWORD,
+                },
+            )
+            user_ids = self.seeder.execute()[User]
+        print(f"Seeded {user_ids} users")
         merch_ids = []
-        wallet_ids = []
         for idx in user_ids:
             self.seeder.add_entity(
                 CarMerchant,
@@ -61,33 +66,38 @@ class PadiSeeder:
             )
             id1 = self.seeder.execute()[CarMerchant][0]
             merch_ids.append(id1)
-            # self.command.stdout.write(self.command.style.SUCCESS(f"Seeded {len(merch_ids)} merchants"))
             self.seeder.add_entity(
                 Wallet,
                 1,
                 {
                     'merchant': lambda x: CarMerchant.objects.get(pk=id1),
-                    'balance': Decimal(100000.0),
-                    'withdrawable_cash': Decimal(100000.0),
+                    'balance': Decimal(10000000.0),
+                    'withdrawable_cash': Decimal(10000000.0),
                     'trading_cash': Decimal(0.0),
                     'total_cash': Decimal(0.0),
                 },
             )
-            wallet_id = self.seeder.execute()[Wallet][0]
-            wallet_ids.append(wallet_id)
-        # self.command.stdout.write(self.command.style.SUCCESS(f"Seeded {len(wallet_ids)} wallets"))
-        return wallet_ids, merch_ids
+            self.seeder.execute()  # [Wallet][0]
+        merch_ids = CarMerchant.objects.filter(user__username__in=usernames)
+        return merch_ids
 
     def seed_admin(self):
-        self.seeder.add_entity(
-            User,
-            1,
-            {"is_staff": True, "is_superuser": True, "is_active": True, 'user_type': UserTypes.Admin, 'password': PASSWORD},
-        )
-        user_ids = self.seeder.execute()[User]
-        self.command.stdout.write(self.command.style.SUCCESS(f"Seeded {user_ids[0]} users"))
-        self.admin = User.objects.get(pk=user_ids[0])
-        return user_ids
+        admin = User.objects.filter(user_type=UserTypes.Admin, is_active=True, is_staff=True, username='lekan').first()
+        if not admin:
+            self.seeder.add_entity(
+                User,
+                1,
+                {"is_staff": True, "is_superuser": True,
+                 "is_active": True, 'username': 'lekan',
+                 'user_type': UserTypes.Admin, 'password': PASSWORD},
+            )
+            user_ids = self.seeder.execute()[User]
+            print(f"Seeded {user_ids[0]} users")
+            self.admin = User.objects.get(pk=user_ids[0])
+            return user_ids
+        else:
+            self.admin = admin
+            return [admin.id]
 
     def seed_cars(self):
         self.seeder.add_entity(
@@ -140,7 +150,6 @@ class PadiSeeder:
             ser.save()
         return car
 
-    @atomic
     def seed_trade(self, car, status: TradeStates):
         assert status not in (
             TradeStates.Completed,
@@ -168,9 +177,9 @@ class PadiSeeder:
     def seed_units(self, trade, merchants):
         units = []
         for merchant in merchants:
-            data = dict(trade=trade.id, merchant=merchant, slots_quantity=1)
+            data = dict(trade=trade.id, merchant=merchant.id, slots_quantity=1)
             ser = TradeUnitSerializer(data=data)
-            ser.context["merchant"] = CarMerchant.objects.get(pk=merchant)
+            ser.context["merchant"] = merchant
             ser.is_valid(raise_exception=True)
             unit = ser.save()
             units.append(unit)
@@ -190,15 +199,18 @@ class PadiSeeder:
             trade.close()
         return trade
 
+    @atomic
     def seed(self):
         # wallet_ids, merch_ids = self.seed_merchants()
-        self.seed_admin()
-        wallet_ids, merch_ids = self.seed_merchants(count=5)
-        # self.seed_trade(Car.objects.get(pk=car), TradeStates.Ongoing)
-        self.seed_completed_trade(merch_ids, should_close=True)
-        self.seed_completed_trade(merch_ids, should_close=False)
-        self.seed_completed_trade(merch_ids[:3])
-        self.seed_completed_trade(merch_ids[:2])
+        if shouldseed == True or self.request is not None:
+            self.seed_admin()
+            merch_ids = self.seed_merchants()
+            self.seed_completed_trade(merch_ids, should_close=True)
+            self.seed_completed_trade(merch_ids, should_close=False)
+            self.seed_completed_trade(merch_ids[:3])
+            self.seed_completed_trade(merch_ids[:2])
+        else:
+            print("Skipping database seed")
 
     def seed_vehicle_info(self, vin):
         vehicle = self.seeder.faker.vehicle_object()

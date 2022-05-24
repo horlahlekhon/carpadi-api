@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.views import TokenViewBase
 
+from src.common.seeder import PadiSeeder
 from src.models.models import User, UserTypes, Assets
 from src.models.permissions import IsUserOrReadOnly
 from src.models.serializers import (
@@ -34,6 +35,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         'default': (IsUserOrReadOnly,),
         'create': (AllowAny,),
         'verify_phone': (AllowAny,),
+        'seed': (AllowAny,),
     }
 
     def get_serializer_class(self):
@@ -98,6 +100,18 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
     def patch_user(self, request, *args, **kwargs):
         return super(UserViewSet, self).update(request, *args, **kwargs)
 
+    @action(detail=False, methods=['post'], url_path='seed', url_name='seed')
+    def seed(self, request, *args, **kwargs):
+        """
+        Seed the database with some data
+        """
+        try:
+            seed_data = PadiSeeder(request=request)
+            seed_data.seed()
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class TokenObtainPairViewMod(TokenViewBase):
     """
@@ -126,3 +140,4 @@ class AssetsViewSet(viewsets.ModelViewSet):
     # @action(detail=False, methods=['patch'], url_path='update', url_name='patch_user')
     # def patch_user(self, request, *args, **kwargs):
     #     return super(PicturesViewSet, self).update(request, *args, **kwargs)
+
