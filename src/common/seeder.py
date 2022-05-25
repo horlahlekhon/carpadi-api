@@ -52,6 +52,9 @@ class PadiSeeder:
                     'username': lambda x: missing.pop(),
                     'user_type': UserTypes.CarMerchant,
                     'password': PASSWORD,
+                    'is_active': True,
+                    'is_staff': False,
+                    'is_superuser': False,
                 },
             )
             user_ids = self.seeder.execute()[User]
@@ -233,4 +236,4 @@ class PadiSeeder:
     async def seed_async(self, loop: AbstractEventLoop):
         self.seed()
         await asyncio.sleep(20)
-        loop.stop() 
+        loop.stop()

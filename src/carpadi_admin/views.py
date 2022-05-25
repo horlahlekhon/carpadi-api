@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -14,7 +14,7 @@ from src.carpadi_admin.filters import (
     DisbursementFilterAdmin,
     ActivityFilterAdmin,
     TradeFilterAdmin,
-    SparePartsFilter,
+    SparePartsFilter, VehicleInfoFilter,
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
@@ -30,7 +30,7 @@ from src.carpadi_admin.serializers import (
     MerchantDashboardSerializer,
     TradeSerializerAdmin,
     CarMaintenanceSerializerAdmin,
-    SparePartsSerializer,
+    SparePartsSerializer, VehicleInfoSerializer,
 )
 from src.carpadi_market.filters import CarProductFilter
 from src.carpadi_market.serializers import CarProductSerializer
@@ -49,7 +49,7 @@ from src.models.models import (
     DisbursementStates,
     SpareParts,
     CarProduct,
-    CarFeature,
+    CarFeature, VehicleInfo,
 )
 from src.models.serializers import CarBrandSerializer, CarMerchantSerializer, ActivitySerializer
 
@@ -212,4 +212,13 @@ class CarProductViewSetAdmin(viewsets.ModelViewSet):
     serializer_class = CarProductSerializer
     queryset = CarProduct.objects.all()
     filter_class = CarProductFilter
+    filter_backends = (filters.DjangoFilterBackend,)
+
+
+class VehicleInfoViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
+                         mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = (IsAdminUser,)
+    serializer_class = VehicleInfoSerializer
+    queryset = VehicleInfo.objects.all()
+    filter_class = VehicleInfoFilter
     filter_backends = (filters.DjangoFilterBackend,)

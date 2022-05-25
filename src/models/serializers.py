@@ -13,6 +13,7 @@ from rest_framework_simplejwt.serializers import PasswordField
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from src.carpadi_api.serializers import TransactionSerializer, TradeUnitSerializer
 from src.config.common import OTP_EXPIRY
 from src.models.models import (
     Wallet,
@@ -25,7 +26,7 @@ from src.models.models import (
     Activity,
     Assets,
     AssetEntityType,
-    Car,
+    Car, Transaction, TradeUnit,
 )
 
 User = get_user_model()
@@ -70,7 +71,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
         # the password will be stored in plain text.
         try:
             validated_data['username'] = (
-                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get("email")
+                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get(
+                    "email")
             )
             validated_data["is_active"] = False
             if validated_data.get("user_type") == UserTypes.CarMerchant:
@@ -284,17 +286,29 @@ class DisbursementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Disbursement
         fields = ('id', 'created', 'trade_unit', 'amount')
-        read_only_fields = "__all__"
+        read_only_fields = ('id', 'created', 'trade_unit', 'amount')
 
 
 class ActivitySerializer(serializers.ModelSerializer):
     content_type = serializers.HiddenField(default=None)
     object_id = serializers.HiddenField(default=None)
+    activity_entity = serializers.SerializerMethodField()
 
     class Meta:
         model = Activity
-        fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
+        fields = ("created", "id", "activity_type", "object_id", "content_type", "description", 'activity_entity')
         read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
+
+    def get_activity_entity(self, obj: Activity):
+        ent = obj.activity
+        if isinstance(ent, Transaction):
+            return TransactionSerializer(instance=ent).data
+        elif isinstance(ent, TradeUnit):
+            return TradeUnitSerializer(instance=ent).data
+        elif isinstance(ent, Disbursement):
+            return DisbursementSerializer(instance=ent).data
+        #  we don't know what this activity is, so we bailed
+        return {}
 
 
 class AssetsSerializer(serializers.ModelSerializer):

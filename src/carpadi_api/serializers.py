@@ -24,7 +24,6 @@ from ..models.models import (
     BankAccount,
     Banks,
 )
-from ..models.serializers import UserSerializer
 
 
 class SocialSerializer(serializers.Serializer):
@@ -101,6 +100,8 @@ class CarMerchantSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
 
     def get_user(self, merchant: CarMerchant):
+        from ..models.serializers import UserSerializer
+
         user_ser = UserSerializer(instance=merchant.user)
         return user_ser.data
 
@@ -209,7 +210,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                         transaction_status=TransactionStatus.Pending,
                         transaction_description=validated_data["transaction_description"],
                         # noqa
-                        transaction_type=TransactionTypes.Debit,
+                        transaction_type=TransactionTypes.Credit,
                         amount=validated_data["amount"],
                         wallet=wallet,
                         transaction_payment_link=data["data"]["link"],

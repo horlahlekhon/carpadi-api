@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import status
 
-from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter, TradeFilter
+from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter, TradeFilter, TradeUnitFilter
 from src.carpadi_api.serializers import (
     CarSerializer,
     TransactionPinSerializers,
@@ -118,9 +118,13 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         self.permission_classes = self.permissions.get(self.action, self.permissions['default'])
         return super().get_permissions()
 
-    def list(self, request):
-        serialize = self.serializer_class(self.queryset, many=True)
-        return Response(serialize.data, status=status.HTTP_200_OK)
+    # def list(self, request):
+    #     serialize = self.serializer_class(self.get_queryset(), many=True)
+    #     return Response(serialize.data, status=status.HTTP_200_OK)
+
+    def get_queryset(self):
+        queryset = self.queryset.filter(wallet__merchant=self.request.user.merchant)
+        return queryset
 
     def retrieve(self, request, pk=None):
         transaction = get_object_or_404(self.queryset, pk=pk)
@@ -273,6 +277,8 @@ class TradeUnitViewSet(viewsets.ModelViewSet):
     serializer_class = TradeUnitSerializer
     queryset = TradeUnit.objects.all()
     permission_classes = (IsCarMerchantAndAuthed,)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = TradeUnitFilter
 
     def get_serializer_context(self):
         ctx = super(TradeUnitViewSet, self).get_serializer_context()

@@ -1,6 +1,7 @@
 from django_filters import rest_framework as filters
 
-from src.models.models import Transaction, Wallet, Trade, Disbursement, Activity, SpareParts, CarProduct, CarFeature
+from src.models.models import Transaction, Wallet, Trade, Disbursement, Activity, SpareParts, CarProduct, CarFeature, \
+    VehicleInfo
 
 
 class TransactionsFilterAdmin(filters.FilterSet):
@@ -89,3 +90,10 @@ class SparePartsFilter(filters.FilterSet):
     class Meta:
         model = SpareParts
         fields = ["car_brand"]
+
+
+class VehicleInfoFilter(filters.FilterSet):
+
+    class Meta:
+        model = VehicleInfo
+        fields = ["transmission", "car_type", "fuel_type", 'make', 'model', 'year']

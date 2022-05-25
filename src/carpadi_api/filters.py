@@ -1,6 +1,7 @@
 from django_filters import rest_framework as filters
 
-from src.models.models import Activity, Disbursement, Transaction, Car, Trade
+from src.models.models import Activity, Disbursement, Transaction, Car, Trade, TransactionStatus, TransactionKinds, \
+    TransactionTypes, ActivityTypes, TradeUnit, TradeStates
 
 
 class TransactionsFilter(filters.FilterSet):
@@ -9,10 +10,15 @@ class TransactionsFilter(filters.FilterSet):
     transaction_date_lte = filters.DateTimeFilter(field_name="created", lookup_expr='day__lte')
     transaction_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')
     transaction_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
+    kind = filters.ChoiceFilter(field_name="transaction_kind", lookup_expr='iexact', choices=TransactionKinds.choices)
+    status = filters.ChoiceFilter(field_name="transaction_status", lookup_expr='iexact',
+                                  choices=TransactionStatus.choices)
+    type = filters.ChoiceFilter(field_name="transaction_type", lookup_expr='iexact', choices=TransactionTypes.choices)
+    reference = filters.CharFilter(field_name="transaction_reference", lookup_expr='iexact')
 
     class Meta:
         model = Transaction
-        fields = ['amount', 'created']
+        fields = ['amount', 'created', 'kind', 'status', 'type', 'reference']
 
 
 class CarsFilter(filters.FilterSet):
@@ -40,11 +46,12 @@ class ActivityFilter(filters.FilterSet):
     activity_date_lte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gt')
     activity_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')
     activity_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
-    activity_type = filters.CharFilter(field_name="activity_type", lookup_expr='iexact')
+    type = filters.ChoiceFilter(field_name="activity_type",
+                                lookup_expr='iexact', choices=ActivityTypes.choices)
 
     class Meta:
         model = Activity
-        fields = ["created", "activity_type"]
+        fields = ["created", "type"]
 
 
 class TradeFilter(filters.FilterSet):
@@ -53,3 +60,15 @@ class TradeFilter(filters.FilterSet):
     class Meta:
         model = Trade
         fields = ['created', 'trade_status', 'make']
+
+
+class TradeUnitFilter(filters.FilterSet):
+    make = filters.CharFilter(field_name="trade__car__information__make", lookup_expr='iexact')
+    trade = filters.CharFilter(field_name="trade__id", lookup_expr='iexact')
+    status = filters.ChoiceFilter(field_name="trade__trade_status", lookup_expr='iexact', choices=TradeStates.choices)
+    slots_quantity_gte = filters.NumberFilter(field_name="slots_quantity", lookup_expr='slots_quantity__gte')
+    slots_quantity_lte = filters.NumberFilter(field_name="slots_quantity", lookup_expr='slots_quantity__lte')
+
+    class Meta:
+        model = TradeUnit
+        fields = ['trade', ]
