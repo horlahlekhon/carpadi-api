@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework import serializers, exceptions
 
 from src.config import common
-from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
+from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes, Assets
 
 # from .models import Transaction
 from ..models.models import (
@@ -274,7 +274,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         return attrs
 
     # TODO: a last part of the transaction shoud be a job that polls for the transaction
-    #  status on flutter wave in cas eour webhook/callback is not working. we can have a job that get all
+    #  status on flutter wave in case our webhook/callback is not working. we can have a job that get all
     #  pending transactions that are not more than 4hrs old and check their status. greater than 4hrs should just fail.
     def create(self, validated_data):
         # rave = Rave(common.FLW_PUBLIC_KEY, common.FLW_SECRET_KEY)
@@ -295,6 +295,7 @@ class TradeSerializer(serializers.ModelSerializer):
     return_on_trade_percentage = serializers.SerializerMethodField()
     return_on_trade = serializers.SerializerMethodField()
 
+
     class Meta:
         model = Trade
         fields = "__all__"
@@ -309,6 +310,23 @@ class TradeSerializer(serializers.ModelSerializer):
             "trade_status",
             "car",
         )
+
+    def serialize_car(self, car: Car):
+        return {
+            "id": car.id,
+            "make": car.information.make,
+            "model": car.information.model,
+            "year": car.information.year,
+            "color": car.colour,
+            "name": car.name,
+            "car_pictures": car.pictures.values_list("asset", flat=True),
+            # "image": c,
+        }
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["car"] = self.serialize_car(instance.car)
+        return data
 
     def get_slots_purchased(self, obj):
         return obj.slots_purchased()

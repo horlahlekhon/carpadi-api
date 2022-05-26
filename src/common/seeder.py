@@ -1,7 +1,7 @@
 import asyncio
 from asyncio import AbstractEventLoop
 from decimal import Decimal
-
+import requests
 from django_seed import Seed
 from faker_vehicle import VehicleProvider
 from src.carpadi_admin.serializers import CarMaintenanceSerializerAdmin
@@ -21,7 +21,7 @@ from src.models.models import (
     TradeStates,
     TradeUnit,
     VehicleInfo,
-    FuelTypes,
+    FuelTypes, Assets, AssetEntityType
 )
 from django.db.transaction import atomic
 
@@ -147,7 +147,16 @@ class PadiSeeder:
         ser = CarMaintenanceSerializerAdmin(data=data)
         if ser.is_valid(raise_exception=True):
             ser.save()
+        self.seed_assets(car, AssetEntityType.Car)
         return car
+
+    def seed_assets(self, entity, ent_type, count=1):
+        # https://picsum.photos/v2/list?page=100&limit=2
+        resp = requests.get('https://picsum.photos/v2/list?page=100&limit={}'.format(count))
+        data = resp.json()
+        urls = [d['download_url'] for d in data]
+        car = Car.objects.get(pk=entity)
+        Assets.create_many(urls, car, ent_type)
 
     def seed_trade(self, car, status: TradeStates):
         assert status not in (

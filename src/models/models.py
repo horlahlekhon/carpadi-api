@@ -20,7 +20,7 @@ from easy_thumbnails.signals import saved_file
 from model_utils.models import UUIDModel, TimeStampedModel
 from rest_framework.exceptions import APIException
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from django.contrib.contenttypes.fields import GenericRelation
 from src.carpadi_admin.utils import validate_inspector, checkout_transaction_validator, disbursement_trade_unit_validator
 from src.config.common import OTP_EXPIRY
 
@@ -407,7 +407,7 @@ class Car(Base):
     status = models.CharField(choices=CarStates.choices, max_length=30, default=CarStates.New)
     # TODO validate vin from vin api
     vin = models.CharField(max_length=17)
-    # pictures = models.ForeignKey("Assets", on_delete=models.SET_NULL, null=True, related_name="cars")
+    pictures = GenericRelation("Assets")
     car_inspector = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,
@@ -458,6 +458,7 @@ class Car(Base):
         blank=True,
     )
     description = models.TextField(null=True, blank=True)
+    name = models.CharField(max_length=50, null=True, blank=True)
 
     def maintenance_cost_calc(self):
         return self.maintenances.all().aggregate(sum=Sum("cost")).get("sum") or Decimal(0.00)
@@ -475,6 +476,11 @@ class Car(Base):
         self.status = CarStates.Sold
         self.margin = self.margin_calc()
         self.save(update_fields=["status", "margin"])
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.name = f"{self.information.make} {self.information.model} {self.information.year}"
+        super().save(*args, **kwargs)
 
 
 class SpareParts(Base):
