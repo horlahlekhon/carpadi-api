@@ -853,3 +853,25 @@ class CarProduct(Base):
 class CarFeature(Base):
     car = models.ForeignKey(CarProduct, on_delete=models.CASCADE, related_name="features")
     name = models.CharField(max_length=100)
+
+
+class NotificationTypes(models.TextChoices):
+    NewTrade = "new_trade", _("New Trade")
+    PasswordReset = "password_reset", _("Password Reset")
+    ProfileUpdate = "profile_update", _("Profile Update")
+    Disbursement = "disbursement", _("Disbursement")
+    TradeUnit = "trade_unit", _("Trade Unit")
+
+
+class Notifications(Base):
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    notice_type = models.CharField(choices=NotificationTypes.choices, max_length=20)
+    entity_id = models.UUIDField(null=True, blank=True)
+
+    @atomic()
+    def save(self, *args, **kwargs):
+        return super().save(*args, **kwargs)

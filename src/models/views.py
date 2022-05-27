@@ -1,5 +1,6 @@
 import asyncio
 import threading
+from django_filters import rest_framework as filters
 
 from django.http.response import Http404
 from rest_framework import serializers
@@ -13,7 +14,8 @@ from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.views import TokenViewBase
 
 from src.common.seeder import PadiSeeder
-from src.models.models import User, UserTypes, Assets
+from src.models.filters import NotificationsFilter
+from src.models.models import User, UserTypes, Assets, Notifications
 from src.models.permissions import IsUserOrReadOnly
 from src.models.serializers import (
     CreateUserSerializer,
@@ -22,7 +24,7 @@ from src.models.serializers import (
     TokenObtainModSerializer,
     CarMerchantSerializer,
     OtpSerializer,
-    AssetsSerializer,
+    AssetsSerializer, NotificationsSerializer,
 )
 from django.db import transaction
 
@@ -146,3 +148,45 @@ class AssetsViewSet(viewsets.ModelViewSet):
     # @action(detail=False, methods=['patch'], url_path='update', url_name='patch_user')
     # def patch_user(self, request, *args, **kwargs):
     #     return super(PicturesViewSet, self).update(request, *args, **kwargs)
+
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Retrieves and Updates - User Pictures
+    """
+
+    queryset = Notifications.objects.all()
+    serializer_class = NotificationsSerializer
+    permission_classes = (IsAuthenticated,)
+    ffilter_backends = (filters.DjangoFilterBackend,)
+    filter_class = NotificationsFilter
+
+    def get_queryset(self):
+        return super(NotificationViewSet, self).get_queryset().filter(user=self.request.user)
+
+    @action(detail=False, methods=['post'], url_path='read', url_name='read')
+    def mark_all_as_read_or_unread(self, request, *args, **kwargs):
+        try:
+            notifications = Notifications.objects.filter(user=request.user)
+            if request.data.get('read', False):
+                notifications.update(read=True)
+            else:
+                notifications.update(read=False)
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], url_path='read/{id}', url_name='read')
+    def mark_as_read(self, request, *args, **kwargs):
+        try:
+            notifications = Notifications.objects.filter(user=request.user, id=kwargs.get('id'))
+            if notifications.exists():
+                notifications.update(read=True)
+                return Response(status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
