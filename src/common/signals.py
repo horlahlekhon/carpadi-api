@@ -203,13 +203,13 @@ def disbursement_completed(sender, instance, created, **kwargs):
 #                 'email': trade.merchant.user.email,
 #                 'amount': trade.amount,
 
-def trade_created(sender, instance, created, **kwargs):
+def trade_created(sender, instance: Trade, created, **kwargs):
     if created:
         Notifications.objects.create(
             notice_type=NotificationTypes.NewTrade,
-            user=instance.merchant.user,
+            user=None,
             message=f" new trade for {instance.car.information.make} {instance.car.information.model}"
-                    f" VIN: {instance.car.vin} with estimated ROT of {instance.estimated_rot}",
+                    f" VIN: {instance.car.vin} with estimated ROT of {instance.estimated_return_on_trade}",
             is_read=False,
             entity_id=instance.id
         )

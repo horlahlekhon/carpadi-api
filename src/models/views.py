@@ -152,7 +152,7 @@ class AssetsViewSet(viewsets.ModelViewSet):
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Retrieves and Updates - User Pictures
+    Retrieves and Updates - User notifications
     """
 
     queryset = Notifications.objects.all()
@@ -166,6 +166,9 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='read', url_name='read')
     def mark_all_as_read_or_unread(self, request, *args, **kwargs):
+        """
+            Mark all notifications as read
+            """
         try:
             notifications = Notifications.objects.filter(user=request.user)
             if request.data.get('read', False):
@@ -176,8 +179,11 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @action(detail=False, methods=['post'], url_path='read/{id}', url_name='read')
+    @action(detail=False, methods=['post'], url_path='read/<int:id>', url_name='read')
     def mark_as_read(self, request, *args, **kwargs):
+        """
+        Mark a notification as read
+        """
         try:
             notifications = Notifications.objects.filter(user=request.user, id=kwargs.get('id'))
             if notifications.exists():

@@ -127,7 +127,7 @@ class PadiSeeder:
             {
                 'status': CarStates.Inspected if self.admin else CarStates.New,
                 'car_inspector': self.admin,
-                'offering_price': Decimal(100000.0),
+                'bought_price': Decimal(100000.0),
                 'inspection_report': 'good' if self.admin else None,
                 'vin': vin,
                 'resale_price': None,

@@ -1,3 +1,4 @@
+import datetime
 from uuid import uuid4
 
 import requests
@@ -360,6 +361,9 @@ class TradeSerializer(serializers.ModelSerializer):
 
 class TradeUnitSerializer(serializers.ModelSerializer):
     merchant = serializers.PrimaryKeyRelatedField(queryset=CarMerchant.objects.all(), required=False)
+    buy_transaction = serializers.HiddenField(default=None)
+    vat_percentage = serializers.HiddenField(default=0)
+    checkout_transaction = serializers.HiddenField(default=None)
 
     class Meta:
         model = TradeUnit
@@ -369,11 +373,29 @@ class TradeUnitSerializer(serializers.ModelSerializer):
             'modified',
             "id",
             "unit_value",
-            "vat_percentage",
             "share_percentage",
             "estimated_rot",
-            "buy_transaction",
         )
+
+    def serialize_car(self, car: Car):
+        return {
+            "id": car.id,
+            "name": car.name,
+            "car_pictures": car.pictures.values_list("asset", flat=True),
+            # "image": c,
+        }
+
+    def to_representation(self, instance: TradeUnit):
+        data = super().to_representation(instance)
+        data["car"] = self.serialize_car(instance.trade.car)
+        data['trade_duration'] = instance.trade.estimated_sales_duration
+        data['trade_start_date'] = instance.trade.created
+        data['estimated_vehicle_sale_date'] = \
+            instance.trade.created + datetime.timedelta(days=instance.trade.estimated_sales_duration)
+        data['description'] = instance.trade.car.description
+        data['trade_status'] = instance.trade.trade_status
+        data['estimated_profit_percentage'] = instance.estimated_rot / instance.unit_value * 100
+        return data
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
