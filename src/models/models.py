@@ -116,6 +116,9 @@ class TransactionPin(Base):
     pin = models.CharField(max_length=200)
     device_name = models.CharField(max_length=50, help_text="The name of the device i.e Iphone x")
 
+    class Meta:
+        unique_together = ('device_serial_number', 'pin')
+
 
 class CarMerchant(Base):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
