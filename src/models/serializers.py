@@ -1,3 +1,4 @@
+from dataclasses import fields
 import datetime
 import re
 from decimal import Decimal
@@ -12,6 +13,7 @@ from rest_framework_simplejwt.serializers import PasswordField
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from src.carpadi_api.serializers import TransactionSerializer, TradeUnitSerializer
 from src.config.common import OTP_EXPIRY
 from src.models.models import (
     Wallet,
@@ -21,7 +23,11 @@ from src.models.models import (
     TransactionPinStatus,
     Otp,
     Disbursement,
-    Activity, )
+    Activity,
+    Assets,
+    AssetEntityType,
+    Car, Transaction, TradeUnit, Notifications,
+)
 
 User = get_user_model()
 
@@ -37,6 +43,8 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'profile_picture',
+            'email',
+            'phone',
         )
         # read_only_fields = ('username',)
 
@@ -52,7 +60,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     merchant_id = serializers.SerializerMethodField()
 
     def get_merchant_id(self, user: User):
-        if user.is_merchant:
+        if user.is_merchant():
             return user.merchant.id
         return None
 
@@ -189,6 +197,7 @@ class TokenObtainModSerializer(serializers.Serializer):
         self.fields['skip_pin'] = serializers.BooleanField(required=False)
 
     def validate(self, attrs):
+        # TODO check if device has a valid fcm token, if not fail login with a nice error
         authenticate_kwargs = {
             self.username_field: attrs[self.username_field],
             'password': attrs['password'],
@@ -280,11 +289,71 @@ class DisbursementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Disbursement
         fields = ('id', 'created', 'trade_unit', 'amount')
-        read_only_fields = "__all__"
+        read_only_fields = ('id', 'created', 'trade_unit', 'amount')
 
 
 class ActivitySerializer(serializers.ModelSerializer):
+    content_type = serializers.HiddenField(default=None)
+    object_id = serializers.HiddenField(default=None)
+    activity_entity = serializers.SerializerMethodField()
+
     class Meta:
         model = Activity
-        fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
+        fields = ("created", "id", "activity_type", "object_id", "content_type", "description", 'activity_entity')
         read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
+
+    def get_activity_entity(self, obj: Activity):
+        ent = obj.activity
+        if isinstance(ent, Transaction):
+            return TransactionSerializer(instance=ent).data
+        elif isinstance(ent, TradeUnit):
+            return TradeUnitSerializer(instance=ent).data
+        elif isinstance(ent, Disbursement):
+            return DisbursementSerializer(instance=ent).data
+        #  we don't know what this activity is, so we bailed
+        return {}
+
+
+class AssetsSerializer(serializers.ModelSerializer):
+    content_object = serializers.HiddenField(default=None)
+    object_id = serializers.HiddenField(default=None)
+    content_type = serializers.HiddenField(default=None)
+    asset = serializers.URLField(required=True)
+    entity_type = serializers.ChoiceField(choices=AssetEntityType.choices, required=True)
+    entity_id = serializers.UUIDField(required=True, write_only=True)
+
+    class Meta:
+        model = Assets
+        fields = "__all__"
+        read_only_fields = ("id", "created")
+
+    def validate(self, attrs):
+        if attrs["entity_type"] == AssetEntityType.Car:
+            entity = Car.objects.filter(id=attrs["entity_id"]).first()
+            if not entity:
+                raise serializers.ValidationError("Car does not exist")
+        elif attrs["entity_type"] == AssetEntityType.Merchant:
+            entity = User.objects.filter(id=attrs["entity_id"]).first()
+            if not entity:
+                raise serializers.ValidationError("Merchant does not exist")
+        else:
+            raise serializers.ValidationError("Invalid entity type")
+        attrs["content_object"] = entity
+        return attrs
+
+    def create(self, validated_data):
+        return Assets.objects.create(
+            content_object=validated_data["content_object"],
+            asset=validated_data["asset"],
+            entity_type=validated_data["entity_type"],
+        )
+
+class NotificationsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Notifications
+        fields = "__all__"
+        read_only_fields = ("id", "created", "modified")
+
+    def create(self, validated_data):
+        return Notifications.objects.create(**validated_data)

@@ -7,7 +7,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import status
 
-from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter
+from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter, TradeFilter, TradeUnitFilter, \
+    TransactionPinFilter
 from src.carpadi_api.serializers import (
     CarSerializer,
     TransactionPinSerializers,
@@ -16,7 +17,9 @@ from src.carpadi_api.serializers import (
     WalletSerializer,
     TransactionSerializer,
     TradeSerializer,
-    TradeUnitSerializer, BankAccountSerializer, BankSerializer,
+    TradeUnitSerializer,
+    BankAccountSerializer,
+    BankSerializer,
 )
 from src.config import common
 from src.models.models import (
@@ -30,7 +33,8 @@ from src.models.models import (
     Wallet,
     Trade,
     TradeUnit,
-    Activity, Banks,
+    Activity,
+    Banks,
 )
 from src.models.permissions import IsCarMerchantAndAuthed
 from src.models.serializers import (
@@ -62,8 +66,7 @@ class DefaultGenericViewset(viewsets.GenericViewSet):
         serializer.save(user=self.request.user)
 
 
-class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-                         viewsets.GenericViewSet):
+class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = CarMerchant.objects.all()
     serializers = {"default": CarMerchantSerializer, "partial_update": CarMerchantUpdateSerializer}
     permission_classes = (IsCarMerchantAndAuthed,)
@@ -99,8 +102,7 @@ class CarMerchantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         return Response(ser.data)
 
 
-class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
-                         viewsets.GenericViewSet):
+class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     handles basic CRUD functionalities for transaction model
     """
@@ -117,9 +119,13 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         self.permission_classes = self.permissions.get(self.action, self.permissions['default'])
         return super().get_permissions()
 
-    def list(self, request):
-        serialize = self.serializer_class(self.queryset, many=True)
-        return Response(serialize.data, status=status.HTTP_200_OK)
+    # def list(self, request):
+    #     serialize = self.serializer_class(self.get_queryset(), many=True)
+    #     return Response(serialize.data, status=status.HTTP_200_OK)
+
+    def get_queryset(self):
+        queryset = self.queryset.filter(wallet__merchant=self.request.user.merchant)
+        return queryset
 
     def retrieve(self, request, pk=None):
         transaction = get_object_or_404(self.queryset, pk=pk)
@@ -194,9 +200,14 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
     # serializer_class = TransactionPinSerializers
     permissions = {'default': (IsCarMerchantAndAuthed,)}
     serializers = {'default': TransactionPinSerializers, 'partial_update': UpdateTransactionPinSerializers}
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = TransactionPinFilter
 
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
+
+    def get_(self):
+        return self.queryset.filter(user=self.request.user)
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
@@ -215,7 +226,7 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return self.queryset.filter(user=user)
+        return super(TransactionPinsViewSet, self).get_queryset().filter(user=user)
 
     def get_serializer_context(self):
         ctx = super(TransactionPinsViewSet, self).get_serializer_context()
@@ -230,6 +241,19 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['post'], url_path='validate-pin', url_name='validate_transaction_pin')
+    def validate_transaction_pin(self, request):
+        data = request.data
+        if not data.get('pin'):
+            return Response({"error": "pin is required"}, status=status.HTTP_400_BAD_REQUEST)
+        pin = data.get('pin')
+        try:
+            # TODO we probably will be encrypting the pin, so we need to decrypt it
+            self.get_queryset().get(pin=pin)
+        except TransactionPin.DoesNotExist:
+            return Response({"error": "Invalid pin"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"success": "Pin is valid"}, status=status.HTTP_200_OK)
+
 
 class WalletViewSet(viewsets.ModelViewSet):
     queryset = Wallet.objects.all()
@@ -241,11 +265,14 @@ class WalletViewSet(viewsets.ModelViewSet):
         serialize = self.serializer_class(wallet)
         return Response(serialize.data, status=status.HTTP_200_OK)
 
+    def get_queryset(self):
+        return [self.request.user.merchant.wallet]
+
     def create(self, request, *args, **kwargs):
         return Response({"message": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def list(self, request, *args, **kwargs):
-        return Response({"message": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    # def list(self, request, *args, **kwargs):
+    #     return Response({"message": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 from django.contrib.auth import get_user_model as User
@@ -255,16 +282,22 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TradeSerializer
     queryset = Trade.objects.all()
     permission_classes = (IsCarMerchantAndAuthed,)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = TradeFilter
 
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     return self.queryset.filter(user=user)
+    def get_queryset(self):
+        queryset = super(TradeViewSet, self).get_queryset()
+        if self.request.query_params.get("self") and bool(self.request.query_params.get("self")) == True:
+            return queryset.filter(units__merchant__id=self.request.user.merchant.id)
+        return queryset
 
 
 class TradeUnitViewSet(viewsets.ModelViewSet):
     serializer_class = TradeUnitSerializer
     queryset = TradeUnit.objects.all()
     permission_classes = (IsCarMerchantAndAuthed,)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = TradeUnitFilter
 
     def get_serializer_context(self):
         ctx = super(TradeUnitViewSet, self).get_serializer_context()
@@ -287,3 +320,7 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsCarMerchantAndAuthed,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ActivityFilter
+
+    def get_queryset(self):
+        user: CarMerchant = self.request.user.merchant
+        return user.activity_set.all()

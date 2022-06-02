@@ -20,33 +20,46 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='disbursement',
             name='disbursement_status',
-            field=models.CharField(choices=[('Ongoing', 'Ongoing'), ('Completed', 'Completed')], default='Ongoing',
-                                   max_length=20),
+            field=models.CharField(
+                choices=[('Ongoing', 'Ongoing'), ('Completed', 'Completed')], default='Ongoing', max_length=20
+            ),
         ),
         migrations.AddField(
             model_name='disbursement',
             name='transaction',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT,
-                                       related_name='disbursements', to='models.transaction'),
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name='disbursements',
+                to='models.transaction',
+            ),
         ),
         migrations.AlterField(
             model_name='disbursement',
             name='trade_unit',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='trade_unit',
-                                       to='models.tradeunit'),
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE, related_name='trade_unit', to='models.tradeunit'
+            ),
         ),
         migrations.AlterField(
             model_name='otp',
             name='expiry',
-            field=models.DateTimeField(default=datetime.datetime(2022, 4, 21, 3, 54, 33, 838700, tzinfo=utc),
-                                       editable=False),
+            field=models.DateTimeField(default=datetime.datetime(2022, 4, 21, 3, 54, 33, 838700, tzinfo=utc), editable=False),
         ),
         migrations.AlterField(
             model_name='transaction',
             name='transaction_kind',
             field=models.CharField(
-                choices=[('deposit', 'Deposit'), ('withdrawal', 'Withdrawal'), ('transfer', 'Transfer'),
-                         ('wallet_transfer', 'Wallet Transfer'), ('disbursement', 'Disbursement')], default='deposit',
-                max_length=50),
+                choices=[
+                    ('deposit', 'Deposit'),
+                    ('withdrawal', 'Withdrawal'),
+                    ('transfer', 'Transfer'),
+                    ('wallet_transfer', 'Wallet Transfer'),
+                    ('disbursement', 'Disbursement'),
+                ],
+                default='deposit',
+                max_length=50,
+            ),
         ),
     ]

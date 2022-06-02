@@ -15,7 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='otp',
             name='expiry',
-            field=models.DateTimeField(default=datetime.datetime(2022, 4, 11, 16, 53, 6, 997308, tzinfo=utc),
-                                       editable=False),
+            field=models.DateTimeField(default=datetime.datetime(2022, 4, 11, 16, 53, 6, 997308, tzinfo=utc), editable=False),
         ),
     ]

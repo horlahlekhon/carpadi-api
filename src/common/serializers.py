@@ -16,8 +16,7 @@ def get_url(request, instance, alias_obj, alias=None):
 
 def image_sizes(request, instance, alias_obj):
     i_sizes = list(alias_obj.keys())
-    return {'original': get_url(request, instance, alias_obj),
-            **{k: get_url(request, instance, alias_obj, k) for k in i_sizes}}
+    return {'original': get_url(request, instance, alias_obj), **{k: get_url(request, instance, alias_obj, k) for k in i_sizes}}
 
 
 class ThumbnailerJSONSerializer(ApiImageField):

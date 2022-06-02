@@ -27,9 +27,18 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='car',
             name='fuel_type',
-            field=models.CharField(choices=[('petrol', 'Petrol'), ('diesel', 'Diesel'), ('cng', 'CNG'), ('lpg', 'LPG'),
-                                            ('electric', 'Electric'), ('hybrid', 'Hybrid')], default='Petrol',
-                                   max_length=30),
+            field=models.CharField(
+                choices=[
+                    ('petrol', 'Petrol'),
+                    ('diesel', 'Diesel'),
+                    ('cng', 'CNG'),
+                    ('lpg', 'LPG'),
+                    ('electric', 'Electric'),
+                    ('hybrid', 'Hybrid'),
+                ],
+                default='Petrol',
+                max_length=30,
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
@@ -40,17 +49,26 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='car',
             name='status',
-            field=models.CharField(choices=[('failed_inspection', 'Failed Inspection'), ('inspected', 'inspected'),
-                                            ('available', 'available for trading and sale'),
-                                            ('ongoing_trade', 'Car is an ongoing trade'), ('bought', 'bought'),
-                                            ('sold', 'sold'), ('new', 'New car waiting to be inspected')],
-                                   default='new', max_length=30),
+            field=models.CharField(
+                choices=[
+                    ('failed_inspection', 'Failed Inspection'),
+                    ('inspected', 'inspected'),
+                    ('available', 'available for trading and sale'),
+                    ('ongoing_trade', 'Car is an ongoing trade'),
+                    ('bought', 'bought'),
+                    ('sold', 'sold'),
+                    ('new', 'New car waiting to be inspected'),
+                ],
+                default='new',
+                max_length=30,
+            ),
         ),
         migrations.AlterField(
             model_name='carmaintenance',
             name='content_type',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
-                                    to='contenttypes.contenttype'),
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype'
+            ),
         ),
         migrations.AlterField(
             model_name='carmaintenance',
@@ -60,7 +78,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='otp',
             name='expiry',
-            field=models.DateTimeField(default=datetime.datetime(2022, 4, 20, 5, 47, 12, 850598, tzinfo=utc),
-                                       editable=False),
+            field=models.DateTimeField(default=datetime.datetime(2022, 4, 20, 5, 47, 12, 850598, tzinfo=utc), editable=False),
         ),
     ]

@@ -1,3 +1,4 @@
+import datetime
 from uuid import uuid4
 
 import requests
@@ -7,7 +8,9 @@ from django.utils import timezone
 from rest_framework import serializers, exceptions
 
 from src.config import common
-from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
+from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes, Assets
+from django.db.models import Sum
+from decimal import Decimal
 # from .models import Transaction
 from ..models.models import (
     CarMerchant,
@@ -19,9 +22,10 @@ from ..models.models import (
     Transaction,
     Trade,
     TradeUnit,
-    TradeStates, BankAccount, Banks,
+    TradeStates,
+    BankAccount,
+    Banks,
 )
-from ..models.serializers import UserSerializer
 
 
 class SocialSerializer(serializers.Serializer):
@@ -61,7 +65,7 @@ class TransactionPinSerializers(serializers.ModelSerializer):
             raise exceptions.NotAcceptable(
                 "User is already logged in on 3 devices," " please delete one of the logged in sessions."
             )
-        validated_data["pin"] = make_password(validated_data["pin"])
+        validated_data["pin"] = validated_data["pin"]
         validated_data["status"] = TransactionPinStatus.Active
         return TransactionPin.objects.create(**validated_data)
 
@@ -98,6 +102,8 @@ class CarMerchantSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
 
     def get_user(self, merchant: CarMerchant):
+        from ..models.serializers import UserSerializer
+
         user_ser = UserSerializer(instance=merchant.user)
         return user_ser.data
 
@@ -124,6 +130,16 @@ class WalletSerializer(serializers.ModelSerializer):
 
     def get_trading_cash(self, wallet: Wallet):
         return wallet.get_trading_cash()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        units_rots = TradeUnit.objects \
+            .filter(
+            merchant=instance.merchant,
+            trade__trade_status__in=[TradeStates.Ongoing, TradeStates.Completed]
+        ).aggregate(total=Sum("estimated_rot")).get("total", Decimal(0))
+        data['estimated_total_rot'] = units_rots
+        return data
 
     class Meta:
         model = Wallet
@@ -206,7 +222,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                         transaction_status=TransactionStatus.Pending,
                         transaction_description=validated_data["transaction_description"],
                         # noqa
-                        transaction_type=TransactionTypes.Debit,
+                        transaction_type=TransactionTypes.Credit,
                         amount=validated_data["amount"],
                         wallet=wallet,
                         transaction_payment_link=data["data"]["link"],
@@ -228,12 +244,9 @@ class TransactionSerializer(serializers.ModelSerializer):
             "currency": "NGN",
             "reference": ref,
             "callback_url": common.FLW_REDIRECT_URL,
-            "debit_currency": "NGN"
+            "debit_currency": "NGN",
         }
-        headers = {
-            "Authorization": f"Bearer {common.FLW_SECRET_KEY}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {common.FLW_SECRET_KEY}", "Content-Type": "application/json"}
         try:
             tx = None
             response: requests.Response = requests.post(url=common.FLW_WITHDRAW_URL, json=payload, headers=headers)
@@ -273,7 +286,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         return attrs
 
     # TODO: a last part of the transaction shoud be a job that polls for the transaction
-    #  status on flutter wave in cas eour webhook/callback is not working. we can have a job that get all
+    #  status on flutter wave in case our webhook/callback is not working. we can have a job that get all
     #  pending transactions that are not more than 4hrs old and check their status. greater than 4hrs should just fail.
     def create(self, validated_data):
         # rave = Rave(common.FLW_PUBLIC_KEY, common.FLW_SECRET_KEY)
@@ -309,6 +322,23 @@ class TradeSerializer(serializers.ModelSerializer):
             "car",
         )
 
+    def serialize_car(self, car: Car):
+        return {
+            "id": car.id,
+            "make": car.information.make,
+            "model": car.information.model,
+            "year": car.information.year,
+            "color": car.colour,
+            "name": car.name,
+            "car_pictures": car.pictures.values_list("asset", flat=True),
+            # "image": c,
+        }
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["car"] = self.serialize_car(instance.car)
+        return data
+
     def get_slots_purchased(self, obj):
         return obj.slots_purchased()
 
@@ -341,13 +371,41 @@ class TradeSerializer(serializers.ModelSerializer):
 
 class TradeUnitSerializer(serializers.ModelSerializer):
     merchant = serializers.PrimaryKeyRelatedField(queryset=CarMerchant.objects.all(), required=False)
+    buy_transaction = serializers.HiddenField(default=None)
+    vat_percentage = serializers.HiddenField(default=0)
+    checkout_transaction = serializers.HiddenField(default=None)
 
     class Meta:
         model = TradeUnit
         fields = "__all__"
         read_only_fields = (
-            'created', 'modified', "id", "unit_value",
-            "vat_percentage", "share_percentage", "estimated_rot", "buy_transaction")
+            'created',
+            'modified',
+            "id",
+            "unit_value",
+            "share_percentage",
+            "estimated_rot",
+        )
+
+    def serialize_car(self, car: Car):
+        return {
+            "id": car.id,
+            "name": car.name,
+            "car_pictures": car.pictures.values_list("asset", flat=True),
+            # "image": c,
+        }
+
+    def to_representation(self, instance: TradeUnit):
+        data = super().to_representation(instance)
+        data["car"] = self.serialize_car(instance.trade.car)
+        data['trade_duration'] = instance.trade.estimated_sales_duration
+        data['trade_start_date'] = instance.trade.created
+        data['estimated_vehicle_sale_date'] = \
+            instance.trade.created + datetime.timedelta(days=instance.trade.estimated_sales_duration)
+        data['description'] = instance.trade.car.description
+        data['trade_status'] = instance.trade.trade_status
+        data['estimated_profit_percentage'] = instance.estimated_rot / instance.unit_value * 100
+        return data
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -373,14 +431,7 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         trade: Trade = validated_data["trade"]
         merchant: CarMerchant = validated_data["merchant"]
         share_percentage = (trade.slots_available / validated_data["slots_quantity"]) * 100
-        unit = TradeUnit.objects.create(
-            trade=trade,
-            merchant=merchant,
-            share_percentage=share_percentage,
-            slots_quantity=validated_data["slots_quantity"],
-            estimated_rot=validated_data["estimated_rot"],
-            unit_value=trade.price_per_slot * validated_data["slots_quantity"],
-        )
+        unit_value = trade.calculate_price_per_slot() * validated_data["slots_quantity"]
         ref = f"CP-{uuid4()}"
         tx = Transaction.objects.create(
             transaction_reference=ref,
@@ -389,13 +440,19 @@ class TradeUnitSerializer(serializers.ModelSerializer):
             transaction_description="Trade Unit Purchase",
             # noqa
             transaction_type=TransactionTypes.Debit,
-            amount=unit.unit_value,
+            amount=unit_value,
             wallet=merchant.wallet,
             transaction_payment_link=None,
         )
-        unit.buy_transaction = tx
-        unit.save(update_fields=["buy_transaction"])
-        unit.refresh_from_db()
+        unit = TradeUnit.objects.create(
+            trade=trade,
+            merchant=merchant,
+            share_percentage=share_percentage,
+            slots_quantity=validated_data["slots_quantity"],
+            estimated_rot=validated_data["estimated_rot"],
+            unit_value=trade.price_per_slot * validated_data["slots_quantity"],
+            buy_transaction=tx,
+        )
         tx.wallet.update_balance(tx=tx)
         return unit
 
@@ -418,7 +475,7 @@ class BankAccountSerializer(serializers.ModelSerializer):
             "account_number": account_number,
             "account_bank": bank_code,
         }
-        resp = requests.post("https://api.flutterwave.com/v3/accounts/resolve", json=bdy, headers=headers)
+        resp = requests.post(common.FLW_ACCOUNT_VERIFY_URL, json=bdy, headers=headers)
         data = resp.json()
         if resp.status_code != 200:
             raise serializers.ValidationError("Invalid account details")

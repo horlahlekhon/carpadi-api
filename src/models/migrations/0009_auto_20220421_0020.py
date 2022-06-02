@@ -20,13 +20,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='otp',
             name='expiry',
-            field=models.DateTimeField(default=datetime.datetime(2022, 4, 21, 0, 50, 45, 15456, tzinfo=utc),
-                                       editable=False),
+            field=models.DateTimeField(default=datetime.datetime(2022, 4, 21, 0, 50, 45, 15456, tzinfo=utc), editable=False),
         ),
         migrations.AlterField(
             model_name='trade',
             name='car',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='trades',
-                                       to='models.car'),
+            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='trades', to='models.car'),
         ),
     ]

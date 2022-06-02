@@ -1,15 +1,21 @@
+import asyncio
+import threading
+from django_filters import rest_framework as filters
+
 from django.http.response import Http404
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAcceptable
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.views import TokenViewBase
 
-from src.models.models import User, UserTypes
+from src.common.seeder import PadiSeeder
+from src.models.filters import NotificationsFilter
+from src.models.models import User, UserTypes, Assets, Notifications
 from src.models.permissions import IsUserOrReadOnly
 from src.models.serializers import (
     CreateUserSerializer,
@@ -18,7 +24,9 @@ from src.models.serializers import (
     TokenObtainModSerializer,
     CarMerchantSerializer,
     OtpSerializer,
+    AssetsSerializer, NotificationsSerializer,
 )
+from django.db import transaction
 
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -32,6 +40,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         'default': (IsUserOrReadOnly,),
         'create': (AllowAny,),
         'verify_phone': (AllowAny,),
+        'seed': (AllowAny,),
     }
 
     def get_serializer_class(self):
@@ -78,6 +87,12 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         except Exception as reason:
             return Response(reason.args, status=status.HTTP_400_BAD_REQUEST)
 
+    # @action()
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
     def get_object(self):
         user = self.request.user
         if user.is_anonymous or not user.is_authenticated or not user.is_active:
@@ -90,6 +105,21 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
     def patch_user(self, request, *args, **kwargs):
         return super(UserViewSet, self).update(request, *args, **kwargs)
 
+    @action(detail=False, methods=['post'], url_path='seed', url_name='seed')
+    def seed(self, request, *args, **kwargs):
+        """
+        Seed the database with some data
+        """
+        try:
+            seed_data = PadiSeeder(request=request)
+            # seed_data.seed()
+            t = threading.Thread(target=seed_data.seed)
+            t.setDaemon(True)
+            t.start()
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class TokenObtainPairViewMod(TokenViewBase):
     """
@@ -98,3 +128,71 @@ class TokenObtainPairViewMod(TokenViewBase):
     """
 
     serializer_class = TokenObtainModSerializer
+
+
+class AssetsViewSet(viewsets.ModelViewSet):
+    """
+    Retrieves and Updates - User Pictures
+    """
+
+    queryset = Assets.objects.all()
+    serializer_class = AssetsSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        user = self.request.user
+        if user.is_anonymous or not user.is_authenticated or not user.is_active:
+            raise Http404('No user matches the given query.')
+        return user
+
+    # @action(detail=False, methods=['patch'], url_path='update', url_name='patch_user')
+    # def patch_user(self, request, *args, **kwargs):
+    #     return super(PicturesViewSet, self).update(request, *args, **kwargs)
+
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Retrieves and Updates - User notifications
+    """
+
+    queryset = Notifications.objects.all()
+    serializer_class = NotificationsSerializer
+    permission_classes = (IsAuthenticated,)
+    ffilter_backends = (filters.DjangoFilterBackend,)
+    filter_class = NotificationsFilter
+
+    def get_queryset(self):
+        return super(NotificationViewSet, self).get_queryset().filter(user=self.request.user)
+
+    @action(detail=False, methods=['post'], url_path='read', url_name='read')
+    def mark_all_as_read_or_unread(self, request, *args, **kwargs):
+        """
+            Mark all notifications as read
+            """
+        try:
+            notifications = Notifications.objects.filter(user=request.user)
+            if request.data.get('read', False):
+                notifications.update(read=True)
+            else:
+                notifications.update(read=False)
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], url_path='read/<int:id>', url_name='read')
+    def mark_as_read(self, request, *args, **kwargs):
+        """
+        Mark a notification as read
+        """
+        try:
+            notifications = Notifications.objects.filter(user=request.user, id=kwargs.get('id'))
+            if notifications.exists():
+                notifications.update(read=True)
+                return Response(status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+

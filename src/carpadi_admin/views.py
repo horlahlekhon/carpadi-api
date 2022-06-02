@@ -1,6 +1,8 @@
+from datetime import datetime
+
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -12,17 +14,26 @@ from src.carpadi_admin.filters import (
     DisbursementFilterAdmin,
     ActivityFilterAdmin,
     TradeFilterAdmin,
-    SparePartsFilter
+    SparePartsFilter, VehicleInfoFilter,
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
     WalletSerializerAdmin,
     TransactionSerializer,
     DisbursementSerializerAdmin,
-    ActivitySerializerAdmin,
-    TradeSerializerAdmin, CarMaintenanceSerializerAdmin,
-    SparePartsSerializer
+    TradeSerializerAdmin,
+    CarMaintenanceSerializerAdmin,
+    SparePartsSerializer,
+    AccountDashboardSerializer,
+    TradeDashboardSerializer,
+    InventoryDashboardSerializer,
+    MerchantDashboardSerializer,
+    TradeSerializerAdmin,
+    CarMaintenanceSerializerAdmin,
+    SparePartsSerializer, VehicleInfoSerializer,
 )
+from src.carpadi_market.filters import CarProductFilter
+from src.carpadi_market.serializers import CarProductSerializer
 from src.models.models import (
     Transaction,
     CarBrand,
@@ -31,9 +42,16 @@ from src.models.models import (
     Wallet,
     Trade,
     Disbursement,
-    Activity, CarMaintenance, TradeStates, SpareParts
+    Activity,
+    CarMaintenance,
+    TradeUnit,
+    TradeStates,
+    DisbursementStates,
+    SpareParts,
+    CarProduct,
+    CarFeature, VehicleInfo,
 )
-from src.models.serializers import CarBrandSerializer, CarMerchantSerializer
+from src.models.serializers import CarBrandSerializer, CarMerchantSerializer, ActivitySerializer
 
 
 # Create your views here.
@@ -107,8 +125,10 @@ class TradeViewSetAdmin(viewsets.ModelViewSet):
         """
         trade = get_object_or_404(Trade, pk=request.query_params.get("trade"))
         if trade.trade_status != TradeStates.Completed:
-            return Response({"message": "Trade is not completed, please complete this trade before disbursing"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Trade is not completed, please complete this trade before disbursing"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         trade.close()
         return Response({"message": "Trade disbursed successfully"}, status=status.HTTP_200_OK)
 
@@ -123,7 +143,7 @@ class DisbursementViewSetAdmin(viewsets.ReadOnlyModelViewSet):
 
 class ActivityViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAdminUser,)
-    serializer_class = ActivitySerializerAdmin
+    serializer_class = ActivitySerializer
     queryset = Activity.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ActivityFilterAdmin
@@ -148,3 +168,57 @@ class SparePartsViewSet(viewsets.ModelViewSet):
     queryset = SpareParts.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = SparePartsFilter
+
+
+class DashboardViewSet(viewsets.GenericViewSet):
+    permission_classes = (IsAdminUser,)
+    serializer_class = AccountDashboardSerializer
+
+    @action(detail=False, methods=['get'], url_path='accounts', url_name='account_dashboard')
+    def accounts(self, request, *args, **kwargs):
+        data = dict(
+            start_date=request.query_params.get('start_date', datetime.now().date().replace(day=1)),
+            end_date=request.query_params.get('end_date', datetime.now().date()),
+        )
+        serializer = self.get_serializer(data=data)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='trades', url_name='trade_dashboard')
+    def trades(self, request, *args, **kwargs):
+        ser = TradeDashboardSerializer(data=request.query_params)
+        if ser.is_valid():
+            return Response(ser.data, status=status.HTTP_200_OK)
+        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='inventory', url_name='inventory_dashboard')
+    def inventory(self, request, *args, **kwargs):
+        ser = InventoryDashboardSerializer(data=request.query_params)
+        if ser.is_valid():
+            return Response(ser.data, status=status.HTTP_200_OK)
+        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='merchants', url_name='merchants_dashboard')
+    def merchants(self, request, *args, **kwargs):
+        ser = MerchantDashboardSerializer(data=request.query_params)
+        if ser.is_valid():
+            return Response(ser.data, status=status.HTTP_200_OK)
+        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CarProductViewSetAdmin(viewsets.ModelViewSet):
+    permission_classes = (IsAdminUser,)
+    serializer_class = CarProductSerializer
+    queryset = CarProduct.objects.all()
+    filter_class = CarProductFilter
+    filter_backends = (filters.DjangoFilterBackend,)
+
+
+class VehicleInfoViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
+                         mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = (IsAdminUser,)
+    serializer_class = VehicleInfoSerializer
+    queryset = VehicleInfo.objects.all()
+    filter_class = VehicleInfoFilter
+    filter_backends = (filters.DjangoFilterBackend,)

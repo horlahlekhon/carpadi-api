@@ -46,3 +46,6 @@ boto3==1.17.84
 
 django-health-check==3.16.4
 rave-python==1.2.15
+
+cloudinary==1.29.0
+click==8.0.1

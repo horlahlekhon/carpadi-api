@@ -31,7 +31,7 @@ INSTALLED_APPS = (
     'django_filters',  # for filtering rest endpoints
     'django_rest_passwordreset',  # for reset password endpoints
     'drf_yasg',  # swagger api
-    'easy_thumbnails',  # image lib
+    'easy_thumbnails',  # asset lib
     'social_django',  # social login
     'corsheaders',  # cors handling
     'django_inlinecss',  # inline css in templates
@@ -52,15 +52,17 @@ INSTALLED_APPS = (
     'src.common',
     'src.carpadi_admin',
     'src.carpadi_api',
-    'django_extensions'
+    'django_extensions',
     # Third party optional apps
     # app must be placed somewhere after all the apps that are going to be generating activities
     # 'actstream',                  # activity stream
+    "fcm_django"
 )
 
 # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
 MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,16 +79,13 @@ ROOT_URLCONF = 'src.urls'
 WSGI_APPLICATION = 'src.wsgi.application'
 
 # Email
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
-EMAIL_PORT = os.getenv('EMAIL_PORT', 1025)
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+EMAIL_PORT = os.getenv('EMAIL_PORT', 587)
 EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
 EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_USER = "emailapikey"
-EMAIL_HOST_PASSWORD = "wSsVR60k8kT4XK99mmarJLs+nlpVU17zFE990VHw73StH6+T9sdqxUDGBAX2G6QeQ2NrEDJArL1/nhdUhDYHi9wlmQlSACiF9mqRe1U4J3x17qnvhDzNV2VVlxKML4IAzw5tmmVhFMEj+g=="
-
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 # Celery
 BROKER_URL = os.getenv('BROKER_URL', 'redis://redis:6379')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379')
@@ -130,7 +129,8 @@ LOGIN_REDIRECT_URL = '/'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
-STATIC_ROOT = os.path.normpath(join(os.path.dirname(BASE_DIR), 'static'))
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATICFILES_DIRS = []
 STATIC_URL = '/static/'
 STATICFILES_FINDERS = (
@@ -374,11 +374,45 @@ DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
 
 FLW_PUBLIC_KEY = os.getenv('FLUTTER_WAVE_PUBLIC_KEY', '')
 FLW_SECRET_KEY = os.getenv('FLUTTER_WAVE_SECRET_KEY', '')
-FLW_REDIRECT_URL = os.getenv('PAYMENT_REDIRECT_URL',
-                             'https://36db-197-210-55-73.ngrok.io/api/v1/merchants/transactions/verify-transaction/')
+FLW_REDIRECT_URL = os.getenv(
+    'PAYMENT_REDIRECT_URL', 'https://f116-102-89-32-150.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
+)
 FLW_PAYMENT_URL = os.getenv('PAYMENT_URL', "https://api.flutterwave.com/v3/payments")
 FLW_PAYMENT_VERIFY_URL = "https://api.flutterwave.com/v3/transactions/{}/verify".format
 FLW_GET_TRANSFER_URL = "https://api.flutterwave.com/v3/transfers/{}".format
+FLW_ACCOUNT_VERIFY_URL = "https://api.flutterwave.com/v3/accounts/resolve"
 LOG_DIRECTORY = os.getenv('LOG_DIRECTORY', 'logs')
 
 FLW_WITHDRAW_URL = os.getenv('FLW_WITHDRAW_URL', "https://api.flutterwave.com/v3/transfers")
+
+# import cloudinary
+#
+# cloudinary.config(
+#     cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME', ''),
+#     api_key=os.getenv('CLOUDINARY_API_KEY', ''),
+#     api_secret=os.getenv('CLOUDINARY_API_SECRET', ''),
+# )
+
+CARMD_PARTNER_TOKEN = os.getenv('CARMD_PARTNER_TOKEN', '')
+CARMD_APIKEY = os.getenv('CARMD_APIKEY', '')
+CARMD_VIN_CHECK = "http://api.carmd.com/v3.0/decode?vin={}".format
+
+from firebase_admin import initialize_app
+
+FIREBASE_APP = initialize_app()
+
+FCM_DJANGO_SETTINGS = {
+    # default: _('FCM Django')
+    "APP_VERBOSE_NAME": "Carpadi",
+    # true if you want to have only one active device per registered user at a time
+    # default: False
+    "ONE_DEVICE_PER_USER": False,
+    # devices to which notifications cannot be sent,
+    # are deleted upon receiving error response from FCM
+    # default: False
+    "DELETE_INACTIVE_DEVICES": True,
+    # Transform create of an existing Device (based on registration id) into
+    # an update. See the section
+    # "Update of device with duplicate registration ID" for more details.
+    "UPDATE_ON_DUPLICATE_REG_ID": True,
+}
