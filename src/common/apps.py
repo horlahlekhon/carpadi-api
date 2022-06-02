@@ -8,7 +8,7 @@ class CommonConfig(AppConfig):
         import uuid
         from .signals import complete_user_registeration, trade_unit_completed, disbursement_completed
         from django.contrib.auth import get_user_model
-        from django.db.models.signals import post_save, pre_save
+        from django.db.models.signals import post_save
         from django_rest_passwordreset.signals import reset_password_token_created
         from django_rest_passwordreset.views import ResetPasswordRequestToken
         from src.common.signals import password_reset_token_created

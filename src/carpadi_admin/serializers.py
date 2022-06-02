@@ -1,11 +1,13 @@
-from dataclasses import fields
-from pyexpat import model
-from django.db.models import Sum, Avg
-import datetime
+from decimal import Decimal
 
-from rest_framework import serializers
+from django.db.models import Sum
+from django.db.transaction import atomic
+from django.utils import timezone
+from rest_framework import serializers, exceptions
 
-from src.models.models import Car, Wallet, Transaction, Trade, TradeUnit, Disbursement, Activity
+from src.models.models import Car, Wallet, Transaction, Trade, Disbursement, Activity, SpareParts
+from src.models.models import TradeStates, \
+    CarStates, CarMaintenance, CarMaintenanceTypes, MiscellaneousExpenses, DisbursementStates
 
 
 class SocialSerializer(serializers.Serializer):
@@ -19,17 +21,73 @@ class SocialSerializer(serializers.Serializer):
     )
 
 
-# class CarMerchantSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = CarMerchant
-#         fields = "__all__"
-
-
 class CarSerializer(serializers.ModelSerializer):
+    maintenance_cost = serializers.SerializerMethodField()
+    total_cost = serializers.SerializerMethodField()
+
     class Meta:
         model = Car
         fields = "__all__"
         ref_name = "car_serializer_admin"
+
+    def get_total_cost(self, obj: Car):
+        return obj.total_cost_calc()
+
+    def get_maintenance_cost(self, obj: Car):
+        return obj.maintenance_cost_calc()
+
+    def validate_status(self, value):
+        if self.instance:  # we are doing update
+            if value == CarStates.Inspected:
+                if not self.instance.inspection_report and not self.initial_data.get("inspection_report") and \
+                        not self.instance.inspector and not self.initial_data.get("inspector"):
+                    raise serializers.ValidationError(
+                        "Inspection report is required for a car with status of inspected")
+            if value == CarStates.Available:
+                # you can only change the status to available if the car is inspected and all the cost have been
+                # accounted for
+                if not self.instance.inspection_report and not self.initial_data.get("inspection_report"):
+                    raise serializers.ValidationError(
+                        "Inspection report is required for a car with status of available")
+                if not self.instance.resale_price and not self.initial_data.get("resale_price"):
+                    raise serializers.ValidationError("Resale price is required for a car with status of available")
+            return value
+        else:
+            # we are doing create
+            if value == CarStates.Inspected:
+                if not self.initial_data.get("inspection_report"):
+                    raise serializers.ValidationError(
+                        "Inspection report is required for a car with status of inspected")
+                if not self.initial_data.get("car_inspector"):
+                    raise serializers.ValidationError(
+                        "A valid car inspector is required for cars that have been inspected")
+            if value == CarStates.Available:
+                if not self.initial_data.get("inspection_report"):
+                    raise serializers.ValidationError(
+                        "Inspection report is required for a car with status of available")
+                if not self.initial_data.get("resale_price"):
+                    raise serializers.ValidationError("Resale price is required for a car with status of available")
+            return value
+
+    def validate_resale_price(self, value):
+        if self.instance:
+            if value < self.instance.total_cost_calc():
+                raise serializers.ValidationError("Resale price cannot be less than the total cost of the car")
+        else:
+            raise serializers.ValidationError("Aye! You cannot create set the resale price of a car while creating it")
+        return value
+
+    @atomic()
+    def create(self, validated_data):
+        car = Car.objects.create(**validated_data)
+        return car
+
+    @atomic()
+    def update(self, instance: Car, validated_data):
+        if validated_data.get("status") == CarStates.Available:
+            validated_data["total_cost"] = instance.total_cost_calc()
+            validated_data["maintenance_cost"] = instance.maintenance_cost_calc()
+        return super().update(instance, validated_data)
 
 
 class WalletSerializerAdmin(serializers.ModelSerializer):
@@ -55,7 +113,29 @@ class TransactionSerializer(serializers.ModelSerializer):
         )
 
 
-class TradeSerializer(serializers.ModelSerializer):
+class CarSerializerField(serializers.RelatedField):
+
+    def to_internal_value(self, data):
+        car: Car = Car.objects.get(id=data)
+        try:
+            if car.trade:
+                raise serializers.ValidationError("This car is already being traded")
+        except BaseException as e:
+            pass
+        return car
+
+    def to_representation(self, value):
+        return value.id
+
+
+class TradeSerializerAdmin(serializers.ModelSerializer):
+    remaining_slots = serializers.SerializerMethodField()
+    # trade_status = serializers.SerializerMethodField()
+    return_on_trade = serializers.SerializerMethodField()
+    return_on_trade_percentage = serializers.SerializerMethodField()
+    car = CarSerializerField(queryset=Car.objects.all())
+    return_on_trade_per_unit = serializers.SerializerMethodField()
+
     class Meta:
         model = Trade
         fields = "__all__"
@@ -66,10 +146,99 @@ class TradeSerializer(serializers.ModelSerializer):
             "traded_slots",
             "remaining_slots",
             "total_slots",
-            "price_per_slot",
-            "trade_status",
-            "car",
+            "price_per_slot"
         )
+        extra_kwargs = {"car":
+                            {"error_messages": {"required": "Car to trade on is required", "unique": "Car already "
+                                                                                                     "traded"}}}
+
+    def get_return_on_trade_per_unit(self, obj: Trade):
+        return obj.return_on_trade_per_slot()
+
+    def get_return_on_trade(self, obj: Trade):
+        return obj.return_on_trade_calc()
+
+    def get_return_on_trade_percentage(self, obj: Trade):
+        return obj.return_on_trade_calc_percent()
+
+    def calculate_price_per_slot(self, car_price, slots_availble):
+        return car_price / slots_availble
+
+    def get_remaining_slots(self, trade: Trade):
+        # TODO: this is a hack, fix it using annotations
+        slots_purchased = sum([unit.slots_quantity for unit in trade.units.all()])
+        return trade.slots_available - slots_purchased
+
+    def get_bts_time(self, trade: Trade):
+        if trade.date_of_sale:
+            return (trade.created.date() - trade.date_of_sale).days
+        return (trade.created.date() - timezone.now()).days
+
+    def validate_trade_status(self, attr):
+        trade: Trade = self.instance
+        if not trade:  # we are creating
+            if attr == TradeStates.Completed:
+                raise serializers.ValidationError("Cannot set trade status to completed when creating a trade")
+        else:
+            if attr == TradeStates.Completed:
+                if not trade.car.resale_price:
+                    raise serializers \
+                        .ValidationError("Please add resale price to the car first before completing the trade")
+                if trade.trade_status != TradeStates.Purchased:
+                    raise serializers.ValidationError(
+                        "Cannot change trade status to {}, trade is {}".format(attr, trade.trade_status))
+        return attr
+
+    def validate_car(self, value):
+        if value.status != CarStates.Available:
+            raise serializers.ValidationError("Car is not available for trade yet")
+        return value
+
+    def validate_min_sale_price(self, value):
+        car: Car = Car.objects.get(id=self.initial_data.get("car"))
+        if value < car.total_cost_calc():
+            raise serializers.ValidationError("Minimum sale price cannot be less than the total cost of the car")
+        return value
+
+    def validate_max_sale_price(self, value):
+        car: Car = Car.objects.get(id=self.initial_data.get("car"))
+        if value < car.total_cost_calc():
+            raise serializers.ValidationError("Maximum sale price cannot be less than the total cost of the car")
+        return value
+
+    @atomic()
+    def create(self, validated_data):
+        car: Car = validated_data["car"]
+        price_per_slot = self.calculate_price_per_slot(car.resale_price, validated_data["slots_available"])
+        return Trade.objects.create(**validated_data, price_per_slot=price_per_slot)
+
+    def complete_trade(self, trade: Trade):
+        """
+        Completes the trade by setting the trade status to completed and updating the car status.
+        we also try to do some validation to make sure trade and its corresponding objects are valid
+        :param trade: Trade object
+        """
+        successful_disbursements = trade \
+            .units \
+            .filter(disbursement__disbursement_status=DisbursementStates.Unsettled).count()
+        query = trade.units.annotate(total_disbursed=Sum('disbursement__amount'))
+        total_disbursed = query.aggregate(sum=Sum('total_disbursed')).get('sum') or Decimal(0)
+        if successful_disbursements == trade.units.count() and total_disbursed == trade.total_payout():
+            car: Car = trade.car
+            car.update_on_sold()
+        else:
+            raise exceptions.APIException("Error, cannot complete trade, because calculated"
+                                          " payout seems to be unbalanced with the disbursements")
+
+    @atomic()
+    def update(self, instance: Trade, validated_data):
+        if instance.trade_status == TradeStates.Closed:
+            raise serializers.ValidationError("Cannot update a closed trade.. Geez!!")
+        if validated_data.get("trade_status") and validated_data.get("trade_status") == TradeStates.Completed:
+            instance.run_disbursement()
+            # check disbursements and update trade state
+            self.complete_trade(instance)
+        return super(TradeSerializerAdmin, self).update(instance, validated_data)
 
 
 class DisbursementSerializerAdmin(serializers.ModelSerializer):
@@ -86,163 +255,49 @@ class ActivitySerializerAdmin(serializers.ModelSerializer):
         read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
 
 
-class DashboardSerializerAdmin(serializers.Serializer):
-    average_bts = serializers.FloatField()
-    number_of_users_trading = serializers.IntegerField()
-    total_trading_cash = serializers.DecimalField(max_digits=15, decimal_places=5)
-    total_available_shares = serializers.IntegerField()
-    available_shares_value = serializers.DecimalField(max_digits=15, decimal_places=5)
-    cars_with_available_share = serializers.IntegerField()
-    recent_trade_activities = serializers.ListField()
-    cars_summary = serializers.JSONField()
-    rot_vs_ttc = serializers.JSONField()
+class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
+    spare_part_id = serializers.UUIDField(required=False)
+    cost = serializers.DecimalField(required=False, help_text="Cost of the maintenance in case it is a misc expenses",
+                                    max_digits=10, decimal_places=2)
+    description = serializers.CharField(required=False, help_text="Description of the maintenance")
+    name = serializers.CharField(required=False, help_text="Name of the maintenance, in case it is a misc expenses")
+    object_id = serializers.HiddenField(required=False, default=None)
+    content_type = serializers.HiddenField(required=False, default=None)
 
     class Meta:
-        read_only_fields = "__all__"
+        model = CarMaintenance
+        fields = "__all__"
+        read_only_fields = ("created", "modified")
+        hidden_fields = ("object_id", "content_type")
 
-    @staticmethod
-    def filter_data(
-        model_name,
-        model_field: str = None,
-        value: str = None,
-        created: bool = False,
-        month: datetime.date.month = None,
-        year: datetime.date.year = None,
-    ):
-        date = datetime.date.today()
+    def validate_spare_part_id(self, value):
+        if value:
+            try:
+                spare_part = SpareParts.objects.get(id=value)
+            except SpareParts.DoesNotExist:
+                raise serializers.ValidationError("Spare part does not exist")
+            return spare_part
+        return value
 
-        if created and not month and not year:
-            return model_name.objects.filter(model_field=value, created__month=date.month, created__year=date.year)
+    @atomic()
+    def create(self, validated_data):
+        car: Car = validated_data["car"]
+        if car.status == CarStates.Available:
+            raise serializers.ValidationError({"error": "new maintenance cannot be created for an available car"})
+        maintenance_type = validated_data["type"]
+        if maintenance_type == CarMaintenanceTypes.SparePart:
+            part: SpareParts = validated_data["spare_part_id"]
+            cost = part.estimated_price
+            return CarMaintenance.objects.create(car=car, type=maintenance_type, cost=cost, maintenance=part)
+        else:
+            cost = validated_data["cost"]
+            description = validated_data["description"]
+            misc = MiscellaneousExpenses.objects.create(estimated_price=cost,
+                                                        description=description, name=validated_data["name"])
+            return CarMaintenance.objects.create(car=car, type=maintenance_type, cost=cost, maintenance=misc)
 
-        elif not created and not month and not year:
-            return model_name.objects.filter(model__field=value, modified__month=date.month, modified__year=date.year)
 
-        elif created and month and year:
-            return model_name.objects.filter(model__field=value, created__month=month, created__year=year)
-
-        elif not created and month and year:
-            return model_name.objects.filter(model_field=value, modified__month=month, created__year=year)
-
-        elif not created and not month:
-            return model_name.objects.filter(model__field=value, modified__year=year)
-
-        elif created and not month:
-            return model_name.objects.filter(model__field=value, created__year=year)
-
-        elif not model_field and not created and not month and not year:
-            return model_name.objects.filter(modified__month=date.month, created__year=date.year)
-
-        elif not model_field and created and not month and not year:
-            return model_name.objects.filter(created__month=date.month, created__year=date.year)
-
-        elif not model_field and created and month and year:
-            return model_name.objects.filter(created__month=month, created__year=year)
-
-        # data = model.objects.filter(model_field=f"{value}", month=month, year=year)
-
-    def get_average_bts(self, month, year, trade=Trade):
-        self.average_bts = self.filter_data(trade, 'trade_status', 'completed', month=month, year=year)\
-                               .aggregate(data=Avg('bts_time')), 200
-        return self.average_bts
-
-    # def get_total_available_shares(self, month, year, trade=Trade):
-    #     self.total_available_shares = self.filter_data(trade, 'trade_status', 'ongoing', True, month, year)\
-    #                                       .aggregate(data=Avg('remaining_slots')), 200
-    #     return self.total_available_shares
-    #
-    # def get_number_of_users_trading(self, month, year, trade_unit=TradeUnit):
-    #     self.number_of_users_trading = self.filter_data(trade_unit, year, month, created=True)\
-    #                                        .aggregate(data=Sum('merchant')), 200
-    #     return self.number_of_users_trading
-    #
-    # def get_total_trading_cash(self, month, year, trade_unit=TradeUnit):
-    #     self.total_trading_cash = self.filter_data(trade_unit, month, year, created=True)\
-    #                                   .aggregate(data=Sum('unit_value')), 200
-    #     return self.total_trading_cash
-    #
-    # def get_available_shares_value(self, month, year, trade=Trade):
-    #     trade_data = self.filter_data(trade, 'trade_status', 'ongoing', month, year)
-    #
-    #     if month:
-    #         total_value = serializers.DecimalField(max_digits=15, decimal_places=5)
-    #         for trade_data.modified.day in range(1, 32):
-    #             value = trade_data.remaining_slots * trade_data.price_per_slot
-    #             total_value = total_value + value
-    #         self.available_shares_value = total_value
-    #     return self.available_shares_value
-    #
-    # def get_cars_with_available_share(self, month, year, trade=Trade):
-    #     self.cars_with_available_share = self.filter_data(trade, 'trade__status', 'ongoing', month=month, year=year)\
-    #         .aggregate(data=Sum('car'))
-    #     return self.cars_with_available_share
-    #
-    # def get_rot_vs_ttc(self, month, year, trade=Trade):
-    #     trade_data = self.filter_data(trade, month=month, year=year)
-    #
-    #     if month:
-    #         ttc = [0.00] * 4
-    #         rot = [0.00] * 4
-    #         weekly = {"ttc": ttc, "rot": rot}
-    #         for i in range(31):
-    #             for trade_data.modified.day in range(1, 8):
-    #                 weekly["ttc"][0] = weekly["ttc"][0] + (trade_data.slots_purchased * trade_data.price_per_slot)
-    #                 weekly["rot"][0] = weekly["rot"][0] + trade_data.return_on_trade
-    #
-    #             for trade_data.modified.day in (8, 16):
-    #                 weekly["ttc"][1] = weekly["ttc"][1] + (trade_data.slots_purchased * trade_data.price_per_slot)
-    #                 weekly["rot"][1] = weekly["rot"][1] + trade_data.return_on_trade
-    #
-    #             for trade_data.modified.day in (16, 24):
-    #                 weekly["ttc"][2] = weekly["ttc"][2] + (trade_data.slots_purchased * trade_data.price_per_slot)
-    #                 weekly["rot"][2] = weekly["rot"][2] + trade_data.return_on_trade
-    #
-    #             for trade_data.modified.day in (24, 32):
-    #                 weekly["ttc"][3] = weekly["ttc"][3] + (trade_data.slots_purchased * trade_data.price_per_slot)
-    #                 weekly["rot"][3] = weekly["rot"][3] + trade_data.return_on_trade
-    #
-    #         self.rot_vs_ttc = weekly
-    #         return self.rot_vs_ttc
-    #
-    #     if not month:
-    #         ttc = [0.00] * 12
-    #         rot = [0.00] * 12
-    #         monthly = {"ttc": ttc, "rot": rot}
-    #
-    #         for trade_data.modified.month in range(1, 13):
-    #             m = 0
-    #             monthly["ttc"][m] = monthly["ttc"][m] + (trade_data.slots_purchased * trade_data.price_per_slot)
-    #             monthly["rot"][m] = monthly["rot"][m] + trade_data.return_on_trade
-    #             m += 1
-    #         self.rot_vs_ttc = monthly
-    #         return self.rot_vs_ttc
-    #
-    # def get_recent_trade_activities(self, month, year, trade_unit=TradeUnit):
-    #     recent_trade = self.filter_data(trade_unit, created=True, month=month, year=year).order_by('created')[10]
-    #     self.recent_trade_activities = recent_trade
-    #     return self.recent_trade_activities
-    #
-    # def get_cars_summary(self, month, year, car=Car):
-    #     summary = self.filter_data(car, month=month, year=year)
-    #     inspected = summary.annotate(status='inspected')
-    #     sold = summary.annotate(status='sold')
-    #     available = summary.annotate(status='available')
-    #     total = summary.Sum()
-    #     percent_inspected = (inspected / total) * 100
-    #     percent_sold = (sold / total) * 100
-    #     percent_available = (available / total) * 100
-    #     self.cars_summary = {
-    #         "total": total,
-    #         "inspected": {
-    #             "percentage": percent_inspected,
-    #             "number": inspected
-    #         },
-    #         "sold": {
-    #             "percentage": percent_sold,
-    #             "number": sold
-    #         },
-    #         "available": {
-    #             "percentage": percent_available,
-    #             "number": available
-    #         }
-    #     }
-    #     return self.cars_summary
+class SparePartsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpareParts
+        fields = "__all__"

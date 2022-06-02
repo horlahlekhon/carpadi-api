@@ -1,5 +1,5 @@
-from django.test import TestCase
 from django.template.exceptions import TemplateDoesNotExist
+from django.test import TestCase
 
 from src.notifications.channels.email import EmailChannel
 

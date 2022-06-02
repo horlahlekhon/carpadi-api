@@ -1,8 +1,11 @@
 import datetime
 from collections import defaultdict
+
 from django.db.models import signals
+from django_rest_passwordreset.models import ResetPasswordToken
 
 from src.common.helpers import build_absolute_uri
+from src.config.common import OTP_EXPIRY
 from src.models.models import (
     Disbursement,
     TradeUnit,
@@ -12,11 +15,7 @@ from src.models.models import (
     Transaction,
     TransactionStatus,
     Activity,
-    ActivityTypes,
-)
-from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
-from django_rest_passwordreset.models import ResetPasswordToken
-from src.config.common import OTP_EXPIRY
+    ActivityTypes, Trade, TradeStates, )
 
 
 class DisableSignals(object):
@@ -56,9 +55,6 @@ class DisableSignals(object):
     def reconnect(self, signal):
         signal.receivers = self.stashed_signals.get(signal, [])
         del self.stashed_signals[signal]
-
-
-from django_rest_passwordreset.tokens import RandomNumberTokenGenerator
 
 
 def complete_user_registeration(sender, **kwargs):
@@ -124,8 +120,8 @@ def complete_transaction(sender, **kwargs):
             # notify(ACTIVITY_MERCHANT_PAYMENT_SUCCESS, context=context, email_to=[tx.wallet.merchant.user.email])
 
     if tx.transaction_status in (
-        TransactionStatus.Success,
-        TransactionStatus.Failed,
+            TransactionStatus.Success,
+            TransactionStatus.Failed,
     ):
         activity = Activity.objects.create(
             activity_type=ActivityTypes.Transaction,
@@ -134,23 +130,36 @@ def complete_transaction(sender, **kwargs):
         )
 
 
-def trade_unit_completed(sender, instance, created, **kwargs):
-    trd: TradeUnit = kwargs.get("instance")
+def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
+    """
+    Handles trade unit creation completion. it handles things like creation of activity for the trade unit
+    check if trade has been fully purchased and update Trade state accordingly
+    and also sends an email to the merchant
+    """
     if created:
         activity = Activity.objects.create(
             activity_type=ActivityTypes.TradeUnit,
-            activity=trd,
-            description=f"Activity Type: Purchase of Unit Description: {trd.slots_quantity} ({trd.share_percentage})  of \
-                    {trd.trade.car.brand.name} {trd.trade.car.brand.model} VIN: {trd.trade.car.vin} valued at {trd.unit_value} naira only.",
+            activity=instance,
+            description=f"Activity Type: Purchase of Unit Description: "
+                        f"{instance.slots_quantity} ({instance.share_percentage})  of \
+                    {instance.trade.car.brand.name} {instance.trade.car.brand.model}"
+                        f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
         )
+        trade: Trade = instance.trade
+        if trade.slots_available == trade.slots_purchased():
+            trade.trade_status = TradeStates.Purchased
+            trade.save(update_fields=["trade_status"])
 
 
 def disbursement_completed(sender, instance, created, **kwargs):
-    dis: Disbursement = kwargs.get("instance")
+    dis: Disbursement = instance
     if created:
         activity = Activity.objects.create(
             activity_type=ActivityTypes.Disbursement,
             activity=dis,
-            description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} naira for {dis.trade_units.slots_quantity} units \
-                    owned in {dis.trade_units.trade.car.brand.name} {dis.trade_units.trade.car.brand.model} VIN: {dis.trade_units.trade.car.vin}",
+            description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} "
+                        f"naira for {dis.trade_unit.slots_quantity} units \
+                    owned in {dis.trade_unit.trade.car.brand.name}"
+                        f" {dis.trade_unit.trade.car.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
         )
+#         update trade status

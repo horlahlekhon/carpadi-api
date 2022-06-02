@@ -1,4 +1,4 @@
-from rest_framework.routers import SimpleRouter, DefaultRouter
+from rest_framework.routers import DefaultRouter
 
 from src.models.views import UserViewSet
 

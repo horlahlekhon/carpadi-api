@@ -1,4 +1,5 @@
 import logging
+
 from actstream import action
 
 from src.notifications.channels.email import EmailChannel

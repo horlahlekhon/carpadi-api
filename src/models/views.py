@@ -1,12 +1,15 @@
-from rest_framework import viewsets, mixins
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenViewBase
+from django.http.response import Http404
 from rest_framework import serializers
-from src.carpadi_api.serializers import TransactionPinSerializers
-from src.models.models import User, TransactionPinStatus, TransactionPin, UserTypes
+from rest_framework import status
+from rest_framework import viewsets, mixins
+from rest_framework.decorators import action
+from rest_framework.exceptions import NotAcceptable
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
+from rest_framework_simplejwt.views import TokenViewBase
+
+from src.models.models import User, UserTypes
 from src.models.permissions import IsUserOrReadOnly
 from src.models.serializers import (
     CreateUserSerializer,
@@ -16,10 +19,6 @@ from src.models.serializers import (
     CarMerchantSerializer,
     OtpSerializer,
 )
-from rest_framework.serializers import ValidationError
-from django.http.response import Http404
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.exceptions import NotAcceptable
 
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
