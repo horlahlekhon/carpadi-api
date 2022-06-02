@@ -31,7 +31,7 @@ from src.models.models import (
 from rest_framework import serializers
 from django.db.transaction import atomic
 from django.utils import timezone
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Avg
 from rest_framework import exceptions
 
 
@@ -542,3 +542,50 @@ class MerchantDashboardSerializer(serializers.Serializer):
     def get_non_trading_users(self, value):
         """The total amount of non trading users in the system"""
         return self.get_total_users(None) - self.get_active_users(None)
+
+class DashboardSerializer(serializers.Serializer):
+    average_bts = serializers.SerializerMethodField()
+    number_of_trading_users = serializers.SerializerMethodField()
+    average_cash_per_slot = serializers.SerializerMethodField()
+    total_available_shares = serializers.SerializerMethodField()
+    total_available_shares_value = serializers.SerializerMethodField()
+    total_cars_with_shares = serializers.SerializerMethodField()
+    cars_summary = serializers.SerializerMethodField()
+    total_trading_cash_vs_return_on_trades = serializers.SerializerMethodField()
+    recent_trade_activities = serializers.SerializerMethodField()
+
+    def __init__(self, instance=None, data=None, **kwargs):
+        super.__init__(instance, data, **kwargs)
+        self.start_date = self.initial_data["start_date"]
+        self.end_date = self.initial_data["end_date"]
+
+    def get_average_bts(self, value):
+        """"The Average Buy to sell time for all completed trades,
+        within the curent month or a specified date range."""
+
+        trades = Trade.objects.filter(
+            trades_status__in=(TradeStates.Completed, TradeStates.Closed),
+            modified_date__gte=self.start_date,
+            modified_date__lte=self.end_date
+        )
+
+        return Avg(i.get_bts_time() for i in trades)
+
+    def get_number_of_trading_users(self, value):
+        """The total number of users that has placed a trade,
+         within the current month or a specified date range."""
+
+        return TradeUnit.objects.filter(
+            created__date__gte=self.start_date,
+            created__date__lte=self.end_date
+        ).values("merchant").distinct().count()
+
+    def get_average_cash_per_slot(self, value):
+        """"The average cash per slot,
+         i.e the average amount the users uses to invest in a car,
+         within the current month or a specified date range."""
+
+        return TradeUnit.objects.filter(
+            created__date__gte=self.start_date,
+            created__date__lte=self.end_date
+        ).aggregate(value=Sum("slots_quantity" * "unit_value")).get("value")

@@ -687,7 +687,7 @@ class Trade(Base):
 
 class TradeUnit(Base):
     trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name="units")
-    merchant = models.ForeignKey(CarMerchant, on_delete=models.CASCADE, related_name="units")
+    merchant = models.ForeignKey(CarMerchant, on_delete=models.CASCADE, related_name="merchant")
     share_percentage = models.DecimalField(
         decimal_places=2,
         editable=False,
