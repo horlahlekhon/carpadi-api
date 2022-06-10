@@ -2,8 +2,7 @@ import itertools
 from datetime import datetime
 from decimal import Decimal
 
-from django.db import models
-from django_monthfield import month
+import month
 
 from src.common.helpers import check_vin
 from src.models.models import (
@@ -580,7 +579,7 @@ class HomeDashboardSerializer(serializers.Serializer):
             modified__date__lte=self.end_date
         )
 
-        return Avg(i.get_bts_time() for i in trades)
+        return Avg(i.get_bts_time() for i in trades) or Decimal(0)
 
     def get_number_of_trading_users(self, value):
         """
@@ -619,7 +618,7 @@ class HomeDashboardSerializer(serializers.Serializer):
             trades_status=TradeStates.Ongoing,
             modified__date__gte=self.start_date,
             modified__date__lte=self.end_date
-        ).aggregate(value=Sum("slots_available")).get("value")
+        ).aggregate(value=Sum("slots_available")).get("value") or 0
 
 
     def get_total_available_shares_value(self, value):
@@ -642,7 +641,7 @@ class HomeDashboardSerializer(serializers.Serializer):
             trades_status=TradeStates.Ongoing,
             modified__date__gte=self.start_date,
             modified__date__lte=self.end_date
-        ).Count()
+        ).Count() or 0
 
     def get_total_trading_cash_vs_return_on_trades(self, value):
         """
@@ -650,24 +649,48 @@ class HomeDashboardSerializer(serializers.Serializer):
             within the current month or a specified date range,
             which can be used to plot weekly or monthly graph.
         """
-        weekly = [] * 4
-        week_start = 1
-        week_end = 8
-        for i in weekly:
-            self.start_date.replace(day=week_start)
-            self.end_date.replace(day=week_end)
+        if self.filter_year_only:
+            cash = [] * 12
+            trade_return = [] * 12
+            i = 0
+            while i < 12:
+                self.start_date.replace(month=i+1)
 
-            if month.Month(self.end_date.year, self.end_date.month) > month.Month(self.start_date.year, self.start_date.month):
-                self.end_date = month.Month(self.start_date.year, self.start_date.month).last_day()
+                ttc = TradeUnit.objects.filter(
+                        created__date__month=self.start_date.month
+                    ).annotate("slots_quantity", "unit_value")
 
-            weekly[i] = TradeUnit.objects.filter(
-                trade_status__in=(TradeStates.Completed, TradeStates.Closed),
-                created__date__gte=self.start_date,
-                created__date__lte=self.end_date
-            ).aggregate(value=Sum("slots_quantity" * "unit_value")).get("value")
-            week_start += 8
-            week_end += 8
-        return dict(graph_type="month", graph_data=weekly)
+                cash[i] = sum(s * u for s, u in ttc) or Decimal(0)
+
+                rot = Trade.objects.filter(
+                    trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+                    modified__date__month=self.start_date.month
+                ).aggregate(value=Sum("return_on_trade")).get("value")
+
+                trade_return[i] = rot or Decimal(0)
+
+                i += 1
+
+            return dict(graph_type="year", ttc=cash, rot=trade_return)
+
+        # weekly = [] * 4
+        # week_start = 1
+        # week_end = 8
+        # for i in weekly:
+        #     self.start_date.replace(day=week_start)
+        #     self.end_date.replace(day=week_end)
+        #
+        #     if month.Month(self.end_date.year, self.end_date.month) > month.Month(self.start_date.year, self.start_date.month):
+        #         self.end_date = month.Month(self.start_date.year, self.start_date.month).last_day()
+        #
+        #     weekly[i] = TradeUnit.objects.filter(
+        #         trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+        #         created__date__gte=self.start_date,
+        #         created__date__lte=self.end_date
+        #     ).aggregate(value=Sum("slots_quantity" * "unit_value")).get("value")
+        #     week_start += 8
+        #     week_end += 8
+        # return dict(graph_type="month", graph_data=weekly)
 
     # def get_cars_summary(self, value):
     #     """
