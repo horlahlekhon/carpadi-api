@@ -692,14 +692,52 @@ class HomeDashboardSerializer(serializers.Serializer):
         #     week_end += 8
         # return dict(graph_type="month", graph_data=weekly)
 
-    # def get_cars_summary(self, value):
-    #     """
-    #        Cars Summary
-    #     """
-    #     cars = Car.objects.filter(
-    #         modified_date__gte=self.start_date,
-    #         modified_date__lte=self.end_date
-    #     )
+    def get_cars_summary(self, value):
+        """
+           Cars Summary
+        """
+        total_cars = Car.objects.filter(
+            created_date__year=datetime.now().year,
+        ).count() or 0
+
+        inspected_cars = Car.objects.filter(
+            created_date__year=datetime.now().year,
+            status=CarStates.Inspected
+        ).count() or 0
+
+        inspected_cars_percent = (inspected_cars / total_cars) * 100
+
+        inspection = dict(count=inspected_cars, percentage=inspected_cars_percent)
+
+
+        available_cars = Car.objects.filter(
+            created_date__year=datetime.now().year,
+            status=CarStates.Available
+        ).count() or 0
+
+        available_cars_percent = (available_cars / total_cars) * 100
+
+        available = dict(count=available_cars, percentage=available_cars_percent)
+
+        trading_cars = Car.objects.filter(
+            created_date__year=datetime.now().year,
+            status=CarStates.OngoingTrade
+        ).count() or 0
+
+        trading_cars_percent = (trading_cars / total_cars) * 100
+
+        trading = dict(count=trading_cars, percentage=trading_cars_percent)
+
+        sold_cars = Car.objects.filter(
+            created_date__year=datetime.now().year,
+            status=CarStates.Sold
+        ).count() or 0
+
+        sold_cars_percent = (sold_cars / total_cars) * 100
+
+        sold = dict(count=sold_cars, percentage=sold_cars_percent)
+
+        return dict(total_cars=total_cars, available=available, trading=trading, inspection=inspection, sold=sold)
 
     def get_recent_trade_activities(self, value):
         """
