@@ -44,7 +44,6 @@ INSTALLED_APPS = (
     'health_check.storage',
     'health_check.contrib.migrations',
     'health_check.contrib.celery_ping',  # requires celery
-    'month'
     # Your apps
     'src.notifications',
     'src.models',
