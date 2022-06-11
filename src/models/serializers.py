@@ -26,7 +26,10 @@ from src.models.models import (
     Activity,
     Assets,
     AssetEntityType,
-    Car, Transaction, TradeUnit, Notifications,
+    Car,
+    Transaction,
+    TradeUnit,
+    Notifications,
 )
 
 User = get_user_model()
@@ -73,8 +76,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         # the password will be stored in plain text.
         try:
             validated_data['username'] = (
-                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get(
-                    "email")
+                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get("email")
             )
             validated_data["is_active"] = False
             if validated_data.get("user_type") == UserTypes.CarMerchant:
@@ -348,8 +350,8 @@ class AssetsSerializer(serializers.ModelSerializer):
             entity_type=validated_data["entity_type"],
         )
 
-class NotificationsSerializer(serializers.ModelSerializer):
 
+class NotificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notifications
         fields = "__all__"

@@ -1,4 +1,3 @@
-
 from django_filters import rest_framework as filters
 
 from src.models.models import Notifications
@@ -11,4 +10,7 @@ class NotificationsFilter(filters.FilterSet):
     class Meta:
         model = Notifications
         # fields = ['trade', ]
-        fields = ['user', 'read', ]
+        fields = [
+            'user',
+            'read',
+        ]

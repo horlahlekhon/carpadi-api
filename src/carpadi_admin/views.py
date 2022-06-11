@@ -14,7 +14,8 @@ from src.carpadi_admin.filters import (
     DisbursementFilterAdmin,
     ActivityFilterAdmin,
     TradeFilterAdmin,
-    SparePartsFilter, VehicleInfoFilter,
+    SparePartsFilter,
+    VehicleInfoFilter,
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
@@ -30,7 +31,8 @@ from src.carpadi_admin.serializers import (
     MerchantDashboardSerializer,
     TradeSerializerAdmin,
     CarMaintenanceSerializerAdmin,
-    SparePartsSerializer, VehicleInfoSerializer,
+    SparePartsSerializer,
+    VehicleInfoSerializer,
     HomeDashboardSerializer,
 )
 from src.carpadi_market.filters import CarProductFilter
@@ -50,7 +52,8 @@ from src.models.models import (
     DisbursementStates,
     SpareParts,
     CarProduct,
-    CarFeature, VehicleInfo,
+    CarFeature,
+    VehicleInfo,
 )
 from src.models.serializers import CarBrandSerializer, CarMerchantSerializer, ActivitySerializer
 
@@ -212,7 +215,7 @@ class DashboardViewSet(viewsets.GenericViewSet):
         data = dict(
             start_date=request.query_params.get('start_date', datetime.now().date().replace(day=1)),
             end_date=request.query_params.get('end_date', datetime.now().date()),
-            filter_year_only=request.query_params.get("filter_year_only", False)
+            filter_year_only=request.query_params.get("filter_year_only", False),
         )
 
         ser = HomeDashboardSerializer(data=data)
@@ -229,8 +232,7 @@ class CarProductViewSetAdmin(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
 
 
-class VehicleInfoViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
-                         mixins.ListModelMixin, viewsets.GenericViewSet):
+class VehicleInfoViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsAdminUser,)
     serializer_class = VehicleInfoSerializer
     queryset = VehicleInfo.objects.all()

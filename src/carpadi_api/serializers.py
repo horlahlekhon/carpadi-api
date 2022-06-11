@@ -11,6 +11,7 @@ from src.config import common
 from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes, Assets
 from django.db.models import Sum
 from decimal import Decimal
+
 # from .models import Transaction
 from ..models.models import (
     CarMerchant,
@@ -133,11 +134,13 @@ class WalletSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        units_rots = TradeUnit.objects \
-            .filter(
-            merchant=instance.merchant,
-            trade__trade_status__in=[TradeStates.Ongoing, TradeStates.Completed]
-        ).aggregate(total=Sum("estimated_rot")).get("total", Decimal(0))
+        units_rots = (
+            TradeUnit.objects.filter(
+                merchant=instance.merchant, trade__trade_status__in=[TradeStates.Ongoing, TradeStates.Completed]
+            )
+            .aggregate(total=Sum("estimated_rot"))
+            .get("total", Decimal(0))
+        )
         data['estimated_total_rot'] = units_rots
         return data
 
@@ -400,8 +403,9 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         data["car"] = self.serialize_car(instance.trade.car)
         data['trade_duration'] = instance.trade.estimated_sales_duration
         data['trade_start_date'] = instance.trade.created
-        data['estimated_vehicle_sale_date'] = \
-            instance.trade.created + datetime.timedelta(days=instance.trade.estimated_sales_duration)
+        data['estimated_vehicle_sale_date'] = instance.trade.created + datetime.timedelta(
+            days=instance.trade.estimated_sales_duration
+        )
         data['description'] = instance.trade.car.description
         data['trade_status'] = instance.trade.trade_status
         data['estimated_profit_percentage'] = instance.estimated_rot / instance.unit_value * 100

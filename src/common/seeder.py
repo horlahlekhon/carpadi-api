@@ -21,7 +21,9 @@ from src.models.models import (
     TradeStates,
     TradeUnit,
     VehicleInfo,
-    FuelTypes, Assets, AssetEntityType
+    FuelTypes,
+    Assets,
+    AssetEntityType,
 )
 from django.db.transaction import atomic
 

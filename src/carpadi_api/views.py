@@ -7,8 +7,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import status
 
-from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter, TradeFilter, TradeUnitFilter, \
-    TransactionPinFilter
+from src.carpadi_api.filters import (
+    ActivityFilter,
+    TransactionsFilter,
+    CarsFilter,
+    TradeFilter,
+    TradeUnitFilter,
+    TransactionPinFilter,
+)
 from src.carpadi_api.serializers import (
     CarSerializer,
     TransactionPinSerializers,

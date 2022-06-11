@@ -24,7 +24,8 @@ from src.models.serializers import (
     TokenObtainModSerializer,
     CarMerchantSerializer,
     OtpSerializer,
-    AssetsSerializer, NotificationsSerializer,
+    AssetsSerializer,
+    NotificationsSerializer,
 )
 from django.db import transaction
 
@@ -167,8 +168,8 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['post'], url_path='read', url_name='read')
     def mark_all_as_read_or_unread(self, request, *args, **kwargs):
         """
-            Mark all notifications as read
-            """
+        Mark all notifications as read
+        """
         try:
             notifications = Notifications.objects.filter(user=request.user)
             if request.data.get('read', False):
@@ -193,6 +194,3 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
                 return Response(status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
