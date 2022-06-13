@@ -14,8 +14,9 @@ class CommonConfig(AppConfig):
         from django_rest_passwordreset.views import ResetPasswordRequestToken
         from src.common.signals import password_reset_token_created
         from src.common.signals import complete_transaction
-        from src.models.models import Transaction, Disbursement, TradeUnit, Trade
+        from src.models.models import Transaction, Disbursement, TradeUnit, Trade, Car
         from src.common.signals import trade_created
+        from src.common.signals import car_created
 
         User = get_user_model()
         post_save.connect(complete_user_registeration, sender=User, dispatch_uid=uuid.uuid4())
@@ -27,3 +28,4 @@ class CommonConfig(AppConfig):
         post_save.connect(trade_unit_completed, sender=TradeUnit, dispatch_uid=uuid.uuid4())
         post_save.connect(disbursement_completed, sender=Disbursement, dispatch_uid=uuid.uuid4())
         post_save.connect(trade_created, sender=Trade, dispatch_uid=uuid.uuid4())
+        post_save.connect(car_created, sender=Car, dispatch_uid=uuid.uuid4())
