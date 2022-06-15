@@ -229,9 +229,3 @@ def car_created(sender, instance: Car, created, **kwargs):
 
         )
 
-        Notifications.objects.create(
-            notice_type=NotificationTypes.CarCreation,
-            is_read=False,
-            message=f"Created Car with information {instance.information}"
-                    f"VIN: {instance.vin}"
-        )

@@ -884,7 +884,6 @@ class NotificationTypes(models.TextChoices):
     ProfileUpdate = "profile_update", _("Profile Update")
     Disbursement = "disbursement", _("Disbursement")
     TradeUnit = "trade_unit", _("Trade Unit")
-    CarCreation = "car_creation", _("Car Created")
 
 
 class Notifications(Base):
