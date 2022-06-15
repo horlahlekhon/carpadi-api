@@ -108,7 +108,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='car',
-            name='offering_price',
+            name='bought_price',
             field=models.DecimalField(
                 decimal_places=2,
                 default=Decimal('0'),
@@ -141,7 +141,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 decimal_places=2,
                 editable=False,
-                help_text='Total cost = offering_price + cost_of_repairs + maintainance_cost + misc',
+                help_text='Total cost = bought_price + cost_of_repairs + maintainance_cost + misc',
                 max_digits=10,
                 null=True,
             ),

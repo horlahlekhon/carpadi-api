@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='car',
-            name='offering_price',
+            name='bought_price',
             field=models.DecimalField(
                 decimal_places=2,
                 default=Decimal('0'),

@@ -7,7 +7,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import status
 
-from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter, TradeFilter, TradeUnitFilter
+from src.carpadi_api.filters import ActivityFilter, TransactionsFilter, CarsFilter, TradeFilter, TradeUnitFilter, \
+    TransactionPinFilter
 from src.carpadi_api.serializers import (
     CarSerializer,
     TransactionPinSerializers,
@@ -199,9 +200,14 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
     # serializer_class = TransactionPinSerializers
     permissions = {'default': (IsCarMerchantAndAuthed,)}
     serializers = {'default': TransactionPinSerializers, 'partial_update': UpdateTransactionPinSerializers}
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = TransactionPinFilter
 
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
+
+    def get_(self):
+        return self.queryset.filter(user=self.request.user)
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
@@ -220,7 +226,7 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return self.queryset.filter(user=user)
+        return super(TransactionPinsViewSet, self).get_queryset().filter(user=user)
 
     def get_serializer_context(self):
         ctx = super(TransactionPinsViewSet, self).get_serializer_context()
@@ -234,6 +240,19 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='validate-pin', url_name='validate_transaction_pin')
+    def validate_transaction_pin(self, request):
+        data = request.data
+        if not data.get('pin'):
+            return Response({"error": "pin is required"}, status=status.HTTP_400_BAD_REQUEST)
+        pin = data.get('pin')
+        try:
+            # TODO we probably will be encrypting the pin, so we need to decrypt it
+            self.get_queryset().get(pin=pin)
+        except TransactionPin.DoesNotExist:
+            return Response({"error": "Invalid pin"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"success": "Pin is valid"}, status=status.HTTP_200_OK)
 
 
 class WalletViewSet(viewsets.ModelViewSet):

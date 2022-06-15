@@ -1,7 +1,7 @@
 from django_filters import rest_framework as filters
 
 from src.models.models import Activity, Disbursement, Transaction, Car, Trade, TransactionStatus, TransactionKinds, \
-    TransactionTypes, ActivityTypes, TradeUnit, TradeStates
+    TransactionTypes, ActivityTypes, TradeUnit, TradeStates, TransactionPin
 
 
 class TransactionsFilter(filters.FilterSet):
@@ -72,3 +72,12 @@ class TradeUnitFilter(filters.FilterSet):
     class Meta:
         model = TradeUnit
         fields = ['trade', ]
+
+
+class TransactionPinFilter(filters.FilterSet):
+    pin = filters.CharFilter(field_name="pin", lookup_expr='iexact')
+    serial_number = filters.CharFilter(field_name="device_serial_number", lookup_expr='iexact')
+
+    class Meta:
+        model = TransactionPin
+        fields = [ 'pin']

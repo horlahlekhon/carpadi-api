@@ -17,7 +17,7 @@ from src.models.models import (
     Activity,
     ActivityTypes,
     Trade,
-    TradeStates,
+    TradeStates, Notifications, NotificationTypes,
 )
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
 
@@ -124,14 +124,20 @@ def complete_transaction(sender, **kwargs):
             # notify(ACTIVITY_MERCHANT_PAYMENT_SUCCESS, context=context, email_to=[tx.wallet.merchant.user.email])
 
     if tx.transaction_status in (
-        TransactionStatus.Success,
-        TransactionStatus.Failed,
+            TransactionStatus.Success,
+            TransactionStatus.Failed,
     ):
         activity = Activity.objects.create(
             activity_type=ActivityTypes.Transaction,
             activity=tx,
             description=f"Activity Type: Transaction, Status: {tx.transaction_status}, Description: {tx.transaction_kind} of {tx.amount} naira.",
             merchant=tx.wallet.merchant,
+        )
+        Notifications.objects.create(
+            notice_type=NotificationTypes.TradeUnit,
+            user=tx.wallet.merchant.user,
+            message=f"Transaction {tx.transaction_kind} of {tx.amount} naira has {tx.transaction_status}.",
+            is_read=False,
         )
 
 
@@ -147,9 +153,18 @@ def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
             activity=instance,
             merchant=instance.merchant,
             description=f"Activity Type: Purchase of Unit Description: "
-            f"{instance.slots_quantity} ({instance.share_percentage})  of \
+                        f"{instance.slots_quantity} ({instance.share_percentage})  of \
                     {instance.trade.car.information.make} {instance.trade.car.information.model}"
-            f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
+                        f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
+        )
+        Notifications.objects.create(
+            notice_type=NotificationTypes.TradeUnit,
+            user=instance.merchant.user,
+            message=f"Activity Type: Purchase of Unit Description: "
+                    f"{instance.slots_quantity} ({instance.share_percentage})  of \
+                                {instance.trade.car.information.make} {instance.trade.car.information.model}"
+                    f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
+            is_read=False,
         )
         trade: Trade = instance.trade
         if trade.slots_available == trade.slots_purchased():
@@ -165,10 +180,36 @@ def disbursement_completed(sender, instance, created, **kwargs):
             activity=dis,
             merchant=dis.trade_unit.merchant,
             description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} "
-            f"naira for {dis.trade_unit.slots_quantity} units \
+                        f"naira for {dis.trade_unit.slots_quantity} units \
                     owned in {dis.trade_unit.trade.car.information.make}"
-            f" {dis.trade_unit.trade.car.information.model} VIN: {dis.trade_unit.trade.car.vin}",
+                        f" {dis.trade_unit.trade.car.information.model} VIN: {dis.trade_unit.trade.car.vin}",
         )
+        Notifications.objects.create(
+            notice_type=NotificationTypes.Disbursement,
+            is_read=False,
+            message=f"Disbursed {dis.amount} naira for {dis.trade_unit.slots_quantity} units "
+                    f"owned in {dis.trade_unit.trade.car.name}"
+                    f" VIN: {dis.trade_unit.trade.car.vin}", entity_id=dis.trade_unit.id)
 
 
 #         update trade status
+
+# def notify(sender, instance: Notifications, created, **kwargs):
+#     if created:
+#         if instance.notice_type == NotificationTypes.PasswordReset:
+#             trade = Trade.objects.get(id=instance.entity_id)
+#             context = {
+#                 'username': trade.merchant.user.username,
+#                 'email': trade.merchant.user.email,
+#                 'amount': trade.amount,
+
+def trade_created(sender, instance: Trade, created, **kwargs):
+    if created:
+        Notifications.objects.create(
+            notice_type=NotificationTypes.NewTrade,
+            user=None,
+            message=f" new trade for {instance.car.information.make} {instance.car.information.model}"
+                    f" VIN: {instance.car.vin} with estimated ROT of {instance.estimated_return_on_trade}",
+            is_read=False,
+            entity_id=instance.id
+        )

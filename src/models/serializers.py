@@ -26,7 +26,7 @@ from src.models.models import (
     Activity,
     Assets,
     AssetEntityType,
-    Car, Transaction, TradeUnit,
+    Car, Transaction, TradeUnit, Notifications,
 )
 
 User = get_user_model()
@@ -197,6 +197,7 @@ class TokenObtainModSerializer(serializers.Serializer):
         self.fields['skip_pin'] = serializers.BooleanField(required=False)
 
     def validate(self, attrs):
+        # TODO check if device has a valid fcm token, if not fail login with a nice error
         authenticate_kwargs = {
             self.username_field: attrs[self.username_field],
             'password': attrs['password'],
@@ -346,3 +347,13 @@ class AssetsSerializer(serializers.ModelSerializer):
             asset=validated_data["asset"],
             entity_type=validated_data["entity_type"],
         )
+
+class NotificationsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Notifications
+        fields = "__all__"
+        read_only_fields = ("id", "created", "modified")
+
+    def create(self, validated_data):
+        return Notifications.objects.create(**validated_data)
