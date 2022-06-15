@@ -815,6 +815,7 @@ class ActivityTypes(models.TextChoices):
     Transaction = "transaction", _("transaction")
     TradeUnit = "trade_unit", _("trade_unit")
     Disbursement = "disbursement", _("disbursement")
+    CarCreation = "car_creation", _("car_creation")
 
 
 class Activity(Base):
@@ -823,7 +824,7 @@ class Activity(Base):
     object_id = models.UUIDField()
     activity = GenericForeignKey("content_type", "object_id")
     description = models.TextField(default="")
-    merchant = models.ForeignKey(CarMerchant, on_delete=models.CASCADE)
+    merchant = models.ForeignKey(CarMerchant, on_delete=models.CASCADE, null=True, blank=True)
 
 
 class AssetEntityType(models.TextChoices):

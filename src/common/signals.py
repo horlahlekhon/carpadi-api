@@ -1,5 +1,6 @@
 import datetime
 from collections import defaultdict
+from email import message
 
 from django.db.models import signals
 from django_rest_passwordreset.models import ResetPasswordToken
@@ -17,7 +18,7 @@ from src.models.models import (
     Activity,
     ActivityTypes,
     Trade,
-    TradeStates, Notifications, NotificationTypes,
+    TradeStates, Notifications, NotificationTypes, Car
 )
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
 
@@ -213,3 +214,18 @@ def trade_created(sender, instance: Trade, created, **kwargs):
             is_read=False,
             entity_id=instance.id
         )
+
+
+
+def car_created(sender, instance: Car, created, **kwargs):
+    if created:
+        activity = Activity.objects.create(
+            activity_type=ActivityTypes.CarCreation,
+            activity = instance,
+            merchant = None,
+            description = f"Activity Type: Car Creation, Description: Created Care - {instance.description}"
+                          f"with information {instance.information}" 
+                          f"VIN {instance.vin}"
+
+        )
+
