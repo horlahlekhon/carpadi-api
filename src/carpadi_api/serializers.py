@@ -295,7 +295,6 @@ class TradeSerializer(serializers.ModelSerializer):
     return_on_trade_percentage = serializers.SerializerMethodField()
     return_on_trade = serializers.SerializerMethodField()
 
-
     class Meta:
         model = Trade
         fields = "__all__"
@@ -436,6 +435,11 @@ class BankAccountSerializer(serializers.ModelSerializer):
         if len(value) < 10:
             raise serializers.ValidationError("Account number should be at least 10 digits")
         return value
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["bank"] = dict(id=instance.bank.id, name=instance.bank.bank_name)
+        return data
 
     def check_account_details(self, account_number, bank_code):
         headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
