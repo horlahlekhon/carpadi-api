@@ -1,11 +1,15 @@
 import asyncio
+import uuid
 from asyncio import AbstractEventLoop
 from decimal import Decimal
 import requests
 from django_seed import Seed
 from faker_vehicle import VehicleProvider
+from rest_framework import status
+
 from src.carpadi_admin.serializers import CarMaintenanceSerializerAdmin
 from src.carpadi_api.serializers import TradeUnitSerializer
+from src.config import common
 from src.models.models import (
     CarMerchant,
     User,
@@ -21,7 +25,7 @@ from src.models.models import (
     TradeStates,
     TradeUnit,
     VehicleInfo,
-    FuelTypes, Assets, AssetEntityType
+    FuelTypes, Assets, AssetEntityType, Banks
 )
 from django.db.transaction import atomic
 
@@ -246,3 +250,26 @@ class PadiSeeder:
         self.seed()
         await asyncio.sleep(20)
         loop.stop()
+
+    def seed_banks(self):
+        headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
+        request = requests.get("https://api.flutterwave.com/v3/banks/ng", headers=headers)
+        response = request.json()
+        if request.status_code == status.HTTP_200_OK and response.get("status") == "success":
+            banks = response.get("data")
+            if Banks.objects.count() < len(banks):
+                bank_list = []
+                for bank in banks:
+                    if Banks.objects.filter(bank_name=bank["name"], bank_code=bank["code"]).count() < 1:
+                        b = Banks(id=uuid.uuid4(), bank_name=bank["name"], bank_code=bank["code"], bank_id=bank["id"])
+                        bank_list.append(b)
+                if len(bank_list) > 0:
+                    resp = Banks.objects.bulk_create(bank_list)
+                    print(f"seeded {len(resp)} banks to db...moving on without vawulence!!")
+                else:
+                    print("This is weird!! an we get a physician here abeg!!")
+            else:
+                print("Banks already seeded in the database.... and am not even cap'ng!!")
+        else:
+            print(f"we couldn't get banks list from the API... due to {response}")
+

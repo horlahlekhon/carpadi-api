@@ -9,7 +9,7 @@ from django.db.utils import IntegrityError
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions
-from rest_framework_simplejwt.serializers import PasswordField
+from rest_framework_simplejwt.serializers import PasswordField, TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -178,6 +178,7 @@ class CarBrandSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+# TokenObtainPairSerializer
 class TokenObtainModSerializer(serializers.Serializer):
     username_field = get_user_model().USERNAME_FIELD
 
@@ -220,8 +221,10 @@ class TokenObtainModSerializer(serializers.Serializer):
             return self.login_merchant_user(attrs)
 
     @classmethod
-    def get_token(cls, user):
-        return RefreshToken.for_user(user)
+    def get_token(cls, user, device_imei=None):
+        token = RefreshToken.for_user(user)
+        token["device_imei"] = device_imei
+        return token
 
     def login_staff_user(self, attrs):
         User.update_last_login(self.user, **{})
@@ -246,7 +249,7 @@ class TokenObtainModSerializer(serializers.Serializer):
             )
         User.update_last_login(self.user, **dict(device_imei=attrs.get("device_imei")))
 
-        refresh = self.get_token(self.user)
+        refresh = self.get_token(self.user, attrs.get('device_imei'))
         car_merch = CarMerchantSerializer(instance=self.user.merchant)
         data = {'refresh': str(refresh), 'access': str(refresh.access_token), "merchant": car_merch.data}
         return data
@@ -348,8 +351,8 @@ class AssetsSerializer(serializers.ModelSerializer):
             entity_type=validated_data["entity_type"],
         )
 
-class NotificationsSerializer(serializers.ModelSerializer):
 
+class NotificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notifications
         fields = "__all__"

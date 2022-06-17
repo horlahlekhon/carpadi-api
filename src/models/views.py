@@ -111,9 +111,11 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         Seed the database with some data
         """
         try:
+            seed_type = str(request.query_params.get('type', None)).lower()
             seed_data = PadiSeeder(request=request)
             # seed_data.seed()
-            t = threading.Thread(target=seed_data.seed)
+            seed_func = seed_data.seed if seed_type != "banks" else seed_data.seed_banks()
+            t = threading.Thread(target=seed_func)
             t.setDaemon(True)
             t.start()
             return Response(status=status.HTTP_200_OK)

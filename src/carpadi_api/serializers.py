@@ -71,22 +71,29 @@ class TransactionPinSerializers(serializers.ModelSerializer):
 
 
 class UpdateTransactionPinSerializers(serializers.Serializer):
-    old_pin = serializers.CharField(max_length=4, required=True)
-    new_pin = serializers.CharField(max_length=4, required=True)
+    old_pin = serializers.CharField(max_length=6, required=True)
+    new_pin = serializers.CharField(max_length=6, required=True)
 
     # def create(self, validated_data):
     #     pin: TransactionPin = self.context["pin"]
     #
 
-    def update(self, pin: TransactionPin, validated_data):
+    def create(self, validated_data):
+        user: User = validated_data["user"]
         old_pin = validated_data["old_pin"]
         new_pin = validated_data["new_pin"]
-        if not check_password(old_pin, pin.pin):
-            raise serializers.ValidationError("Pin is not correct")
-        pin.pin = make_password(new_pin)
-        pin.save(update_fields=["pin"])
-        pin.refresh_from_db()
-        return pin
+        try:
+            device = validated_data["device"]
+            pin = user.transaction_pins.get(status=TransactionPinStatus.Active, pin=old_pin, device_serial_number=device)
+            # if not check_password(old_pin, pin.pin):
+            #     raise serializers.ValidationError("Pin is not correct")
+            # pin.pin = make_password(new_pin)
+            pin.pin = new_pin
+            pin.save(update_fields=["pin"])
+            pin.refresh_from_db()
+            return pin
+        except TransactionPin.DoesNotExist as reason:
+            raise serializers.ValidationError({"error": "Pin is not correct"})
 
 
 class CarMerchantUpdateSerializer(serializers.Serializer):
