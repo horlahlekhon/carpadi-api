@@ -249,6 +249,9 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
         pin = data.get('pin')
         try:
             # TODO we probably will be encrypting the pin, so we need to decrypt it
+            if self.get_queryset().count() < 1:
+                return Response({"error": "Merchant does not have any transaction pin set on this device"},
+                                status=status.HTTP_404_NOT_FOUND)
             self.get_queryset().get(pin=pin)
         except TransactionPin.DoesNotExist:
             return Response({"error": "Invalid pin"}, status=status.HTTP_400_BAD_REQUEST)
