@@ -51,7 +51,7 @@ class TransactionPinSerializers(serializers.ModelSerializer):
     class Meta:
         model = TransactionPin
         fields = "__all__"
-        read_only_fields = ("id", "created", "modified", "status", "user")
+        read_only_fields = ("id", "created", "modified", "status", "user", "device_serial_number")
         extra_kwargs = {'pin': {'write_only': True}}
 
     def validate_pin(self, pin):
@@ -61,33 +61,49 @@ class TransactionPinSerializers(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user: User = validated_data["user"]
-        active_pins = user.transaction_pins.filter(status=TransactionPinStatus.Active).count()
-        if active_pins >= 3:
+        device = validated_data["device_serial_number"]
+        pin = validated_data["pin"]
+        active_pins = user.transaction_pins.filter(status=TransactionPinStatus.Active)
+        if len(active_pins) >= 3:
             raise exceptions.NotAcceptable(
                 "User is already logged in on 3 devices," " please delete one of the logged in sessions."
             )
-        validated_data["pin"] = validated_data["pin"]
+        if len(active_pins.filter(device_serial_number=device)) > 0:
+            # user have a pin on this device but tries to create with same device
+            raise serializers.ValidationError({"error": "You have a pin configured for this device already,"
+                                                        " only one pin can be used on one device"})
+        if len(active_pins.filter(pin=pin)) > 0:
+            raise serializers.ValidationError({"error": "Pin already belong to one of your devices, please use another one"})
+        validated_data["pin"] = pin
         validated_data["status"] = TransactionPinStatus.Active
         return TransactionPin.objects.create(**validated_data)
 
 
+
 class UpdateTransactionPinSerializers(serializers.Serializer):
-    old_pin = serializers.CharField(max_length=4, required=True)
-    new_pin = serializers.CharField(max_length=4, required=True)
+    old_pin = serializers.CharField(max_length=6, required=True)
+    new_pin = serializers.CharField(max_length=6, required=True)
 
     # def create(self, validated_data):
     #     pin: TransactionPin = self.context["pin"]
     #
 
-    def update(self, pin: TransactionPin, validated_data):
+    def create(self, validated_data):
+        user: User = validated_data["user"]
         old_pin = validated_data["old_pin"]
         new_pin = validated_data["new_pin"]
-        if not check_password(old_pin, pin.pin):
-            raise serializers.ValidationError("Pin is not correct")
-        pin.pin = make_password(new_pin)
-        pin.save(update_fields=["pin"])
-        pin.refresh_from_db()
-        return pin
+        try:
+            device = validated_data["device"]
+            pin = user.transaction_pins.get(status=TransactionPinStatus.Active, pin=old_pin, device_serial_number=device)
+            # if not check_password(old_pin, pin.pin):
+            #     raise serializers.ValidationError("Pin is not correct")
+            # pin.pin = make_password(new_pin)
+            pin.pin = new_pin
+            pin.save(update_fields=["pin"])
+            pin.refresh_from_db()
+            return pin
+        except TransactionPin.DoesNotExist as reason:
+            raise serializers.ValidationError({"error": "Pin is not correct"})
 
 
 class CarMerchantUpdateSerializer(serializers.Serializer):
@@ -472,6 +488,11 @@ class BankAccountSerializer(serializers.ModelSerializer):
         if len(value) < 10:
             raise serializers.ValidationError("Account number should be at least 10 digits")
         return value
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["bank"] = dict(id=instance.bank.id, name=instance.bank.bank_name)
+        return data
 
     def check_account_details(self, account_number, bank_code):
         headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")

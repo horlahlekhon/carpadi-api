@@ -212,8 +212,8 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
 
-    def get_(self):
-        return self.queryset.filter(user=self.request.user)
+    # def get_(self):
+    #     return self.queryset.filter(user=self.request.user)
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
@@ -228,7 +228,8 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        device_serial_number = self.request.auth.payload["device_imei"]
+        serializer.save(user=self.request.user, device_serial_number=device_serial_number)
 
     def get_queryset(self):
         user = self.request.user
@@ -242,20 +243,34 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         data = request.data
+        device = request.auth.payload["device_imei"]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer.save(user=request.user, device=device)
         return Response(status=status.HTTP_200_OK)
+
+    def perform_destroy(self, instance):
+        d = self.get_object()
+        return super(TransactionPinsViewSet, self).perform_destroy(instance)
+
 
     @action(detail=False, methods=['post'], url_path='validate-pin', url_name='validate_transaction_pin')
     def validate_transaction_pin(self, request):
+        """
+            Check if the pin sent in the payload belongs to a pin that have been set on this device, by checking
+            the device in the logged in token.
+        """
         data = request.data
+        device = request.auth.payload["device_imei"]
         if not data.get('pin'):
             return Response({"error": "pin is required"}, status=status.HTTP_400_BAD_REQUEST)
         pin = data.get('pin')
         try:
             # TODO we probably will be encrypting the pin, so we need to decrypt it
-            self.get_queryset().get(pin=pin)
+            if self.get_queryset().filter(device_serial_number=device).count() < 1:
+                return Response({"error": "Merchant does not have any transaction pin set on this device"},
+                                status=status.HTTP_404_NOT_FOUND)
+            self.get_queryset().get(pin=pin, device_serial_number=device)
         except TransactionPin.DoesNotExist:
             return Response({"error": "Invalid pin"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"success": "Pin is valid"}, status=status.HTTP_200_OK)
