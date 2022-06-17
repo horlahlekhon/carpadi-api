@@ -218,10 +218,10 @@ class DashboardViewSet(viewsets.GenericViewSet):
             filter_year_only=request.query_params.get("filter_year_only", False),
         )
 
-        ser = HomeDashboardSerializer(data=data)
-        if ser.is_valid():
-            return Response(ser.data, status=status.HTTP_200_OK)
-        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = HomeDashboardSerializer(data=data)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CarProductViewSetAdmin(viewsets.ModelViewSet):

@@ -550,7 +550,7 @@ class MerchantDashboardSerializer(serializers.Serializer):
 class HomeDashboardSerializer(serializers.Serializer):
     average_bts = serializers.SerializerMethodField()
     number_of_trading_users = serializers.SerializerMethodField()
-    average_cash_per_slot = serializers.SerializerMethodField()
+    average_trading_cash = serializers.SerializerMethodField()
     total_available_shares = serializers.SerializerMethodField()
     total_available_shares_value = serializers.SerializerMethodField()
     total_cars_with_shares = serializers.SerializerMethodField()
@@ -559,7 +559,7 @@ class HomeDashboardSerializer(serializers.Serializer):
     recent_trade_activities = serializers.SerializerMethodField()
 
     def __init__(self, instance=None, data=None, **kwargs):
-        super.__init__(instance, data, **kwargs)
+        super().__init__(instance, data, **kwargs)
         self.start_date = self.initial_data["start_date"]
         self.end_date = self.initial_data["end_date"]
         self.filter_year_only = self.initial_data["filter_year_only"]
@@ -574,13 +574,13 @@ class HomeDashboardSerializer(serializers.Serializer):
         within the current month or a specified date range.
         """
 
-        trades = Trade.objects.filter(
-            trades_status__in=(TradeStates.Completed, TradeStates.Closed),
-            modified__date__gte=self.start_date,
-            modified__date__lte=self.end_date,
-        )
+        bts = Trade.objects.filter(
+            trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+            created__date__gte=self.start_date,
+            created__date__lte=self.end_date,
+        ).aggregate(value=Avg("bts_time")).get("value")
 
-        return Avg(i.get_bts_time() for i in trades) or Decimal(0)
+        return bts or Decimal(0.00)
 
     def get_number_of_trading_users(self, value):
         """
@@ -592,23 +592,22 @@ class HomeDashboardSerializer(serializers.Serializer):
             TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date)
             .values("merchant")
             .distinct()
-            .count()
+            .count() or 0
         )
 
-    def get_average_cash_per_slot(self, value):
+    def get_average_trading_cash(self, value):
         """
         The average cash per slot,
         i.e. the average amount the users uses to invest in a car,
         within the current month or a specified date range.
         """
 
-        tradeUnits = TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date).aggregate(
-            value=Avg("slots_quantity" * "unit_value")
-        ).get("value") or Decimal(0)
+        cash = TradeUnit.objects.filter(
+            created__date__gte=self.start_date,
+            created__date__lte=self.end_date
+        ).aggregate(value=Avg("unit_value")).get("value")
 
-        # quantity = tradeUnits.annotate("slots_quantity")
-        # unit_value = tradeUnits.annotate("unit_value")
-        # value = sum(q * u for (q,u in quantity, unit_value) )
+        return cash or Decimal(0.00)
 
     def get_total_available_shares(self, value):
         """
@@ -616,35 +615,45 @@ class HomeDashboardSerializer(serializers.Serializer):
         within the current month or a specified date range.
         """
 
-        return (
-            Trade.objects.filter(
-                trades_status=TradeStates.Ongoing, modified__date__gte=self.start_date, modified__date__lte=self.end_date
-            )
-            .aggregate(value=Sum("slots_available"))
-            .get("value")
-            or 0
-        )
+        shares = Trade.objects.filter(
+            trade_status=TradeStates.Ongoing,
+            created__date__gte=self.start_date,
+            created__date__lte=self.end_date
+        ).aggregate(value=Sum("slots_available")).get("value")
+
+        return shares or 0
 
     def get_total_available_shares_value(self, value):
         """
         The total value of shares in all open trades,
         within the current month or a specified date range.
         """
-        return Trade.objects.filter(
-            trades_status=TradeStates.Ongoing, modified__date__gte=self.start_date, modified__date__lte=self.end_date
-        ).aggregate(value=Sum("slots_available" * "price_per_slot")).get("value") or Decimal(0)
+
+        trades = Trade.objects.filter(
+            trade_status=TradeStates.Ongoing,
+            created__date__gte=self.start_date,
+            created__date__lte=self.end_date
+        )
+        values = Decimal(0.00)
+
+        for i in trades:
+            value = i.get_slots_available() * i.get_price_per_slot
+            values = values + value
+
+        return values
 
     def get_total_cars_with_shares(self, value):
         """
         The total numbers of cars on trade with available shares,
         within the current month or a specified date range.
         """
-        return (
-            Trade.objects.filter(
-                trades_status=TradeStates.Ongoing, modified__date__gte=self.start_date, modified__date__lte=self.end_date
-            ).Count()
-            or 0
-        )
+
+        cars = Trade.objects.filter(
+                trade_status=TradeStates.Ongoing,
+                created__date__gte=self.start_date,
+                created__date__lte=self.end_date
+            ).count()
+        return cars or 0
 
     def get_total_trading_cash_vs_return_on_trades(self, value):
         """
@@ -652,9 +661,10 @@ class HomeDashboardSerializer(serializers.Serializer):
         within the current month or a specified date range,
         which can be used to plot weekly or monthly graph.
         """
+
+        cash = []
+        trade_return = []
         if self.filter_year_only:
-            cash = [] * 12
-            trade_return = [] * 12
             i = 0
             while i < 12:
                 self.start_date.replace(month=i + 1)
@@ -667,7 +677,8 @@ class HomeDashboardSerializer(serializers.Serializer):
 
                 rot = (
                     Trade.objects.filter(
-                        trade_status__in=(TradeStates.Completed, TradeStates.Closed), modified__date__month=self.start_date.month
+                        trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+                        modified__date__month=self.start_date.month
                     )
                     .aggregate(value=Sum("return_on_trade"))
                     .get("value")
@@ -677,7 +688,7 @@ class HomeDashboardSerializer(serializers.Serializer):
 
                 i += 1
 
-            return dict(graph_type="year", ttc=cash, rot=trade_return)
+        return dict(graph_type="year", ttc=cash, rot=trade_return)
 
         # weekly = [] * 4
         # week_start = 1
@@ -702,34 +713,31 @@ class HomeDashboardSerializer(serializers.Serializer):
         """
         Cars Summary
         """
-        total_cars = (
-            Car.objects.filter(
-                created_date__year=datetime.now().year,
-            ).count()
-            or 0
-        )
+        total_cars = Car.objects.filter(
+                created__date__year=datetime.now().year,
+        ).count() or 0
 
-        inspected_cars = Car.objects.filter(created_date__year=datetime.now().year, status=CarStates.Inspected).count() or 0
+        inspected_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Inspected).count() or 0
 
-        inspected_cars_percent = (inspected_cars / total_cars) * 100
+        inspected_cars_percent = Decimal(0)
 
         inspection = dict(count=inspected_cars, percentage=inspected_cars_percent)
 
-        available_cars = Car.objects.filter(created_date__year=datetime.now().year, status=CarStates.Available).count() or 0
+        available_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Available).count() or 0
 
-        available_cars_percent = (available_cars / total_cars) * 100
+        available_cars_percent = Decimal(0)
 
         available = dict(count=available_cars, percentage=available_cars_percent)
 
-        trading_cars = Car.objects.filter(created_date__year=datetime.now().year, status=CarStates.OngoingTrade).count() or 0
+        trading_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.OngoingTrade).count() or 0
 
-        trading_cars_percent = (trading_cars / total_cars) * 100
+        trading_cars_percent = Decimal(0)
 
         trading = dict(count=trading_cars, percentage=trading_cars_percent)
 
-        sold_cars = Car.objects.filter(created_date__year=datetime.now().year, status=CarStates.Sold).count() or 0
+        sold_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Sold).count() or 0
 
-        sold_cars_percent = (sold_cars / total_cars) * 100
+        sold_cars_percent = Decimal(0)
 
         sold = dict(count=sold_cars, percentage=sold_cars_percent)
 
