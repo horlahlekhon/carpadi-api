@@ -120,13 +120,16 @@ class CarSerializer(serializers.ModelSerializer):
         return value
 
     def validate_vin(self, attr):
+        info: VehicleInfo = None
         try:
-            return VehicleInfo.objects.get(vin=attr)
+            info = VehicleInfo.objects.get(vin=attr)
         except VehicleInfo.DoesNotExist as reason:
             vin = check_vin(attr)
             if not vin:
                 raise serializers.ValidationError("Invalid vin number")
-            return VehicleInfo.objects.create(vin=attr, **vin)
+            info = VehicleInfo.objects.create(vin=attr, **vin)
+        if info.car:
+            raise serializers.ValidationError(f"Car with the vin number {attr} exists before")
 
     @atomic()
     def create(self, validated_data):
