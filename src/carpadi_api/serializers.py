@@ -50,7 +50,7 @@ class TransactionPinSerializers(serializers.ModelSerializer):
     class Meta:
         model = TransactionPin
         fields = "__all__"
-        read_only_fields = ("id", "created", "modified", "status", "user")
+        read_only_fields = ("id", "created", "modified", "status", "user", "device_serial_number")
         extra_kwargs = {'pin': {'write_only': True}}
 
     def validate_pin(self, pin):
@@ -60,14 +60,23 @@ class TransactionPinSerializers(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user: User = validated_data["user"]
-        active_pins = user.transaction_pins.filter(status=TransactionPinStatus.Active).count()
-        if active_pins >= 3:
+        device = validated_data["device_serial_number"]
+        pin = validated_data["pin"]
+        active_pins = user.transaction_pins.filter(status=TransactionPinStatus.Active)
+        if len(active_pins) >= 3:
             raise exceptions.NotAcceptable(
                 "User is already logged in on 3 devices," " please delete one of the logged in sessions."
             )
-        validated_data["pin"] = validated_data["pin"]
+        if len(active_pins.filter(device_serial_number=device)) > 0:
+            # user have a pin on this device but tries to create with same device
+            raise serializers.ValidationError({"error": "You have a pin configured for this device already,"
+                                                        " only one pin can be used on one device"})
+        if len(active_pins.filter(pin=pin)) > 0:
+            raise serializers.ValidationError({"error": "Pin already belong to one of your devices, please use another one"})
+        validated_data["pin"] = pin
         validated_data["status"] = TransactionPinStatus.Active
         return TransactionPin.objects.create(**validated_data)
+
 
 
 class UpdateTransactionPinSerializers(serializers.Serializer):

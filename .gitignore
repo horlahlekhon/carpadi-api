@@ -115,3 +115,5 @@ media/*
 dump.rdb
 *.db
 .env.export
+.env.dist
+.env-compose
