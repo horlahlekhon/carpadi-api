@@ -24,7 +24,6 @@ class CarFeatureSerializer(serializers.ModelSerializer):
         return feat
 
 
-
 class CarProductSerializer(serializers.ModelSerializer):
     images = serializers.ListField(write_only=True, child=serializers.URLField(), min_length=1, required=True)
     product_images = serializers.SerializerMethodField()

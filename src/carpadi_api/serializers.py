@@ -70,14 +70,14 @@ class TransactionPinSerializers(serializers.ModelSerializer):
             )
         if len(active_pins.filter(device_serial_number=device)) > 0:
             # user have a pin on this device but tries to create with same device
-            raise serializers.ValidationError({"error": "You have a pin configured for this device already,"
-                                                        " only one pin can be used on one device"})
+            raise serializers.ValidationError(
+                {"error": "You have a pin configured for this device already," " only one pin can be used on one device"}
+            )
         if len(active_pins.filter(pin=pin)) > 0:
             raise serializers.ValidationError({"error": "Pin already belong to one of your devices, please use another one"})
         validated_data["pin"] = pin
         validated_data["status"] = TransactionPinStatus.Active
         return TransactionPin.objects.create(**validated_data)
-
 
 
 class UpdateTransactionPinSerializers(serializers.Serializer):

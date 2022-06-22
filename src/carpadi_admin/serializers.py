@@ -577,11 +577,15 @@ class HomeDashboardSerializer(serializers.Serializer):
         within the current month or a specified date range.
         """
 
-        bts = Trade.objects.filter(
-            trade_status__in=(TradeStates.Completed, TradeStates.Closed),
-            created__date__gte=self.start_date,
-            created__date__lte=self.end_date,
-        ).aggregate(value=Avg("bts_time")).get("value")
+        bts = (
+            Trade.objects.filter(
+                trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+                created__date__gte=self.start_date,
+                created__date__lte=self.end_date,
+            )
+            .aggregate(value=Avg("bts_time"))
+            .get("value")
+        )
 
         return bts or Decimal(0.00)
 
@@ -595,7 +599,8 @@ class HomeDashboardSerializer(serializers.Serializer):
             TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date)
             .values("merchant")
             .distinct()
-            .count() or 0
+            .count()
+            or 0
         )
 
     def get_average_trading_cash(self, value):
@@ -605,10 +610,11 @@ class HomeDashboardSerializer(serializers.Serializer):
         within the current month or a specified date range.
         """
 
-        cash = TradeUnit.objects.filter(
-            created__date__gte=self.start_date,
-            created__date__lte=self.end_date
-        ).aggregate(value=Avg("unit_value")).get("value")
+        cash = (
+            TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date)
+            .aggregate(value=Avg("unit_value"))
+            .get("value")
+        )
 
         return cash or Decimal(0.00)
 
@@ -618,11 +624,13 @@ class HomeDashboardSerializer(serializers.Serializer):
         within the current month or a specified date range.
         """
 
-        shares = Trade.objects.filter(
-            trade_status=TradeStates.Ongoing,
-            created__date__gte=self.start_date,
-            created__date__lte=self.end_date
-        ).aggregate(value=Sum("slots_available")).get("value")
+        shares = (
+            Trade.objects.filter(
+                trade_status=TradeStates.Ongoing, created__date__gte=self.start_date, created__date__lte=self.end_date
+            )
+            .aggregate(value=Sum("slots_available"))
+            .get("value")
+        )
 
         return shares or 0
 
@@ -633,9 +641,7 @@ class HomeDashboardSerializer(serializers.Serializer):
         """
 
         trades = Trade.objects.filter(
-            trade_status=TradeStates.Ongoing,
-            created__date__gte=self.start_date,
-            created__date__lte=self.end_date
+            trade_status=TradeStates.Ongoing, created__date__gte=self.start_date, created__date__lte=self.end_date
         )
         values = Decimal(0.00)
 
@@ -652,10 +658,8 @@ class HomeDashboardSerializer(serializers.Serializer):
         """
 
         cars = Trade.objects.filter(
-                trade_status=TradeStates.Ongoing,
-                created__date__gte=self.start_date,
-                created__date__lte=self.end_date
-            ).count()
+            trade_status=TradeStates.Ongoing, created__date__gte=self.start_date, created__date__lte=self.end_date
+        ).count()
         return cars or 0
 
     def get_total_trading_cash_vs_return_on_trades(self, value):
@@ -680,8 +684,7 @@ class HomeDashboardSerializer(serializers.Serializer):
 
                 rot = (
                     Trade.objects.filter(
-                        trade_status__in=(TradeStates.Completed, TradeStates.Closed),
-                        modified__date__month=self.start_date.month
+                        trade_status__in=(TradeStates.Completed, TradeStates.Closed), modified__date__month=self.start_date.month
                     )
                     .aggregate(value=Sum("return_on_trade"))
                     .get("value")
@@ -716,9 +719,12 @@ class HomeDashboardSerializer(serializers.Serializer):
         """
         Cars Summary
         """
-        total_cars = Car.objects.filter(
+        total_cars = (
+            Car.objects.filter(
                 created__date__year=datetime.now().year,
-        ).count() or 0
+            ).count()
+            or 0
+        )
 
         inspected_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Inspected).count() or 0
 

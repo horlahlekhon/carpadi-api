@@ -25,7 +25,10 @@ from src.models.models import (
     TradeStates,
     TradeUnit,
     VehicleInfo,
-    FuelTypes, Assets, AssetEntityType, Banks
+    FuelTypes,
+    Assets,
+    AssetEntityType,
+    Banks,
 )
 from django.db.transaction import atomic
 
@@ -272,4 +275,3 @@ class PadiSeeder:
                 print("Banks already seeded in the database.... and am not even cap'ng!!")
         else:
             print(f"we couldn't get banks list from the API... due to {response}")
-

@@ -253,12 +253,11 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
         d = self.get_object()
         return super(TransactionPinsViewSet, self).perform_destroy(instance)
 
-
     @action(detail=False, methods=['post'], url_path='validate-pin', url_name='validate_transaction_pin')
     def validate_transaction_pin(self, request):
         """
-            Check if the pin sent in the payload belongs to a pin that have been set on this device, by checking
-            the device in the logged in token.
+        Check if the pin sent in the payload belongs to a pin that have been set on this device, by checking
+        the device in the logged in token.
         """
         data = request.data
         device = request.auth.payload["device_imei"]
@@ -268,8 +267,9 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
         try:
             # TODO we probably will be encrypting the pin, so we need to decrypt it
             if self.get_queryset().filter(device_serial_number=device).count() < 1:
-                return Response({"error": "Merchant does not have any transaction pin set on this device"},
-                                status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"error": "Merchant does not have any transaction pin set on this device"}, status=status.HTTP_404_NOT_FOUND
+                )
             self.get_queryset().get(pin=pin, device_serial_number=device)
         except TransactionPin.DoesNotExist:
             return Response({"error": "Invalid pin"}, status=status.HTTP_400_BAD_REQUEST)
