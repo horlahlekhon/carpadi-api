@@ -2,8 +2,6 @@ import itertools
 from datetime import datetime
 from decimal import Decimal
 
-import month
-
 from src.common.helpers import check_vin
 from src.models.models import (
     CarMerchant,
