@@ -835,6 +835,7 @@ class AssetEntityType(models.TextChoices):
     Inspection = "car_inspection", _("Car inspection pictures")
     Features = "feature", _("Picture of a feature of a car")
     InspectionReport = "inspection_report", _("Pdf report of an inspected vehicle")
+    UserProfilePicture = "profile_picture", _("Profile picture of a user")
 
 
 class Assets(Base):

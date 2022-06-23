@@ -103,6 +103,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
 
     @action(detail=False, methods=['patch'], url_path='update', url_name='patch_user')
     def patch_user(self, request, *args, **kwargs):
+        kwargs["partial"] = True
         return super(UserViewSet, self).update(request, *args, **kwargs)
 
     @action(detail=False, methods=['post'], url_path='seed', url_name='seed')

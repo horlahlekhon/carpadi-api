@@ -48,6 +48,19 @@ class UserSerializer(serializers.ModelSerializer):
         )
         # read_only_fields = ('username',)
 
+    def to_representation(self, instance):
+        data = super(UserSerializer, self).to_representation(instance)
+        data["profile_picture"] = instance.profile_picture.asset if instance.profile_picture else None
+        return data
+
+    def update(self, instance, validated_data):
+        picture = validated_data.get("profile_picture")
+        if picture:
+            picture = Assets.objects.create(
+                asset=picture, content_object=instance, entity_type=AssetEntityType.UserProfilePicture)
+            validated_data["profile_picture"] = picture
+        return super(UserSerializer, self).update(instance, validated_data)
+
 
 class CreateUserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.URLField(required=False)
@@ -105,7 +118,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'user_type',
             'merchant_id',
         )
-        read_only_fields = ('merchant_id',)
+        read_only_fields = ('merchant_id', 'profile_picture')
         extra_kwargs = {'password': {'write_only': True}}
 
 
@@ -185,7 +198,8 @@ class TokenObtainModSerializer(serializers.Serializer):
     default_error_messages = {
         'no_active_account': _('No active account found with the given credentials'),
         'new_device_detected': _(
-            'You are logging in to this device for the first time,' 'kindly create a new transaction pin for this device '
+            'You are logging in to this device for the first time,' 'kindly create a new transaction pin for this '
+            'device '
         ),
     }
 
