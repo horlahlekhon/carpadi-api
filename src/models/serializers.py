@@ -51,6 +51,19 @@ class UserSerializer(serializers.ModelSerializer):
         )
         # read_only_fields = ('username',)
 
+    def to_representation(self, instance):
+        data = super(UserSerializer, self).to_representation(instance)
+        data["profile_picture"] = instance.profile_picture.asset if instance.profile_picture else None
+        return data
+
+    def update(self, instance, validated_data):
+        picture = validated_data.get("profile_picture")
+        if picture:
+            picture = Assets.objects.create(
+                asset=picture, content_object=instance, entity_type=AssetEntityType.UserProfilePicture)
+            validated_data["profile_picture"] = picture
+        return super(UserSerializer, self).update(instance, validated_data)
+
 
 class CreateUserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.URLField(required=False)
@@ -107,7 +120,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'user_type',
             'merchant_id',
         )
-        read_only_fields = ('merchant_id',)
+        read_only_fields = ('merchant_id', 'profile_picture')
         extra_kwargs = {'password': {'write_only': True}}
 
 
@@ -121,9 +134,11 @@ def is_valid_phone(phone):
 class PhoneVerificationSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=6, required=True)
     phone = serializers.CharField(validators=(is_valid_phone,), max_length=15)
+    device_imei = serializers.CharField(required=True, write_only=True)
 
     def get_tokens(self, user):
-        return user.get_tokens()
+        token = user.get_tokens(self.validated_data["device_imei"])
+        return token
 
     def validate(self, attrs):
         user = User.objects.get(phone=attrs["phone"])
@@ -143,23 +158,29 @@ class PhoneVerificationSerializer(serializers.Serializer):
     @transaction.atomic()
     def create(self, validated_data):
         user: User = User.objects.get(phone=validated_data["phone"])
-        user.is_active = True
-        if user.user_type == UserTypes.CarMerchant:
-            # we have validated user, lets create the wallet
-            Wallet.objects.create(
-                merchant=user.merchant,
-                balance=Decimal(0),
-                trading_cash=Decimal(0),
-                withdrawable_cash=Decimal(0),
-                unsettled_cash=Decimal(0),
-                total_cash=Decimal(0),
-            )
-        user.save(update_fields=["is_active"])
-        user.refresh_from_db()
+        user_wallet = Wallet.objects.filter(merchant=user.merchant)
+        if user.is_active and len(user_wallet) > 0:
+            pass
+        else:
+            user.is_active = True
+            if user.user_type == UserTypes.CarMerchant:
+                # we have validated user, lets create the wallet
+                if len(user_wallet) < 1:
+                    Wallet.objects.create(
+                        merchant=user.merchant,
+                        balance=Decimal(0),
+                        trading_cash=Decimal(0),
+                        withdrawable_cash=Decimal(0),
+                        unsettled_cash=Decimal(0),
+                        total_cash=Decimal(0),
+                    )
+            user.save(update_fields=["is_active"])
+            user.refresh_from_db()
         return user
 
     class Meta:
-        fields = ('token',)
+        fields = ('token', "device_imei")
+
 
 
 class CarMerchantSerializer(serializers.ModelSerializer):
@@ -187,7 +208,8 @@ class TokenObtainModSerializer(serializers.Serializer):
     default_error_messages = {
         'no_active_account': _('No active account found with the given credentials'),
         'new_device_detected': _(
-            'You are logging in to this device for the first time,' 'kindly create a new transaction pin for this device '
+            'You are logging in to this device for the first time,' 'kindly create a new transaction pin for this '
+            'device '
         ),
     }
 
