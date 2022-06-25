@@ -109,7 +109,7 @@ class TransactionPinStatus(models.TextChoices):
 
 
 class TransactionPin(Base):
-    device_serial_number = models.CharField(max_length=50, unique=True)
+    device_serial_number = models.CharField(max_length=50)
     device_platform = models.CharField(max_length=20)
     status = models.CharField(max_length=10, choices=TransactionPinStatus.choices)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transaction_pins")
@@ -117,7 +117,7 @@ class TransactionPin(Base):
     device_name = models.CharField(max_length=50, help_text="The name of the device i.e Iphone x")
 
     class Meta:
-        unique_together = ('device_serial_number', 'pin')
+        unique_together = ('device_serial_number', 'pin', 'user')
 
 
 class CarMerchant(Base):
