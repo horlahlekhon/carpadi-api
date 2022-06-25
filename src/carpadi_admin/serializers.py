@@ -676,15 +676,15 @@ class HomeDashboardSerializer(serializers.Serializer):
             while i < graph_partition:
                 self.start_date.replace(month=i + 1)
 
-                ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).values(
-                    "slots_quantity", "unit_value"
-                )
+                ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).values("slots_quantity", "unit_value")
 
                 cash[i] = sum(s["slots_quantity"] * s["unit_value"] for s in ttc) or Decimal(0)
 
                 rot = (
                     Trade.objects.filter(
-                        trade_status__in=(TradeStates.Completed, TradeStates.Closed), modified__date__year=self.start_date.year, modified__date__month=self.start_date.month
+                        trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+                        modified__date__year=self.start_date.year,
+                        modified__date__month=self.start_date.month,
                     )
                     .aggregate(value=Sum("return_on_trade"))
                     .get("value")
@@ -719,14 +719,12 @@ class HomeDashboardSerializer(serializers.Serializer):
         """
         Cars Summary
         """
-        total_cars = (
-            Car.objects.filter(
-                created__date__year=datetime.now().year,
-            ).count()
-        )
+        total_cars = Car.objects.filter(
+            created__date__year=datetime.now().year,
+        ).count()
 
         inspected_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Inspected).count()
-        inspected_cars_percent =(inspected_cars / total_cars) * 100 or Decimal(0)
+        inspected_cars_percent = (inspected_cars / total_cars) * 100 or Decimal(0)
         inspection = dict(count=inspected_cars, percentage=inspected_cars_percent)
 
         available_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Available).count()
