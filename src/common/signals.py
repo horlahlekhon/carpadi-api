@@ -156,7 +156,7 @@ def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
             activity_type=ActivityTypes.TradeUnit,
             activity=instance,
             merchant=instance.merchant,
-            description=f"Activity Type: Purchase of Unit Description: "
+            description=f"Activity Type: Purchase of Unit, Description: "
             f"{instance.slots_quantity} ({instance.share_percentage})  of \
                     {instance.trade.car.information.make} {instance.trade.car.information.model}"
             f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",

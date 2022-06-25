@@ -641,10 +641,9 @@ class HomeDashboardSerializer(serializers.Serializer):
         trades = Trade.objects.filter(
             trade_status=TradeStates.Ongoing, created__date__gte=self.start_date, created__date__lte=self.end_date
         )
-        values = Decimal(0.00)
-
+        values = Decimal(0)
         for i in trades:
-            value = i.get_slots_available() * i.get_price_per_slot
+            value = i.remaining_slots() * i.price_per_slot
             values = values + value
 
         return values
@@ -666,23 +665,26 @@ class HomeDashboardSerializer(serializers.Serializer):
         within the current month or a specified date range,
         which can be used to plot weekly or monthly graph.
         """
+        graph_partition = 12
+        cash = [Decimal(0)] * graph_partition
+        trade_return = [Decimal(0)] * graph_partition
+        self.filter_year_only = True
 
-        cash = []
-        trade_return = []
         if self.filter_year_only:
+            graph_partition = 12
             i = 0
-            while i < 12:
+            while i < graph_partition:
                 self.start_date.replace(month=i + 1)
 
-                ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).annotate(
+                ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).values(
                     "slots_quantity", "unit_value"
                 )
 
-                cash[i] = sum(s * u for s, u in ttc) or Decimal(0)
+                cash[i] = sum(s["slots_quantity"] * s["unit_value"] for s in ttc) or Decimal(0)
 
                 rot = (
                     Trade.objects.filter(
-                        trade_status__in=(TradeStates.Completed, TradeStates.Closed), modified__date__month=self.start_date.month
+                        trade_status__in=(TradeStates.Completed, TradeStates.Closed), modified__date__year=self.start_date.year, modified__date__month=self.start_date.month
                     )
                     .aggregate(value=Sum("return_on_trade"))
                     .get("value")
@@ -721,31 +723,22 @@ class HomeDashboardSerializer(serializers.Serializer):
             Car.objects.filter(
                 created__date__year=datetime.now().year,
             ).count()
-            or 0
         )
 
-        inspected_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Inspected).count() or 0
-
-        inspected_cars_percent = Decimal(0)
-
+        inspected_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Inspected).count()
+        inspected_cars_percent =(inspected_cars / total_cars) * 100 or Decimal(0)
         inspection = dict(count=inspected_cars, percentage=inspected_cars_percent)
 
-        available_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Available).count() or 0
-
-        available_cars_percent = Decimal(0)
-
+        available_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Available).count()
+        available_cars_percent = (available_cars / total_cars) * 100 or Decimal(0)
         available = dict(count=available_cars, percentage=available_cars_percent)
 
-        trading_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.OngoingTrade).count() or 0
-
-        trading_cars_percent = Decimal(0)
-
+        trading_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.OngoingTrade).count()
+        trading_cars_percent = (trading_cars / total_cars) * 100 or Decimal(0)
         trading = dict(count=trading_cars, percentage=trading_cars_percent)
 
-        sold_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Sold).count() or 0
-
-        sold_cars_percent = Decimal(0)
-
+        sold_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Sold).count()
+        sold_cars_percent = (sold_cars / total_cars) * 100 or Decimal(0)
         sold = dict(count=sold_cars, percentage=sold_cars_percent)
 
         return dict(total_cars=total_cars, available=available, trading=trading, inspection=inspection, sold=sold)
@@ -754,4 +747,5 @@ class HomeDashboardSerializer(serializers.Serializer):
         """
         Last Ten Trading activities carried out
         """
-        return Activity.objects.filter(activity_type=ActivityTypes.TradeUnit)[:10]
+        recent_activities = Activity.objects.filter(activity_type=ActivityTypes.TradeUnit).values("description", "merchant")[:10]
+        return dict(recent_activities=recent_activities)
