@@ -156,14 +156,14 @@ class PhoneVerificationSerializer(serializers.Serializer):
     @transaction.atomic()
     def create(self, validated_data):
         user: User = User.objects.get(phone=validated_data["phone"])
-        user_wallet = user.merchant.wallet
-        if user.is_active and user_wallet:
+        user_wallet = Wallet.objects.filter(merchant=user.merchant)
+        if user.is_active and len(user_wallet) > 0:
             pass
         else:
             user.is_active = True
             if user.user_type == UserTypes.CarMerchant:
                 # we have validated user, lets create the wallet
-                if not user_wallet:
+                if len(user_wallet) < 1:
                     Wallet.objects.create(
                         merchant=user.merchant,
                         balance=Decimal(0),
