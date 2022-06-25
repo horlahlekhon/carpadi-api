@@ -1,5 +1,8 @@
 import asyncio
+import datetime
 import threading
+
+from django.utils import timezone
 from django_filters import rest_framework as filters
 
 from django.http.response import Http404
@@ -15,7 +18,7 @@ from rest_framework_simplejwt.views import TokenViewBase
 
 from src.common.seeder import PadiSeeder
 from src.models.filters import NotificationsFilter
-from src.models.models import User, UserTypes, Assets, Notifications
+from src.models.models import User, UserTypes, Assets, Notifications, Otp
 from src.models.permissions import IsUserOrReadOnly
 from src.models.serializers import (
     CreateUserSerializer,
@@ -87,7 +90,20 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         except Exception as reason:
             return Response(reason.args, status=status.HTTP_400_BAD_REQUEST)
 
-    # @action()
+    @action(detail=False, methods=['post'], url_path='validate-otp', url_name='validate_otp')
+    def validate_otp(self, instance):
+        try:
+            data = instance.data.get("otp")
+            if data:
+                self.get_object()
+                otp = Otp.objects.filter(otp=data, user=self.get_object()).latest()
+                if otp.expiry < timezone.now():
+                    return Response(data={"error": "Otp has expired"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response(data={"error": "otp is a required field"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"status": "otp is valid"}, status=status.HTTP_200_OK)
+        except Otp.DoesNotExist:
+            return Response(data={"error": "Otp does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -196,6 +212,3 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
                 return Response(status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-

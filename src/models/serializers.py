@@ -132,9 +132,11 @@ def is_valid_phone(phone):
 class PhoneVerificationSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=6, required=True)
     phone = serializers.CharField(validators=(is_valid_phone,), max_length=15)
+    device_imei = serializers.CharField(required=True, write_only=True)
 
     def get_tokens(self, user):
-        return user.get_tokens()
+        token = user.get_tokens(self.validated_data["device_imei"])
+        return token
 
     def validate(self, attrs):
         user = User.objects.get(phone=attrs["phone"])
@@ -154,23 +156,29 @@ class PhoneVerificationSerializer(serializers.Serializer):
     @transaction.atomic()
     def create(self, validated_data):
         user: User = User.objects.get(phone=validated_data["phone"])
-        user.is_active = True
-        if user.user_type == UserTypes.CarMerchant:
-            # we have validated user, lets create the wallet
-            Wallet.objects.create(
-                merchant=user.merchant,
-                balance=Decimal(0),
-                trading_cash=Decimal(0),
-                withdrawable_cash=Decimal(0),
-                unsettled_cash=Decimal(0),
-                total_cash=Decimal(0),
-            )
-        user.save(update_fields=["is_active"])
-        user.refresh_from_db()
+        user_wallet = user.merchant.wallet
+        if user.is_active and user_wallet:
+            pass
+        else:
+            user.is_active = True
+            if user.user_type == UserTypes.CarMerchant:
+                # we have validated user, lets create the wallet
+                if not user_wallet:
+                    Wallet.objects.create(
+                        merchant=user.merchant,
+                        balance=Decimal(0),
+                        trading_cash=Decimal(0),
+                        withdrawable_cash=Decimal(0),
+                        unsettled_cash=Decimal(0),
+                        total_cash=Decimal(0),
+                    )
+            user.save(update_fields=["is_active"])
+            user.refresh_from_db()
         return user
 
     class Meta:
-        fields = ('token',)
+        fields = ('token', "device_imei")
+
 
 
 class CarMerchantSerializer(serializers.ModelSerializer):

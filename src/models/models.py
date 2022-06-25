@@ -47,9 +47,9 @@ class User(AbstractUser, Base):
     phone = models.CharField(max_length=15, unique=True, help_text="International format phone number")
     username = models.CharField(max_length=50, validators=[username_validator], unique=True, null=True)
 
-    def get_tokens(self):
+    def get_tokens(self, imei=None):
         refresh = RefreshToken.for_user(self)
-
+        refresh["device_imei"] = imei
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
@@ -710,7 +710,7 @@ class TradeUnit(Base):
         editable=False,
         default=Decimal(0.00),
         max_digits=10,
-        help_text="the percentage of vat to be paid. calculated in relation to share " 
+        help_text="the percentage of vat to be paid. calculated in relation to share "
                   "percentage of tradeUnit in trade",
     )
     estimated_rot = models.DecimalField(
