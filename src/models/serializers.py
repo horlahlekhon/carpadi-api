@@ -60,7 +60,8 @@ class UserSerializer(serializers.ModelSerializer):
         picture = validated_data.get("profile_picture")
         if picture:
             picture = Assets.objects.create(
-                asset=picture, content_object=instance, entity_type=AssetEntityType.UserProfilePicture)
+                asset=picture, content_object=instance, entity_type=AssetEntityType.UserProfilePicture
+            )
             validated_data["profile_picture"] = picture
         return super(UserSerializer, self).update(instance, validated_data)
 
@@ -182,7 +183,6 @@ class PhoneVerificationSerializer(serializers.Serializer):
         fields = ('token', "device_imei")
 
 
-
 class CarMerchantSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
 
@@ -208,8 +208,7 @@ class TokenObtainModSerializer(serializers.Serializer):
     default_error_messages = {
         'no_active_account': _('No active account found with the given credentials'),
         'new_device_detected': _(
-            'You are logging in to this device for the first time,' 'kindly create a new transaction pin for this '
-            'device '
+            'You are logging in to this device for the first time,' 'kindly create a new transaction pin for this ' 'device '
         ),
     }
 
