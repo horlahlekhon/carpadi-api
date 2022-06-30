@@ -82,13 +82,15 @@ WSGI_APPLICATION = 'src.wsgi.application'
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', '')
 EMAIL_PORT = os.getenv('EMAIL_PORT', 587)
-EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
+EMAIL_FROM = os.getenv('EMAIL_FROM', 'admin@carpadi.com')
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_API_KEY = os.getenv('EMAIL_PASSWORD', "ncTkaSqq5KLZH0Ddux7V4w")
 # Celery
 BROKER_URL = os.getenv('BROKER_URL', 'redis://redis:6379')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379')
+
 
 ADMINS = ()
 
