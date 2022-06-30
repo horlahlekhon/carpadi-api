@@ -16,7 +16,15 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='activity',
             name='activity_type',
-            field=models.CharField(choices=[('transaction', 'transaction'), ('trade_unit', 'trade_unit'), ('disbursement', 'disbursement'), ('car_creation', 'car_creation')], max_length=15),
+            field=models.CharField(
+                choices=[
+                    ('transaction', 'transaction'),
+                    ('trade_unit', 'trade_unit'),
+                    ('disbursement', 'disbursement'),
+                    ('car_creation', 'car_creation'),
+                ],
+                max_length=15,
+            ),
         ),
         migrations.AlterField(
             model_name='activity',

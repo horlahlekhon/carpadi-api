@@ -15,7 +15,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='assets',
             name='entity_type',
-            field=models.CharField(choices=[('car_product', 'Pictures of a car on the sales platform'), ('car', 'car picture'), ('merchant', 'user profile picture'), ('trade', 'Trade pictures of a car'), ('car_inspection', 'Car inspection pictures'), ('feature', 'Picture of a feature of a car'), ('inspection_report', 'Pdf report of an inspected vehicle'), ('profile_picture', 'Profile picture of a user')], max_length=20),
+            field=models.CharField(
+                choices=[
+                    ('car_product', 'Pictures of a car on the sales platform'),
+                    ('car', 'car picture'),
+                    ('merchant', 'user profile picture'),
+                    ('trade', 'Trade pictures of a car'),
+                    ('car_inspection', 'Car inspection pictures'),
+                    ('feature', 'Picture of a feature of a car'),
+                    ('inspection_report', 'Pdf report of an inspected vehicle'),
+                    ('profile_picture', 'Profile picture of a user'),
+                ],
+                max_length=20,
+            ),
         ),
         migrations.AlterField(
             model_name='otp',

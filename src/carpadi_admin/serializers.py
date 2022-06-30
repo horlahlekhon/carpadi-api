@@ -27,11 +27,12 @@ from src.models.models import (
     TransactionTypes,
     TransactionKinds,
     AssetEntityType,
+    ActivityTypes,
 )
 from rest_framework import serializers
 from django.db.transaction import atomic
 from django.utils import timezone
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Avg
 from rest_framework import exceptions
 
 
@@ -545,3 +546,204 @@ class MerchantDashboardSerializer(serializers.Serializer):
     def get_non_trading_users(self, value):
         """The total amount of non trading users in the system"""
         return self.get_total_users(None) - self.get_active_users(None)
+
+
+class HomeDashboardSerializer(serializers.Serializer):
+    average_bts = serializers.SerializerMethodField()
+    number_of_trading_users = serializers.SerializerMethodField()
+    average_trading_cash = serializers.SerializerMethodField()
+    total_available_shares = serializers.SerializerMethodField()
+    total_available_shares_value = serializers.SerializerMethodField()
+    total_cars_with_shares = serializers.SerializerMethodField()
+    total_trading_cash_vs_return_on_trades = serializers.SerializerMethodField()
+    cars_summary = serializers.SerializerMethodField()
+    recent_trade_activities = serializers.SerializerMethodField()
+
+    def __init__(self, instance=None, data=None, **kwargs):
+        super().__init__(instance, data, **kwargs)
+        self.start_date = self.initial_data["start_date"]
+        self.end_date = self.initial_data["end_date"]
+        self.filter_year_only = self.initial_data["filter_year_only"]
+
+        if self.filter_year_only:
+            self.start_date.replace(month=1, day=1)
+            self.end_date.replace(month=12, day=31)
+
+    def get_average_bts(self, value):
+        """
+        The Average Buy to sell time for all completed trades,
+        within the current month or a specified date range.
+        """
+
+        bts = (
+            Trade.objects.filter(
+                trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+                created__date__gte=self.start_date,
+                created__date__lte=self.end_date,
+            )
+            .aggregate(value=Avg("bts_time"))
+            .get("value")
+        )
+
+        return bts or Decimal(0.00)
+
+    def get_number_of_trading_users(self, value):
+        """
+        The total number of users that has placed a trade,
+        within the current month or a specified date range.
+        """
+
+        return (
+            TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date)
+            .values("merchant")
+            .distinct()
+            .count()
+            or 0
+        )
+
+    def get_average_trading_cash(self, value):
+        """
+        The average cash per slot,
+        i.e. the average amount the users uses to invest in a car,
+        within the current month or a specified date range.
+        """
+
+        cash = (
+            TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date)
+            .aggregate(value=Avg("unit_value"))
+            .get("value")
+        )
+
+        return cash or Decimal(0.00)
+
+    def get_total_available_shares(self, value):
+        """
+        The total available shares in all open trades,
+        within the current month or a specified date range.
+        """
+
+        shares = (
+            Trade.objects.filter(
+                trade_status=TradeStates.Ongoing, created__date__gte=self.start_date, created__date__lte=self.end_date
+            )
+            .aggregate(value=Sum("slots_available"))
+            .get("value")
+        )
+
+        return shares or 0
+
+    def get_total_available_shares_value(self, value):
+        """
+        The total value of shares in all open trades,
+        within the current month or a specified date range.
+        """
+
+        trades = Trade.objects.filter(
+            trade_status=TradeStates.Ongoing, created__date__gte=self.start_date, created__date__lte=self.end_date
+        )
+        values = Decimal(0)
+        for i in trades:
+            value = i.remaining_slots() * i.price_per_slot
+            values = values + value
+
+        return values
+
+    def get_total_cars_with_shares(self, value):
+        """
+        The total numbers of cars on trade with available shares,
+        within the current month or a specified date range.
+        """
+
+        cars = Trade.objects.filter(
+            trade_status=TradeStates.Ongoing, created__date__gte=self.start_date, created__date__lte=self.end_date
+        ).count()
+        return cars or 0
+
+    def get_total_trading_cash_vs_return_on_trades(self, value):
+        """
+        Segmented value of  Total Trading cash and Return on Trades,
+        within the current month or a specified date range,
+        which can be used to plot weekly or monthly graph.
+        """
+        graph_partition = 12
+        cash = [Decimal(0)] * graph_partition
+        trade_return = [Decimal(0)] * graph_partition
+        self.filter_year_only = True
+
+        if self.filter_year_only:
+            graph_partition = 12
+            i = 0
+            while i < graph_partition:
+                self.start_date.replace(month=i + 1)
+
+                ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).values("slots_quantity", "unit_value")
+
+                cash[i] = sum(s["slots_quantity"] * s["unit_value"] for s in ttc) or Decimal(0)
+
+                rot = (
+                    Trade.objects.filter(
+                        trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+                        modified__date__year=self.start_date.year,
+                        modified__date__month=self.start_date.month,
+                    )
+                    .aggregate(value=Sum("return_on_trade"))
+                    .get("value")
+                )
+
+                trade_return[i] = rot or Decimal(0)
+
+                i += 1
+
+        return dict(graph_type="year", ttc=cash, rot=trade_return)
+
+        # weekly = [] * 4
+        # week_start = 1
+        # week_end = 8
+        # for i in weekly:
+        #     self.start_date.replace(day=week_start)
+        #     self.end_date.replace(day=week_end)
+        #
+        #     if month.Month(self.end_date.year, self.end_date.month) > month.Month(self.start_date.year, self.start_date.month):
+        #         self.end_date = month.Month(self.start_date.year, self.start_date.month).last_day()
+        #
+        #     weekly[i] = TradeUnit.objects.filter(
+        #         trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+        #         created__date__gte=self.start_date,
+        #         created__date__lte=self.end_date
+        #     ).aggregate(value=Sum("slots_quantity" * "unit_value")).get("value")
+        #     week_start += 8
+        #     week_end += 8
+        # return dict(graph_type="month", graph_data=weekly)
+
+    def get_cars_summary(self, value):
+        """
+        Cars Summary
+        """
+        total_cars = Car.objects.filter(
+            created__date__year=datetime.now().year,
+        ).count()
+
+        inspected_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Inspected).count()
+        inspected_cars_percent = (inspected_cars / total_cars) * 100 or Decimal(0)
+        inspection = dict(count=inspected_cars, percentage=inspected_cars_percent)
+
+        available_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Available).count()
+        available_cars_percent = (available_cars / total_cars) * 100 or Decimal(0)
+        available = dict(count=available_cars, percentage=available_cars_percent)
+
+        trading_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.OngoingTrade).count()
+        trading_cars_percent = (trading_cars / total_cars) * 100 or Decimal(0)
+        trading = dict(count=trading_cars, percentage=trading_cars_percent)
+
+        sold_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Sold).count()
+        sold_cars_percent = (sold_cars / total_cars) * 100 or Decimal(0)
+        sold = dict(count=sold_cars, percentage=sold_cars_percent)
+
+        return dict(total_cars=total_cars, available=available, trading=trading, inspection=inspection, sold=sold)
+
+    def get_recent_trade_activities(self, value):
+        """
+        Last Ten Trading activities carried out
+        """
+        recent_activities = Activity.objects.filter(activity_type=ActivityTypes.TradeUnit).values("description", "merchant")[:10]
+        return dict(recent_activities=recent_activities)

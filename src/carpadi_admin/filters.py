@@ -1,7 +1,6 @@
 from django_filters import rest_framework as filters
 
-from src.models.models import Transaction, Wallet, Trade, Disbursement, Activity, SpareParts, CarProduct, CarFeature, \
-    VehicleInfo
+from src.models.models import Transaction, Wallet, Trade, Disbursement, Activity, SpareParts, CarProduct, CarFeature, VehicleInfo
 
 
 class TransactionsFilterAdmin(filters.FilterSet):
@@ -59,7 +58,7 @@ class ActivityFilterAdmin(filters.FilterSet):
     activity_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')
     activity_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
 
-    actvity_type = filters.CharFilter(field_name="actvity_type")
+    activity_type = filters.CharFilter(field_name="activity_type")
 
     class Meta:
         model = Activity
@@ -93,7 +92,6 @@ class SparePartsFilter(filters.FilterSet):
 
 
 class VehicleInfoFilter(filters.FilterSet):
-
     class Meta:
         model = VehicleInfo
         fields = ["transmission", "car_type", "fuel_type", 'make', 'model', 'year']
