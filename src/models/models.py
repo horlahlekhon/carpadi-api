@@ -121,7 +121,7 @@ class TransactionPin(Base):
 
 
 class CarMerchant(Base):
-    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
+    user: User = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
     bvn = models.CharField(max_length=14, null=True, blank=False, default=None)
 
     # class Meta:
@@ -852,6 +852,9 @@ class Assets(Base):
                    images]
             return Assets.objects.bulk_create(objs=ims)
 
+    def __str__(self):
+        return self.asset
+
 
 class VehicleInfo(Base):
     vin = models.CharField(max_length=17, unique=True)
@@ -869,9 +872,22 @@ class VehicleInfo(Base):
     make = models.CharField(max_length=50)
 
 
+class CarProductStatus(models.TextChoices):
+    Active = "active", _("Car is still in the market", )
+    Sold = "sold", _("Car has been sold")
+    Inactive = "inactive", _("Car has been recalled due to fault or other issues")
+
+
 class CarProduct(Base):
     car = models.OneToOneField(VehicleInfo, on_delete=models.CASCADE, related_name="product")
     selling_price = models.DecimalField(decimal_places=2, max_digits=25)
+    highlight = models.CharField(max_length=100, help_text="A short description of the vehicle")
+    status = models.CharField(choices=CarProductStatus.choices, default=CarProductStatus.Active, max_length=10)
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.highlight:
+            self.highlight = f"{self.car.manufacturer} | {self.car.make} | {self.car.model} | {self.car.year}"
+        return super(CarProduct, self).save(args, kwargs)
 
 
 class CarFeature(Base):

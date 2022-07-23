@@ -1,7 +1,7 @@
 from django_filters import rest_framework as filters
 
 from src.models.models import Transaction, Wallet, Trade, Disbursement, Activity, SpareParts, CarProduct, CarFeature, \
-    VehicleInfo
+    VehicleInfo, TradeStates, CarMerchant
 
 
 class TransactionsFilterAdmin(filters.FilterSet):
@@ -79,6 +79,9 @@ class TradeFilterAdmin(filters.FilterSet):
     updated_date_gte = filters.DateTimeFilter(field_name="modified", lookup_expr='day_gte')
     updated_date_range = filters.DateTimeFromToRangeFilter(field_name="modified")
 
+    trade_status = filters.ChoiceFilter(field_name="trade_status", lookup_expr='iexact',
+                                        choices=TradeStates.choices)
+
     class Meta:
         model = Trade
         fields = ['created', 'modified', 'min_sale_price', 'max_sale_price']
@@ -93,7 +96,13 @@ class SparePartsFilter(filters.FilterSet):
 
 
 class VehicleInfoFilter(filters.FilterSet):
-
     class Meta:
         model = VehicleInfo
         fields = ["transmission", "car_type", "fuel_type", 'make', 'model', 'year']
+
+
+class CarMerchantFilter(filters.FilterSet):
+    
+    class Meta:
+        model = CarMerchant
+        fields = "user"

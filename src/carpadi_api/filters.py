@@ -68,6 +68,7 @@ class TradeUnitFilter(filters.FilterSet):
     status = filters.ChoiceFilter(field_name="trade__trade_status", lookup_expr='iexact', choices=TradeStates.choices)
     slots_quantity_gte = filters.NumberFilter(field_name="slots_quantity", lookup_expr='slots_quantity__gte')
     slots_quantity_lte = filters.NumberFilter(field_name="slots_quantity", lookup_expr='slots_quantity__lte')
+    merchant = filters.CharFilter(field_name="merchant__id", lookup_expr="iexact")
 
     class Meta:
         model = TradeUnit
