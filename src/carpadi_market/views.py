@@ -15,4 +15,3 @@ class CarProductView(viewsets.ReadOnlyModelViewSet):
     queryset = CarProduct.objects.all()
     filter_class = CarProductFilter
     filter_backends = (filters.DjangoFilterBackend,)
-

@@ -26,7 +26,10 @@ from src.models.models import (
     Activity,
     Assets,
     AssetEntityType,
-    Car, Transaction, TradeUnit, Notifications,
+    Car,
+    Transaction,
+    TradeUnit,
+    Notifications,
 )
 
 User = get_user_model()
@@ -57,7 +60,8 @@ class UserSerializer(serializers.ModelSerializer):
         picture = validated_data.get("profile_picture")
         if picture:
             picture = Assets.objects.create(
-                asset=picture, content_object=instance, entity_type=AssetEntityType.UserProfilePicture)
+                asset=picture, content_object=instance, entity_type=AssetEntityType.UserProfilePicture
+            )
             validated_data["profile_picture"] = picture
         return super(UserSerializer, self).update(instance, validated_data)
 
@@ -86,8 +90,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         # the password will be stored in plain text.
         try:
             validated_data['username'] = (
-                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get(
-                    "email")
+                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get("email")
             )
             validated_data["is_active"] = False
             if validated_data.get("user_type") == UserTypes.CarMerchant:
@@ -123,9 +126,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('merchant_id', 'profile_picture')
         extra_kwargs = {'password': {'write_only': True}}
-
-
-
 
 
 def is_valid_phone(phone):
@@ -186,7 +186,6 @@ class PhoneVerificationSerializer(serializers.Serializer):
         fields = ('token', "device_imei")
 
 
-
 class CarMerchantSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
 
@@ -212,8 +211,7 @@ class TokenObtainModSerializer(serializers.Serializer):
     default_error_messages = {
         'no_active_account': _('No active account found with the given credentials'),
         'new_device_detected': _(
-            'You are logging in to this device for the first time,' 'kindly create a new transaction pin for this '
-            'device '
+            'You are logging in to this device for the first time,' 'kindly create a new transaction pin for this ' 'device '
         ),
     }
 

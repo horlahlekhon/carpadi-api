@@ -27,11 +27,9 @@ class CarFeatureSerializer(serializers.ModelSerializer):
 
 
 class CarProductSerializer(serializers.ModelSerializer):
-    images = serializers.ListField(
-        write_only=True, child=serializers.URLField(), min_length=1, required=True)
+    images = serializers.ListField(write_only=True, child=serializers.URLField(), min_length=1, required=True)
     product_images = serializers.SerializerMethodField()
-    features = serializers.ListField(
-        write_only=True, child=serializers.DictField(), min_length=1, required=False, default=[])
+    features = serializers.ListField(write_only=True, child=serializers.DictField(), min_length=1, required=False, default=[])
     car_features = serializers.SerializerMethodField()
     highlight = serializers.CharField(required=False, max_length=100)
     trade = serializers.SerializerMethodField()

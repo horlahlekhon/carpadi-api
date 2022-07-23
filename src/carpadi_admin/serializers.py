@@ -556,9 +556,15 @@ class TradeUnitSerializerAdmin(serializers.ModelSerializer):
     merchant = serializers.SerializerMethodField()
 
     def get_merchant(self, unit: TradeUnit):
-        return dict(name=unit.merchant.user.username, id=unit.merchant.id,
-                    image=str(unit.merchant.user.profile_picture))
+        return dict(name=unit.merchant.user.username, id=unit.merchant.id, image=str(unit.merchant.user.profile_picture))
 
     class Meta:
         model = TradeUnit
-        fields = ("share_percentage", "slots_quantity", "unit_value", "estimated_rot", "merchant", "trade", )
+        fields = (
+            "share_percentage",
+            "slots_quantity",
+            "unit_value",
+            "estimated_rot",
+            "merchant",
+            "trade",
+        )

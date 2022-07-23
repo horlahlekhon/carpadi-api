@@ -1,7 +1,19 @@
 from django_filters import rest_framework as filters
 
-from src.models.models import Activity, Disbursement, Transaction, Car, Trade, TransactionStatus, TransactionKinds, \
-    TransactionTypes, ActivityTypes, TradeUnit, TradeStates, TransactionPin
+from src.models.models import (
+    Activity,
+    Disbursement,
+    Transaction,
+    Car,
+    Trade,
+    TransactionStatus,
+    TransactionKinds,
+    TransactionTypes,
+    ActivityTypes,
+    TradeUnit,
+    TradeStates,
+    TransactionPin,
+)
 
 
 class TransactionsFilter(filters.FilterSet):
@@ -11,8 +23,7 @@ class TransactionsFilter(filters.FilterSet):
     transaction_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')
     transaction_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
     kind = filters.ChoiceFilter(field_name="transaction_kind", lookup_expr='iexact', choices=TransactionKinds.choices)
-    status = filters.ChoiceFilter(field_name="transaction_status", lookup_expr='iexact',
-                                  choices=TransactionStatus.choices)
+    status = filters.ChoiceFilter(field_name="transaction_status", lookup_expr='iexact', choices=TransactionStatus.choices)
     type = filters.ChoiceFilter(field_name="transaction_type", lookup_expr='iexact', choices=TransactionTypes.choices)
     reference = filters.CharFilter(field_name="transaction_reference", lookup_expr='iexact')
 
@@ -46,8 +57,7 @@ class ActivityFilter(filters.FilterSet):
     activity_date_lte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gt')
     activity_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')
     activity_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
-    type = filters.ChoiceFilter(field_name="activity_type",
-                                lookup_expr='iexact', choices=ActivityTypes.choices)
+    type = filters.ChoiceFilter(field_name="activity_type", lookup_expr='iexact', choices=ActivityTypes.choices)
 
     class Meta:
         model = Activity
@@ -72,7 +82,9 @@ class TradeUnitFilter(filters.FilterSet):
 
     class Meta:
         model = TradeUnit
-        fields = ['trade', ]
+        fields = [
+            'trade',
+        ]
 
 
 class TransactionPinFilter(filters.FilterSet):
@@ -81,4 +93,4 @@ class TransactionPinFilter(filters.FilterSet):
 
     class Meta:
         model = TransactionPin
-        fields = [ 'pin']
+        fields = ['pin']

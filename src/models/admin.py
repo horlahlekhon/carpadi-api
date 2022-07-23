@@ -24,6 +24,7 @@ class UserAdmin(UserAdmin):
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
 
+
 # admin.site.register(UserAdmin)
 admin.site.register(LoginSessions)
 admin.site.register(Otp)

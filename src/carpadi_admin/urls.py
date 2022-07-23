@@ -12,7 +12,9 @@ from src.carpadi_admin.views import (
     CarMaintenanceViewSetAdmin,
     SparePartsViewSet,
     DashboardViewSet,
-    CarProductViewSetAdmin, VehicleInfoViewSet, TradeUnitReadOnlyView,
+    CarProductViewSetAdmin,
+    VehicleInfoViewSet,
+    TradeUnitReadOnlyView,
 )
 from src.models.views import UserViewSet
 
