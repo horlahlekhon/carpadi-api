@@ -810,6 +810,7 @@ class ActivityTypes(models.TextChoices):
     TradeUnit = "trade_unit", _("trade_unit")
     Disbursement = "disbursement", _("disbursement")
     CarCreation = "car_creation", _("car_creation")
+    NewUser = "new_user", _("new user")
 
 
 class Activity(Base):

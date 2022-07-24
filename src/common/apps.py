@@ -6,14 +6,14 @@ class CommonConfig(AppConfig):
 
     def ready(self):
         import uuid
-        from .signals import complete_user_registeration, trade_unit_completed, disbursement_completed
+        from .signals import complete_user_registeration, trade_unit_completed, disbursement_completed, wallet_created
         from django.contrib.auth import get_user_model
         from django.db.models.signals import post_save
         from django_rest_passwordreset.signals import reset_password_token_created
         from django_rest_passwordreset.views import ResetPasswordRequestToken
         from src.common.signals import password_reset_token_created
         from src.common.signals import complete_transaction
-        from src.models.models import Transaction, Disbursement, TradeUnit, Trade, Car
+        from src.models.models import Transaction, Disbursement, TradeUnit, Trade, Car, Wallet
         from src.common.signals import trade_created
         from src.common.signals import car_created
 
@@ -28,3 +28,4 @@ class CommonConfig(AppConfig):
         post_save.connect(disbursement_completed, sender=Disbursement, dispatch_uid=uuid.uuid4())
         post_save.connect(trade_created, sender=Trade, dispatch_uid=uuid.uuid4())
         post_save.connect(car_created, sender=Car, dispatch_uid=uuid.uuid4())
+        post_save.connect(wallet_created, sender=Wallet, dispatch_uid=uuid.uuid4())
