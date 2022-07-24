@@ -48,6 +48,7 @@ class UserSerializer(serializers.ModelSerializer):
             'profile_picture',
             'email',
             'phone',
+            'is_active'
         )
         # read_only_fields = ('username',)
 

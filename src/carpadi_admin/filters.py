@@ -1,3 +1,4 @@
+from django.db.models import QuerySet, F, Q
 from django_filters import rest_framework as filters
 
 from src.models.models import (
@@ -11,7 +12,7 @@ from src.models.models import (
     CarFeature,
     VehicleInfo,
     TradeStates,
-    CarMerchant,
+    CarMerchant, UserStatusFilterChoices, TradeUnit,
 )
 
 
@@ -112,6 +113,17 @@ class VehicleInfoFilter(filters.FilterSet):
 
 
 class CarMerchantFilter(filters.FilterSet):
+    trading_status = filters.ChoiceFilter(method="trading_status_filter", choices=UserStatusFilterChoices.choices)
+
+    def trading_status_filter(self, queryset, name, value):
+        merchants: QuerySet = TradeUnit.objects\
+            .filter(merchant__user__is_active=True)\
+            .values_list('merchant', flat=True).distinct()
+        if value == UserStatusFilterChoices.ActivelyTrading:
+            return queryset.filter(id__in=merchants)
+        elif value == UserStatusFilterChoices.NotActivelyTrading:
+            return queryset.filter(~Q(id__in=merchants))
+
     class Meta:
         model = CarMerchant
         fields = ("user",)

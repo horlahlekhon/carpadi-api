@@ -119,6 +119,11 @@ class TransactionPin(Base):
         unique_together = ('device_serial_number', 'pin', 'user')
 
 
+class UserStatusFilterChoices(models.TextChoices):
+    ActivelyTrading = "actively_trading", _("user is an active trading user")
+    NotActivelyTrading = "not_actively_trading", _("user is not actively trading")
+
+
 class CarMerchant(Base):
     user: User = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
     bvn = models.CharField(max_length=14, null=True, blank=False, default=None)

@@ -2,6 +2,7 @@ import itertools
 from datetime import datetime
 from decimal import Decimal
 
+from src.carpadi_api.serializers import BankAccountSerializer
 from src.common.helpers import check_vin
 from src.models.models import (
     CarMerchant,
@@ -148,6 +149,11 @@ class CarSerializer(serializers.ModelSerializer):
 
 
 class WalletSerializerAdmin(serializers.ModelSerializer):
+    bank_accounts = serializers.SerializerMethodField()
+
+    def get_bank_accounts(self, obj: Wallet):
+        return BankAccountSerializer(instance=obj.merchant.bank_accounts.all(), many=True).data
+
     class Meta:
         model = Wallet
         fields = "__all__"
