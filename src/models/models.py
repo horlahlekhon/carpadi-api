@@ -642,6 +642,9 @@ class Trade(Base):
     def get_trade_merchants(self):
         return self.units.values_list('merchant', flat=True).distinct()
 
+    def sold_slots_price(self):
+        return self.units.aggregate(s=Sum("unit_value")).get("s") or Decimal(0.0)
+
     @atomic()
     def close(self):
         units = self.units.all()

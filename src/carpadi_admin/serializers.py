@@ -188,7 +188,8 @@ class CarSerializerField(serializers.RelatedField):
 
     def to_representation(self, value: Car):
         pics = None if not value.pictures.first() else value.pictures.first().asset
-        return dict(id=value.id, bought_price=value.bought_price, image=pics)
+        return dict(id=value.id, bought_price=value.bought_price,
+                    image=pics, model=value.information.model, make=value.information.make)
 
 
 class TradeSerializerAdmin(serializers.ModelSerializer):
@@ -199,6 +200,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     car = CarSerializerField(queryset=Car.objects.all())
     return_on_trade_per_unit = serializers.SerializerMethodField()
     total_users_trading = serializers.SerializerMethodField()
+    sold_slots_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Trade
@@ -228,6 +230,9 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
 
     def calculate_price_per_slot(self, car_price, slots_availble):
         return car_price / slots_availble
+
+    def get_sold_slots_price(self, instance: Trade):
+        return instance.sold_slots_price()
 
     def get_remaining_slots(self, trade: Trade):
         # TODO: this is a hack, fix it using annotations
