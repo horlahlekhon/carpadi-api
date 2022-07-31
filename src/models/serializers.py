@@ -128,9 +128,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 
-
-
-
 def is_valid_phone(phone):
     is_valid = re.search(r'\+?[\d]{3}[\d]{10}', phone)
     if not is_valid:

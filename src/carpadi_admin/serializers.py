@@ -667,8 +667,7 @@ class HomeDashboardSerializer(serializers.Serializer):
         while i < 12:
             self.start_date.replace(month=i + 1)
 
-            ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).values("slots_quantity",
-                                                                                              "unit_value")
+            ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).values("slots_quantity", "unit_value")
 
             cash[i] = sum(s["slots_quantity"] * s["unit_value"] for s in ttc) or Decimal(0)
 
@@ -678,8 +677,8 @@ class HomeDashboardSerializer(serializers.Serializer):
                     modified__date__year=self.start_date.year,
                     modified__date__month=self.start_date.month,
                 )
-                    .aggregate(value=Sum("return_on_trade"))
-                    .get("value")
+                .aggregate(value=Sum("return_on_trade"))
+                .get("value")
             )
 
             trade_return[i] = rot or Decimal(0)
@@ -703,8 +702,9 @@ class HomeDashboardSerializer(serializers.Serializer):
         graph_partition = 5
         i = 0
         while i < graph_partition:
-            ttc = TradeUnit.objects.filter(created__date__year=self.start_date.year, created__date__week=start_week) \
-                .values("slots_quantity", "unit_value")
+            ttc = TradeUnit.objects.filter(created__date__year=self.start_date.year, created__date__week=start_week).values(
+                "slots_quantity", "unit_value"
+            )
 
             cash[i] = sum(s["slots_quantity"] * s["unit_value"] for s in ttc) or Decimal(0)
 
@@ -714,8 +714,8 @@ class HomeDashboardSerializer(serializers.Serializer):
                     modified__date__year=self.start_date.year,
                     modified__date__week=start_week,
                 )
-                    .aggregate(value=Sum("return_on_trade"))
-                    .get("value")
+                .aggregate(value=Sum("return_on_trade"))
+                .get("value")
             )
 
             trade_return[i] = rot or Decimal(0)

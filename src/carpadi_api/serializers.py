@@ -276,7 +276,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                         transaction_reference=ref,
                         transaction_kind=TransactionKinds.Withdrawal,
                         transaction_status=TransactionStatus.Pending,
-                        transaction_description=validated_data.get("transaction_description"), # TODO write custom message
+                        transaction_description=validated_data.get("transaction_description"),  # TODO write custom message
                         transaction_type=TransactionTypes.Debit,
                         amount=validated_data["amount"],
                         wallet=wallet,
