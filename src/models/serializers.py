@@ -105,6 +105,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
             raise exceptions.ValidationError("phone or email or username already exists", 400)
         return user
 
+    # def update(self, instance, validated_data):
+    #
+
     class Meta:
         model = User
         fields = (
@@ -123,6 +126,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('merchant_id', 'profile_picture')
         extra_kwargs = {'password': {'write_only': True}}
+
+
+
 
 
 def is_valid_phone(phone):

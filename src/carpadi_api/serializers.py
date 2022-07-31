@@ -239,7 +239,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                         transaction_reference=reference,
                         transaction_kind=validated_data["transaction_kind"],
                         transaction_status=TransactionStatus.Pending,
-                        transaction_description=validated_data["transaction_description"],
+                        transaction_description=validated_data.get("transaction_description") or "carpadi deposit",
                         # noqa
                         transaction_type=TransactionTypes.Credit,
                         amount=validated_data["amount"],
@@ -259,7 +259,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             "account_bank": validated_data["destination_account"].bank.bank_code,
             "account_number": validated_data["destination_account"].account_number,
             "amount": validated_data["amount"],
-            "narration": validated_data["transaction_description"],
+            "narration": validated_data.get("transaction_description") or "withdrawal from carpadi",
             "currency": "NGN",
             "reference": ref,
             "callback_url": common.FLW_REDIRECT_URL,
@@ -276,7 +276,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                         transaction_reference=ref,
                         transaction_kind=TransactionKinds.Withdrawal,
                         transaction_status=TransactionStatus.Pending,
-                        transaction_description=validated_data["transaction_description"],
+                        transaction_description=validated_data.get("transaction_description"), # TODO write custom message
                         transaction_type=TransactionTypes.Debit,
                         amount=validated_data["amount"],
                         wallet=wallet,
@@ -508,8 +508,8 @@ class BankAccountSerializer(serializers.ModelSerializer):
             return data['data']["account_name"], data['data']["account_number"]
 
     def validate(self, attrs):
-        if BankAccount.objects.filter(account_number=attrs.get("account_number")).exists():
-            raise serializers.ValidationError("Account number already exists")
+        # if BankAccount.objects.filter(account_number=attrs.get("account_number")).exists():
+        #     raise serializers.ValidationError("Account number already exists")
         bank: Banks = attrs.get('bank')
         account_name, _ = self.check_account_details(attrs.get("account_number"), bank.bank_code)
         attrs["name"] = account_name
