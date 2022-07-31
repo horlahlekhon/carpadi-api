@@ -16,6 +16,7 @@ from src.carpadi_admin.filters import (
     TradeFilterAdmin,
     SparePartsFilter,
     VehicleInfoFilter,
+    CarMerchantFilter,
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
@@ -33,8 +34,10 @@ from src.carpadi_admin.serializers import (
     CarMaintenanceSerializerAdmin,
     SparePartsSerializer,
     VehicleInfoSerializer,
+    TradeUnitSerializerAdmin,
     HomeDashboardSerializer,
 )
+from src.carpadi_api.filters import TradeUnitFilter
 from src.carpadi_market.filters import CarProductFilter
 from src.carpadi_market.serializers import CarProductSerializer
 from src.models.models import (
@@ -75,6 +78,8 @@ class CarMerchantsViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAdminUser,)
     serializer_class = CarMerchantSerializer
     queryset = CarMerchant.objects.all()
+    filter_class = CarMerchantFilter
+    filter_backends = (filters.DjangoFilterBackend,)
 
     # def list(self, request):
     #     serialize = CarMerchantSerializer(self.queryset, many=True)
@@ -237,4 +242,12 @@ class VehicleInfoViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mix
     serializer_class = VehicleInfoSerializer
     queryset = VehicleInfo.objects.all()
     filter_class = VehicleInfoFilter
+    filter_backends = (filters.DjangoFilterBackend,)
+
+
+class TradeUnitReadOnlyView(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (IsAdminUser,)
+    serializer_class = TradeUnitSerializerAdmin
+    queryset = TradeUnit.objects.all()
+    filter_class = TradeUnitFilter
     filter_backends = (filters.DjangoFilterBackend,)

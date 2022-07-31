@@ -2,6 +2,7 @@ import itertools
 from datetime import datetime
 from decimal import Decimal
 
+from src.carpadi_api.serializers import BankAccountSerializer
 from src.common.helpers import check_vin
 from src.models.models import (
     CarMerchant,
@@ -181,8 +182,10 @@ class CarSerializerField(serializers.RelatedField):
             pass
         return car
 
-    def to_representation(self, value):
-        return value.id
+    def to_representation(self, value: Car):
+        pics = None if not value.pictures.first() else value.pictures.first().asset
+        return dict(id=value.id, bought_price=value.bought_price,
+                    image=pics, model=value.information.model, make=value.information.make)
 
 
 class TradeSerializerAdmin(serializers.ModelSerializer):
@@ -192,6 +195,8 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     return_on_trade_percentage = serializers.SerializerMethodField()
     car = CarSerializerField(queryset=Car.objects.all())
     return_on_trade_per_unit = serializers.SerializerMethodField()
+    total_users_trading = serializers.SerializerMethodField()
+    sold_slots_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Trade
@@ -207,6 +212,9 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         )
         extra_kwargs = {"car": {"error_messages": {"required": "Car to trade on is required", "unique": "Car already " "traded"}}}
 
+    def get_total_users_trading(self, obj: Trade):
+        return obj.get_trade_merchants().count()
+
     def get_return_on_trade_per_unit(self, obj: Trade):
         return obj.return_on_trade_per_slot()
 
@@ -218,6 +226,9 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
 
     def calculate_price_per_slot(self, car_price, slots_availble):
         return car_price / slots_availble
+
+    def get_sold_slots_price(self, instance: Trade):
+        return instance.sold_slots_price()
 
     def get_remaining_slots(self, trade: Trade):
         # TODO: this is a hack, fix it using annotations
@@ -546,6 +557,24 @@ class MerchantDashboardSerializer(serializers.Serializer):
     def get_non_trading_users(self, value):
         """The total amount of non trading users in the system"""
         return self.get_total_users(None) - self.get_active_users(None)
+
+
+class TradeUnitSerializerAdmin(serializers.ModelSerializer):
+    merchant = serializers.SerializerMethodField()
+
+    def get_merchant(self, unit: TradeUnit):
+        return dict(name=unit.merchant.user.username, id=unit.merchant.id, image=str(unit.merchant.user.profile_picture))
+
+    class Meta:
+        model = TradeUnit
+        fields = (
+            "share_percentage",
+            "slots_quantity",
+            "unit_value",
+            "estimated_rot",
+            "merchant",
+            "trade",
+        )
 
 
 class HomeDashboardSerializer(serializers.Serializer):

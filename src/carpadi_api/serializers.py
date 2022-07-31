@@ -326,6 +326,7 @@ class TradeSerializer(serializers.ModelSerializer):
     return_on_trade_percentage = serializers.SerializerMethodField()
     return_on_trade = serializers.SerializerMethodField()
 
+
     class Meta:
         model = Trade
         fields = "__all__"
@@ -340,6 +341,8 @@ class TradeSerializer(serializers.ModelSerializer):
             "trade_status",
             "car",
         )
+
+
 
     def serialize_car(self, car: Car):
         return {

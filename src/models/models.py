@@ -26,6 +26,8 @@ from src.config.common import OTP_EXPIRY
 
 from rest_framework import exceptions
 
+from src.models.validators import PhoneNumberValidator
+
 
 class Base(UUIDModel, TimeStampedModel):
     pass
@@ -119,8 +121,13 @@ class TransactionPin(Base):
         unique_together = ('device_serial_number', 'pin')
 
 
+class UserStatusFilterChoices(models.TextChoices):
+    ActivelyTrading = "actively_trading", _("user is an active trading user")
+    NotActivelyTrading = "not_actively_trading", _("user is not actively trading")
+
+
 class CarMerchant(Base):
-    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
+    user: User = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
     bvn = models.CharField(max_length=14, null=True, blank=False, default=None)
 
     # class Meta:
@@ -627,6 +634,9 @@ class Trade(Base):
     def get_trade_merchants(self):
         return self.units.values_list('merchant', flat=True).distinct()
 
+    def sold_slots_price(self):
+        return self.units.aggregate(s=Sum("unit_value")).get("s") or Decimal(0.0)
+
     @atomic()
     def close(self):
         units = self.units.all()
@@ -805,6 +815,7 @@ class ActivityTypes(models.TextChoices):
     TradeUnit = "trade_unit", _("trade_unit")
     Disbursement = "disbursement", _("disbursement")
     CarCreation = "car_creation", _("car_creation")
+    NewUser = "new_user", _("new user")
 
 
 class Activity(Base):
@@ -839,6 +850,9 @@ class Assets(Base):
             ims = [Assets(id=uuid.uuid4(), content_object=feature, asset=image, entity_type=entity_type) for image in images]
             return Assets.objects.bulk_create(objs=ims)
 
+    def __str__(self):
+        return self.asset
+
 
 class VehicleInfo(Base):
     vin = models.CharField(max_length=17, unique=True)
@@ -856,9 +870,24 @@ class VehicleInfo(Base):
     make = models.CharField(max_length=50)
 
 
+class CarProductStatus(models.TextChoices):
+    Active = "active", _(
+        "Car is still in the market",
+    )
+    Sold = "sold", _("Car has been sold")
+    Inactive = "inactive", _("Car has been recalled due to fault or other issues")
+
+
 class CarProduct(Base):
     car = models.OneToOneField(VehicleInfo, on_delete=models.CASCADE, related_name="product")
     selling_price = models.DecimalField(decimal_places=2, max_digits=25)
+    highlight = models.CharField(max_length=100, help_text="A short description of the vehicle")
+    status = models.CharField(choices=CarProductStatus.choices, default=CarProductStatus.Active, max_length=10)
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.highlight:
+            self.highlight = f"{self.car.manufacturer} | {self.car.make} | {self.car.model} | {self.car.year}"
+        return super(CarProduct, self).save(args, kwargs)
 
 
 class CarFeature(Base):
@@ -886,3 +915,64 @@ class Notifications(Base):
     @atomic()
     def save(self, *args, **kwargs):
         return super().save(*args, **kwargs)
+
+
+class InspectionStatus(models.TextChoices):
+    Ongoing = "ongoing", _("Ongoing inspection")
+    Completed = "completed", _("Completed inspection")
+    Pending = "pending", _("New inspection")
+    Expired = "expired", _("Inspection has been scheduled for"
+                           " more than a week without being ongoing or completed")
+
+
+class InspectionVerdict(models.TextChoices):
+    Great = "great", _("Average rating above 90 percentile")
+    Good = "good", _("Average rating above 60 percentile up to 89")
+    Fair = "fair", _("Average rating above 40 percentile up to 60")
+    Bad = "bad", _("Average rating below 39 percentile")
+
+
+class Inspections(Base):
+    owners_name = models.CharField(max_length=100)
+    inspection_date = models.DateTimeField()
+    owners_phone = models.CharField(max_length=20, validators=[PhoneNumberValidator, ])
+    owners_review = models.CharField(max_length=50, null=True, blank=True)
+    address = models.TextField()
+    status = models.CharField(choices=InspectionStatus.choices, max_length=20, default=InspectionStatus.Pending)
+    inspection_verdict = models.CharField(
+        choices=InspectionVerdict.choices, max_length=10, default=InspectionVerdict.Bad,
+        help_text="Verdict of the inspection after taking into account all"
+                  " the stages and their scores. should be calculated by the system")
+    inspector = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, related_name="inspections",
+        blank=False, help_text="The person to undertake this inspection")
+    inspection_assigner = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, related_name="inspections_assigned",
+        blank=False, help_text="The user who assigned this inspection to the inspector. should be set automatically")
+    car = models.ForeignKey(Car, on_delete=models.CASCADE)
+
+
+class Score(models.IntegerChoices):
+    Good = 20
+    Fair = 10
+    Poor = 0
+
+
+class Stages(models.TextChoices):
+    Generic = "generic"
+    Exterior = "exterior"
+    Glass = "glass"
+    Wheels = "wheels"
+    UnderBody = "under_body"
+    UnderHood = "under_hood"
+    Interior = "interior"
+    ElectricalSystems = "electrical_systems"
+    RoadTest = "road_test"
+
+
+class InspectionStage(Base):
+    inspection = models.ForeignKey(Inspections, on_delete=models.CASCADE)
+    score = models.PositiveIntegerField(choices=Score.choices)
+    part_name = models.CharField(max_length=50)
+    stage_name = models.CharField(choices=Stages.choices, max_length=40)
+    review = models.TextField(null=True, blank=True)

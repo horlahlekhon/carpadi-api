@@ -1,6 +1,21 @@
+from django.db.models import QuerySet, F, Q
 from django_filters import rest_framework as filters
 
-from src.models.models import Transaction, Wallet, Trade, Disbursement, Activity, SpareParts, CarProduct, CarFeature, VehicleInfo
+from src.models.models import (
+    Transaction,
+    Wallet,
+    Trade,
+    Disbursement,
+    Activity,
+    SpareParts,
+    CarProduct,
+    CarFeature,
+    VehicleInfo,
+    TradeStates,
+    CarMerchant,
+    UserStatusFilterChoices,
+    TradeUnit,
+)
 
 
 class TransactionsFilterAdmin(filters.FilterSet):
@@ -58,7 +73,7 @@ class ActivityFilterAdmin(filters.FilterSet):
     activity_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')
     activity_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
 
-    activity_type = filters.CharFilter(field_name="activity_type")
+    actvity_type = filters.CharFilter(field_name="actvity_type")
 
     class Meta:
         model = Activity
@@ -78,6 +93,8 @@ class TradeFilterAdmin(filters.FilterSet):
     updated_date_gte = filters.DateTimeFilter(field_name="modified", lookup_expr='day_gte')
     updated_date_range = filters.DateTimeFromToRangeFilter(field_name="modified")
 
+    trade_status = filters.ChoiceFilter(field_name="trade_status", lookup_expr='iexact', choices=TradeStates.choices)
+
     class Meta:
         model = Trade
         fields = ['created', 'modified', 'min_sale_price', 'max_sale_price']
@@ -92,6 +109,24 @@ class SparePartsFilter(filters.FilterSet):
 
 
 class VehicleInfoFilter(filters.FilterSet):
+
     class Meta:
         model = VehicleInfo
         fields = ["transmission", "car_type", "fuel_type", 'make', 'model', 'year']
+
+
+class CarMerchantFilter(filters.FilterSet):
+    trading_status = filters.ChoiceFilter(method="trading_status_filter", choices=UserStatusFilterChoices.choices)
+
+    def trading_status_filter(self, queryset, name, value):
+        merchants: QuerySet = (
+            TradeUnit.objects.filter(merchant__user__is_active=True).values_list('merchant', flat=True).distinct()
+        )
+        if value == UserStatusFilterChoices.ActivelyTrading:
+            return queryset.filter(id__in=merchants)
+        elif value == UserStatusFilterChoices.NotActivelyTrading:
+            return queryset.filter(~Q(id__in=merchants))
+
+    class Meta:
+        model = CarMerchant
+        fields = ("user",)
