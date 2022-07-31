@@ -659,61 +659,84 @@ class HomeDashboardSerializer(serializers.Serializer):
         ).count()
         return cars or 0
 
+    def extract_monthly_graph(self):
+        cash = [Decimal(0)] * 12
+        trade_return = [Decimal(0)] * 12
+
+        i = 0
+        while i < 12:
+            self.start_date.replace(month=i + 1)
+
+            ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).values("slots_quantity",
+                                                                                              "unit_value")
+
+            cash[i] = sum(s["slots_quantity"] * s["unit_value"] for s in ttc) or Decimal(0)
+
+            rot = (
+                Trade.objects.filter(
+                    trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+                    modified__date__year=self.start_date.year,
+                    modified__date__month=self.start_date.month,
+                )
+                    .aggregate(value=Sum("return_on_trade"))
+                    .get("value")
+            )
+
+            trade_return[i] = rot or Decimal(0)
+
+            i += 1
+
+        return dict(graph_type="monthly", ttc=cash, rot=trade_return)
+
+    def extract_weekly_graph(self):
+        cash = [Decimal(0)] * 5
+        trade_return = [Decimal(0)] * 5
+
+        current_week = self.start_date.isocalendar()[1]
+        start_week = serializers.IntegerField
+
+        if current_week >= datetime.today().isocalendar()[1]:
+            start_week = current_week - 5 or 1
+        else:
+            start_week = current_week - 3
+
+        graph_partition = 5
+        i = 0
+        while i < graph_partition:
+            ttc = TradeUnit.objects.filter(created__date__year=self.start_date.year, created__date__week=start_week) \
+                .values("slots_quantity", "unit_value")
+
+            cash[i] = sum(s["slots_quantity"] * s["unit_value"] for s in ttc) or Decimal(0)
+
+            rot = (
+                Trade.objects.filter(
+                    trade_status__in=(TradeStates.Completed, TradeStates.Closed),
+                    modified__date__year=self.start_date.year,
+                    modified__date__week=start_week,
+                )
+                    .aggregate(value=Sum("return_on_trade"))
+                    .get("value")
+            )
+
+            trade_return[i] = rot or Decimal(0)
+
+            i += 1
+
+        return dict(graph_type="weekly", ttc=cash, rot=trade_return)
+
     def get_total_trading_cash_vs_return_on_trades(self, value):
         """
         Segmented value of  Total Trading cash and Return on Trades,
         within the current month or a specified date range,
         which can be used to plot weekly or monthly graph.
         """
-        graph_partition = 12
-        cash = [Decimal(0)] * graph_partition
-        trade_return = [Decimal(0)] * graph_partition
-        self.filter_year_only = True
 
         if self.filter_year_only:
-            graph_partition = 12
-            i = 0
-            while i < graph_partition:
-                self.start_date.replace(month=i + 1)
-
-                ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).values("slots_quantity", "unit_value")
-
-                cash[i] = sum(s["slots_quantity"] * s["unit_value"] for s in ttc) or Decimal(0)
-
-                rot = (
-                    Trade.objects.filter(
-                        trade_status__in=(TradeStates.Completed, TradeStates.Closed),
-                        modified__date__year=self.start_date.year,
-                        modified__date__month=self.start_date.month,
-                    )
-                    .aggregate(value=Sum("return_on_trade"))
-                    .get("value")
-                )
-
-                trade_return[i] = rot or Decimal(0)
-
-                i += 1
-
-        return dict(graph_type="year", ttc=cash, rot=trade_return)
-
-        # weekly = [] * 4
-        # week_start = 1
-        # week_end = 8
-        # for i in weekly:
-        #     self.start_date.replace(day=week_start)
-        #     self.end_date.replace(day=week_end)
-        #
-        #     if month.Month(self.end_date.year, self.end_date.month) > month.Month(self.start_date.year, self.start_date.month):
-        #         self.end_date = month.Month(self.start_date.year, self.start_date.month).last_day()
-        #
-        #     weekly[i] = TradeUnit.objects.filter(
-        #         trade_status__in=(TradeStates.Completed, TradeStates.Closed),
-        #         created__date__gte=self.start_date,
-        #         created__date__lte=self.end_date
-        #     ).aggregate(value=Sum("slots_quantity" * "unit_value")).get("value")
-        #     week_start += 8
-        #     week_end += 8
-        # return dict(graph_type="month", graph_data=weekly)
+            monthly = self.extract_monthly_graph()
+            return monthly
+        else:
+            weekly = self.extract_weekly_graph()
+            return weekly
 
     def get_cars_summary(self, value):
         """
