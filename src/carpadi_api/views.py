@@ -2,6 +2,7 @@ import requests
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
+from fcm_django.api.rest_framework import FCMDeviceAuthorizedViewSet
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response

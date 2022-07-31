@@ -126,6 +126,19 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         kwargs["partial"] = True
         return super(UserViewSet, self).update(request, *args, **kwargs)
 
+    @action(detail=False, methods=['post'], url_path='update-password', url_name='update_password')
+    def update_password(self, request, *args, **kwargs):
+        data: dict = request.data
+        if data.get("new_password") and data.get("old_password"):
+            user: User = self.request.user
+            if user.is_active and user.check_password(data.get("old_password")) and user.is_merchant():
+                user.set_password(data.get("new_password"))
+                user.save(update_fields=["password"])
+                return Response(status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data=dict(error="Invalid user cannot update password"))
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=dict(error="old_password and new_password must be supplied"))
+
     @action(detail=False, methods=['post'], url_path='seed', url_name='seed')
     def seed(self, request, *args, **kwargs):
         """

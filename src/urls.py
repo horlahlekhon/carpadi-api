@@ -19,6 +19,7 @@ from src.carpadi_market.urls import router as market_router
 from src.models.views import TokenObtainPairViewMod
 from src.social.views import exchange_token, complete_twitter_login
 from src.carpadi_inspection.urls import router as inspection_router
+
 schema_view = get_schema_view(
     openapi.Info(title="Carpadi API", default_version='v1'),
     public=True,
@@ -36,6 +37,7 @@ api_router_set.registry.extend(files_router.registry)
 
 generic_router = DefaultRouter()
 generic_router.registry.extend(model_router.registry)
+
 urlpatterns = [
     # admin panel
     path('admin/', admin.site.urls),

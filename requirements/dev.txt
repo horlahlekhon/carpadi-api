@@ -17,3 +17,4 @@ bpython
 whitenoise
 faker_vehicle
 fcm-django
+firebase-admin

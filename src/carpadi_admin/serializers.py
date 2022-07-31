@@ -188,8 +188,9 @@ class CarSerializerField(serializers.RelatedField):
 
     def to_representation(self, value: Car):
         pics = None if not value.pictures.first() else value.pictures.first().asset
-        return dict(id=value.id, bought_price=value.bought_price,
-                    image=pics, model=value.information.model, make=value.information.make)
+        return dict(
+            id=value.id, bought_price=value.bought_price, image=pics, model=value.information.model, make=value.information.make
+        )
 
 
 class TradeSerializerAdmin(serializers.ModelSerializer):
