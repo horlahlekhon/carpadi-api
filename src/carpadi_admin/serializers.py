@@ -28,7 +28,10 @@ from src.models.models import (
     TransactionStatus,
     TransactionTypes,
     TransactionKinds,
-    AssetEntityType, FuelTypes, CarTypes, CarTransmissionTypes,
+    AssetEntityType,
+    FuelTypes,
+    CarTypes,
+    CarTransmissionTypes,
 )
 from rest_framework import serializers
 from django.db.transaction import atomic

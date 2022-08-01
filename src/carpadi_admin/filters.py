@@ -14,7 +14,8 @@ from src.models.models import (
     TradeStates,
     CarMerchant,
     UserStatusFilterChoices,
-    TradeUnit, ActivityTypes,
+    TradeUnit,
+    ActivityTypes,
 )
 
 
@@ -75,7 +76,6 @@ class ActivityFilterAdmin(filters.FilterSet):
 
     activity_type = filters.TypedMultipleChoiceFilter(field_name="activity_type", choices=ActivityTypes.choices)
 
-
     class Meta:
         model = Activity
         fields = ["created", "activity_type", "merchant"]
@@ -117,7 +117,6 @@ class VehicleInfoFilter(filters.FilterSet):
 
 class CarMerchantFilter(filters.FilterSet):
     trading_status = filters.ChoiceFilter(method="trading_status_filter", choices=UserStatusFilterChoices.choices)
-
 
     def trading_status_filter(self, queryset, name, value):
         merchants: QuerySet = (

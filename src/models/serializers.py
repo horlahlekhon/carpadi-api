@@ -269,8 +269,7 @@ class TokenObtainModSerializer(serializers.Serializer):
                 self.error_messages['new_device_detected'],
                 'new_device_detected',
             )
-        self.validate_firebase_(
-            attrs.get('firebase_token'), self.user, attrs.get('device_imei'), attrs.get('device_type'))
+        self.validate_firebase_(attrs.get('firebase_token'), self.user, attrs.get('device_imei'), attrs.get('device_type'))
         User.update_last_login(self.user, **dict(device_imei=attrs.get("device_imei")))
 
         refresh = self.get_token(self.user, attrs.get('device_imei'))
