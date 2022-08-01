@@ -110,6 +110,7 @@ class SparePartsFilter(filters.FilterSet):
 
 
 class VehicleInfoFilter(filters.FilterSet):
+
     class Meta:
         model = VehicleInfo
         fields = ["transmission", "car_type", "fuel_type", 'make', 'model', 'year']

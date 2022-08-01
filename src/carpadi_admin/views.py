@@ -35,6 +35,7 @@ from src.carpadi_admin.serializers import (
     SparePartsSerializer,
     VehicleInfoSerializer,
     TradeUnitSerializerAdmin,
+    HomeDashboardSerializer,
 )
 from src.carpadi_api.filters import TradeUnitFilter
 from src.carpadi_market.filters import CarProductFilter
@@ -213,6 +214,19 @@ class DashboardViewSet(viewsets.GenericViewSet):
         if ser.is_valid():
             return Response(ser.data, status=status.HTTP_200_OK)
         return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='home', url_name='home_dashboard')
+    def home(self, request, *args, **kwargs):
+        data = dict(
+            start_date=request.query_params.get('start_date', datetime.now().date().replace(day=1)),
+            end_date=request.query_params.get('end_date', datetime.now().date()),
+            filter_year_only=request.query_params.get("filter_year_only", False),
+        )
+
+        serializer = HomeDashboardSerializer(data=data)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CarProductViewSetAdmin(viewsets.ModelViewSet):

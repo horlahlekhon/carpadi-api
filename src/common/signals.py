@@ -157,18 +157,18 @@ def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
             activity_type=ActivityTypes.TradeUnit,
             activity=instance,
             merchant=instance.merchant,
-            description=f"Activity Type: Purchase of Unit Description: "
+            description=f"Activity Type: Purchase of Unit, Description: "
             f"{instance.slots_quantity} ({instance.share_percentage})  of \
                     {instance.trade.car.information.make} {instance.trade.car.information.model}"
-            f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
+                        f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
         )
         Notifications.objects.create(
             notice_type=NotificationTypes.TradeUnit,
             user=instance.merchant.user,
             message=f"Activity Type: Purchase of Unit Description: "
-            f"{instance.slots_quantity} ({instance.share_percentage})  of \
+                    f"{instance.slots_quantity} ({instance.share_percentage})  of \
                                 {instance.trade.car.information.make} {instance.trade.car.information.model}"
-            f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
+                    f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
             is_read=False,
         )
         trade: Trade = instance.trade
@@ -185,9 +185,9 @@ def disbursement_completed(sender, instance, created, **kwargs):
             activity=dis,
             merchant=dis.trade_unit.merchant,
             description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} "
-            f"naira for {dis.trade_unit.slots_quantity} units \
+                        f"naira for {dis.trade_unit.slots_quantity} units \
                     owned in {dis.trade_unit.trade.car.information.make}"
-            f" {dis.trade_unit.trade.car.information.model} VIN: {dis.trade_unit.trade.car.vin}",
+                        f" {dis.trade_unit.trade.car.information.model} VIN: {dis.trade_unit.trade.car.vin}",
         )
         Notifications.objects.create(
             notice_type=NotificationTypes.Disbursement,
@@ -210,17 +210,17 @@ def disbursement_completed(sender, instance, created, **kwargs):
 #                 'email': trade.merchant.user.email,
 #                 'amount': trade.amount,
 
-
 def trade_created(sender, instance: Trade, created, **kwargs):
     if created:
         Notifications.objects.create(
             notice_type=NotificationTypes.NewTrade,
             user=None,
             message=f" new trade for {instance.car.information.make} {instance.car.information.model}"
-            f" VIN: {instance.car.vin} with estimated ROT of {instance.estimated_return_on_trade}",
+                    f" VIN: {instance.car.vin} with estimated ROT of {instance.estimated_return_on_trade}",
             is_read=False,
-            entity_id=instance.id,
+            entity_id=instance.id
         )
+
 
 
 def car_created(sender, instance: Car, created, **kwargs):
@@ -243,3 +243,4 @@ def wallet_created(sender, instance: Wallet, created, **kwargs):
             merchant=instance.merchant,
             description=f"Activity Type: New user, Description: {instance.merchant.user.username} just joined carpadi",
         )
+

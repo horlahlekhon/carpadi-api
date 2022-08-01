@@ -48,9 +48,9 @@ class User(AbstractUser, Base):
     phone = models.CharField(max_length=15, unique=True, help_text="International format phone number")
     username = models.CharField(max_length=50, validators=[username_validator], unique=True, null=True)
 
-    def get_tokens(self, imei=None):
+    def get_tokens(self):
         refresh = RefreshToken.for_user(self)
-        refresh["device_imei"] = imei
+
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
@@ -110,7 +110,7 @@ class TransactionPinStatus(models.TextChoices):
 
 
 class TransactionPin(Base):
-    device_serial_number = models.CharField(max_length=50)
+    device_serial_number = models.CharField(max_length=50, unique=True)
     device_platform = models.CharField(max_length=20)
     status = models.CharField(max_length=10, choices=TransactionPinStatus.choices)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transaction_pins")
@@ -118,7 +118,7 @@ class TransactionPin(Base):
     device_name = models.CharField(max_length=50, help_text="The name of the device i.e Iphone x")
 
     class Meta:
-        unique_together = ('device_serial_number', 'pin', 'user')
+        unique_together = ('device_serial_number', 'pin')
 
 
 class UserStatusFilterChoices(models.TextChoices):
@@ -835,7 +835,6 @@ class AssetEntityType(models.TextChoices):
     Inspection = "car_inspection", _("Car inspection pictures")
     Features = "feature", _("Picture of a feature of a car")
     InspectionReport = "inspection_report", _("Pdf report of an inspected vehicle")
-    UserProfilePicture = "profile_picture", _("Profile picture of a user")
 
 
 class Assets(Base):
