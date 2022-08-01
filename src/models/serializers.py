@@ -216,8 +216,8 @@ class TokenObtainModSerializer(serializers.Serializer):
         self.fields['password'] = PasswordField()
         self.fields['device_imei'] = serializers.CharField(required=False)
         self.fields['skip_pin'] = serializers.BooleanField(required=False)
-        self.fields["firebase_token"] = serializers.CharField(required=True)
-        self.fields["device_type"] = serializers.CharField(required=True)
+        self.fields["firebase_token"] = serializers.CharField(required=False)
+        self.fields["device_type"] = serializers.CharField(required=False)
 
     def validate(self, attrs):
         # TODO check if device has a valid fcm token, if not fail login with a nice error
@@ -240,6 +240,7 @@ class TokenObtainModSerializer(serializers.Serializer):
         if self.user.is_staff:
             return self.login_staff_user(attrs)
         if self.user.is_merchant:
+            # if attrs.get("device_type")
             return self.login_merchant_user(attrs)
 
     @classmethod
