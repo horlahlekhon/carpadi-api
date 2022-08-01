@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: |
+          echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} > ./carpadi-1ddb6-firebase-adminsdk-x4sa4-ef6624c208.json
       - uses: gonuit/heroku-docker-deploy@v1.3.3
         with:
 #          deploy ....
