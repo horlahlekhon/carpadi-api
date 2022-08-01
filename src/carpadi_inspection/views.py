@@ -24,4 +24,3 @@ class InspectionStagesViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminUser,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = InspectionsStageFilter
-

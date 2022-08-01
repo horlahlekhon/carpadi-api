@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import fields
 import datetime
 import re
@@ -8,6 +9,7 @@ from django.db import transaction
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from fcm_django.models import FCMDevice
 from rest_framework import serializers, exceptions
 from rest_framework_simplejwt.serializers import PasswordField, TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
@@ -214,6 +216,8 @@ class TokenObtainModSerializer(serializers.Serializer):
         self.fields['password'] = PasswordField()
         self.fields['device_imei'] = serializers.CharField(required=False)
         self.fields['skip_pin'] = serializers.BooleanField(required=False)
+        self.fields["firebase_token"] = serializers.CharField(required=False)
+        self.fields["device_type"] = serializers.CharField(required=False)
 
     def validate(self, attrs):
         # TODO check if device has a valid fcm token, if not fail login with a nice error
@@ -236,6 +240,7 @@ class TokenObtainModSerializer(serializers.Serializer):
         if self.user.is_staff:
             return self.login_staff_user(attrs)
         if self.user.is_merchant:
+            # if attrs.get("device_type")
             return self.login_merchant_user(attrs)
 
     @classmethod
@@ -246,7 +251,6 @@ class TokenObtainModSerializer(serializers.Serializer):
 
     def login_staff_user(self, attrs):
         User.update_last_login(self.user, **{})
-
         refresh = self.get_token(self.user)
         user = UserSerializer(instance=self.user)
         data = {'refresh': str(refresh), 'access': str(refresh.access_token), "user": user.data}
@@ -265,12 +269,18 @@ class TokenObtainModSerializer(serializers.Serializer):
                 self.error_messages['new_device_detected'],
                 'new_device_detected',
             )
+        self.validate_firebase_(attrs.get('firebase_token'), self.user, attrs.get('device_imei'), attrs.get('device_type'))
         User.update_last_login(self.user, **dict(device_imei=attrs.get("device_imei")))
 
         refresh = self.get_token(self.user, attrs.get('device_imei'))
         car_merch = CarMerchantSerializer(instance=self.user.merchant)
         data = {'refresh': str(refresh), 'access': str(refresh.access_token), "merchant": car_merch.data}
         return data
+
+    def validate_firebase_(self, token: str, user: User, imei: str, device_type: str):
+        device: FCMDevice = FCMDevice.objects.filter(registration_id=token, user=user).first()
+        if not device:
+            FCMDevice.objects.create(device_id=imei, registration_id=token, name=user.first_name, type=device_type, user=user)
 
 
 class OtpSerializer(serializers.Serializer):
@@ -320,7 +330,7 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Activity
-        fields = ("created", "id", "activity_type", "object_id", "content_type", "description", 'activity_entity')
+        fields = ("created", "id", "activity_type", "object_id", "content_type", "description", 'activity_entity', "merchant")
         read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
 
     def get_activity_entity(self, obj: Activity):

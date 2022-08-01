@@ -237,7 +237,7 @@ class CarProductViewSetAdmin(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
 
 
-class VehicleInfoViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class VehicleInfoViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminUser,)
     serializer_class = VehicleInfoSerializer
     queryset = VehicleInfo.objects.all()

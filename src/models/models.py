@@ -921,8 +921,7 @@ class InspectionStatus(models.TextChoices):
     Ongoing = "ongoing", _("Ongoing inspection")
     Completed = "completed", _("Completed inspection")
     Pending = "pending", _("New inspection")
-    Expired = "expired", _("Inspection has been scheduled for"
-                           " more than a week without being ongoing or completed")
+    Expired = "expired", _("Inspection has been scheduled for" " more than a week without being ongoing or completed")
 
 
 class InspectionVerdict(models.TextChoices):
@@ -935,20 +934,38 @@ class InspectionVerdict(models.TextChoices):
 class Inspections(Base):
     owners_name = models.CharField(max_length=100)
     inspection_date = models.DateTimeField()
-    owners_phone = models.CharField(max_length=20, validators=[PhoneNumberValidator, ])
+    owners_phone = models.CharField(
+        max_length=20,
+        validators=[
+            PhoneNumberValidator,
+        ],
+    )
     owners_review = models.CharField(max_length=50, null=True, blank=True)
     address = models.TextField()
     status = models.CharField(choices=InspectionStatus.choices, max_length=20, default=InspectionStatus.Pending)
     inspection_verdict = models.CharField(
-        choices=InspectionVerdict.choices, max_length=10, default=InspectionVerdict.Bad,
+        choices=InspectionVerdict.choices,
+        max_length=10,
+        default=InspectionVerdict.Bad,
         help_text="Verdict of the inspection after taking into account all"
-                  " the stages and their scores. should be calculated by the system")
+        " the stages and their scores. should be calculated by the system",
+    )
     inspector = models.ForeignKey(
-        User, on_delete=models.CASCADE, null=True, related_name="inspections",
-        blank=False, help_text="The person to undertake this inspection")
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="inspections",
+        blank=False,
+        help_text="The person to undertake this inspection",
+    )
     inspection_assigner = models.ForeignKey(
-        User, on_delete=models.CASCADE, null=True, related_name="inspections_assigned",
-        blank=False, help_text="The user who assigned this inspection to the inspector. should be set automatically")
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="inspections_assigned",
+        blank=False,
+        help_text="The user who assigned this inspection to the inspector. should be set automatically",
+    )
     car = models.ForeignKey(Car, on_delete=models.CASCADE)
 
 
@@ -976,3 +993,7 @@ class InspectionStage(Base):
     part_name = models.CharField(max_length=50)
     stage_name = models.CharField(choices=Stages.choices, max_length=40)
     review = models.TextField(null=True, blank=True)
+
+
+class Settings(Base):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)

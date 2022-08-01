@@ -15,6 +15,7 @@ from src.models.models import (
     CarMerchant,
     UserStatusFilterChoices,
     TradeUnit,
+    ActivityTypes,
 )
 
 
@@ -73,11 +74,11 @@ class ActivityFilterAdmin(filters.FilterSet):
     activity_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')
     activity_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
 
-    actvity_type = filters.CharFilter(field_name="actvity_type")
+    activity_type = filters.TypedMultipleChoiceFilter(field_name="activity_type", choices=ActivityTypes.choices)
 
     class Meta:
         model = Activity
-        fields = ["created", "activity_type"]
+        fields = ["created", "activity_type", "merchant"]
 
 
 class TradeFilterAdmin(filters.FilterSet):
@@ -129,4 +130,4 @@ class CarMerchantFilter(filters.FilterSet):
 
     class Meta:
         model = CarMerchant
-        fields = ("user",)
+        fields = ("user", "created")
