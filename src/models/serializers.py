@@ -251,7 +251,6 @@ class TokenObtainModSerializer(serializers.Serializer):
 
     def login_staff_user(self, attrs):
         User.update_last_login(self.user, **{})
-
         refresh = self.get_token(self.user)
         user = UserSerializer(instance=self.user)
         data = {'refresh': str(refresh), 'access': str(refresh.access_token), "user": user.data}
@@ -270,7 +269,8 @@ class TokenObtainModSerializer(serializers.Serializer):
                 self.error_messages['new_device_detected'],
                 'new_device_detected',
             )
-        self.validate_firebase_(attrs.get('firebase_token'), self.user, attrs.get('device_imei'), attrs.get('device_type'))
+        self.validate_firebase_(
+            attrs.get('firebase_token'), self.user, attrs.get('device_imei'), attrs.get('device_type'))
         User.update_last_login(self.user, **dict(device_imei=attrs.get("device_imei")))
 
         refresh = self.get_token(self.user, attrs.get('device_imei'))
@@ -331,7 +331,7 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Activity
-        fields = ("created", "id", "activity_type", "object_id", "content_type", "description", 'activity_entity')
+        fields = ("created", "id", "activity_type", "object_id", "content_type", "description", 'activity_entity', "merchant")
         read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
 
     def get_activity_entity(self, obj: Activity):

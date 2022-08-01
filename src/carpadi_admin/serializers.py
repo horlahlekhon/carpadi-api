@@ -1,6 +1,7 @@
 import itertools
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 from src.carpadi_api.serializers import BankAccountSerializer
 from src.common.helpers import check_vin
@@ -27,7 +28,7 @@ from src.models.models import (
     TransactionStatus,
     TransactionTypes,
     TransactionKinds,
-    AssetEntityType,
+    AssetEntityType, FuelTypes, CarTypes, CarTransmissionTypes,
 )
 from rest_framework import serializers
 from django.db.transaction import atomic
@@ -48,9 +49,35 @@ class SocialSerializer(serializers.Serializer):
 
 
 class VehicleInfoSerializer(serializers.ModelSerializer):
+    engine = serializers.CharField(required=False)
+    transmission = serializers.ChoiceField(required=False, choices=CarTransmissionTypes.choices)
+    car_type = serializers.ChoiceField(choices=CarTypes.choices, required=False)
+    fuel_type = serializers.ChoiceField(choices=FuelTypes.choices, required=False)
+    mileage = serializers.IntegerField(required=False, min_value=1)
+    age = serializers.IntegerField(required=False, min_value=1)
+    description = serializers.CharField(required=False)
+    trim = serializers.CharField(required=False)
+    year = serializers.IntegerField(required=False, min_value=1)
+    model = serializers.CharField(max_length=100, required=False)
+    manufacturer = serializers.CharField(max_length=50, required=False)
+    make = serializers.CharField(max_length=50, required=False)
+    vin = serializers.CharField(required=True)
+
     class Meta:
         model = VehicleInfo
         fields = "__all__"
+        # read_only_fields = (,)
+
+    def create(self, validated_data):
+        vin = validated_data.get("vin")
+        info: Optional[VehicleInfo] = VehicleInfo.objects.filter(vin=vin).first()
+        if not info:
+            if data := check_vin(vin):
+                validated_data.update(data)
+                return super(VehicleInfoSerializer, self).create(validated_data)
+            else:
+                raise serializers.ValidationError(detail="No vehicle is associated with that vin", code=400)
+        return info
 
 
 class CarSerializer(serializers.ModelSerializer):
@@ -121,16 +148,10 @@ class CarSerializer(serializers.ModelSerializer):
         return value
 
     def validate_vin(self, attr):
-        info: VehicleInfo = None
-        try:
-            info = VehicleInfo.objects.get(vin=attr)
-        except VehicleInfo.DoesNotExist as reason:
-            vin = check_vin(attr)
-            if not vin:
-                raise serializers.ValidationError("Invalid vin number")
-            info = VehicleInfo.objects.create(vin=attr, **vin)
+        info = VehicleInfo.objects.filter(vin=attr).first()
         if info.car:
             raise serializers.ValidationError(f"Car with the vin number {attr} exists before")
+        return info
 
     @atomic()
     def create(self, validated_data):

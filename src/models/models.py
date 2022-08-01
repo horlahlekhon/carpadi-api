@@ -994,3 +994,7 @@ class InspectionStage(Base):
     part_name = models.CharField(max_length=50)
     stage_name = models.CharField(choices=Stages.choices, max_length=40)
     review = models.TextField(null=True, blank=True)
+
+
+class Settings(Base):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
