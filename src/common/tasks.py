@@ -1,9 +1,9 @@
+import mailchimp_transactional as MailchimpTransactional
 from celery import task
+from mailchimp_transactional.api_client import ApiClientError
+
 
 # from django.core.mail import EmailMultiAlternatives
-
-import mailchimp_transactional as MailchimpTransactional
-from mailchimp_transactional.api_client import ApiClientError
 
 
 @task(name='SendEmailTask')

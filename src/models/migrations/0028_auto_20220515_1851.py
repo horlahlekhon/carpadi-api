@@ -2,13 +2,13 @@
 
 import datetime
 from decimal import Decimal
+
 import django.core.validators
 from django.db import migrations, models
 from django.utils.timezone import utc
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('models', '0027_alter_otp_expiry'),
     ]

@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -18,14 +19,12 @@ from django.utils.translation import gettext_lazy as _
 from easy_thumbnails.signal_handlers import generate_aliases_global
 from easy_thumbnails.signals import saved_file
 from model_utils.models import UUIDModel, TimeStampedModel
+from rest_framework import exceptions
 from rest_framework.exceptions import APIException
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.contenttypes.fields import GenericRelation
+
 from src.carpadi_admin.utils import validate_inspector, checkout_transaction_validator, disbursement_trade_unit_validator
 from src.config.common import OTP_EXPIRY
-
-from rest_framework import exceptions
-
 from src.models.validators import PhoneNumberValidator
 
 
@@ -414,7 +413,7 @@ class FuelTypes(models.TextChoices):
 
 class Car(Base):
     information = models.OneToOneField("VehicleInfo", on_delete=models.SET_NULL, null=True)
-    status = models.CharField(choices=CarStates.choices, max_length=30, default=CarStates.New)
+    status = models.CharField(choices=CarStates.choices, null=True, max_length=30, default=CarStates.New)
     # TODO validate vin from vin api
     vin = models.CharField(max_length=17)
     pictures = GenericRelation("Assets")
@@ -432,6 +431,7 @@ class Car(Base):
         decimal_places=2,
         max_digits=10,
         max_length=10,
+        null=True,
         help_text="potential cost of  purchasing the car offered by the seller. "
         "this should be changed to reflect the actual cost of the car when it is bought",
         validators=[MinValueValidator(Decimal(0.00))],
@@ -469,6 +469,7 @@ class Car(Base):
     )
     description = models.TextField(null=True, blank=True)
     name = models.CharField(max_length=50, null=True, blank=True)
+    licence_plate = models.CharField(max_length=20, null=True, blank=True)
 
     def maintenance_cost_calc(self):
         return self.maintenances.all().aggregate(sum=Sum("cost")).get("sum") or Decimal(0.00)
@@ -477,7 +478,7 @@ class Car(Base):
         return self.bought_price + self.maintenance_cost_calc()
 
     def margin_calc(self):
-        return None if not self.resale_price else self.resale_price - self.total_cost_calc()
+        return self.resale_price - self.total_cost_calc() if self.resale_price else None
 
         # def get_resale_price(self):
 

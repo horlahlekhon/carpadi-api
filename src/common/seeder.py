@@ -2,7 +2,9 @@ import asyncio
 import uuid
 from asyncio import AbstractEventLoop
 from decimal import Decimal
+
 import requests
+from django.db.transaction import atomic
 from django_seed import Seed
 from faker_vehicle import VehicleProvider
 from rest_framework import status
@@ -16,21 +18,16 @@ from src.models.models import (
     UserTypes,
     Wallet,
     Car,
-    CarBrand,
-    CarMaintenance,
     MiscellaneousExpenses,
-    CarMaintenanceTypes,
     CarStates,
     Trade,
     TradeStates,
-    TradeUnit,
     VehicleInfo,
     FuelTypes,
     Assets,
     AssetEntityType,
     Banks,
 )
-from django.db.transaction import atomic
 
 PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00PVbKK4Nu2YLpiK3OliA="
 

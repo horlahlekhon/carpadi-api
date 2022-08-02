@@ -1,5 +1,3 @@
-import uuid
-from dataclasses import fields
 import datetime
 import re
 from decimal import Decimal
@@ -11,7 +9,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from fcm_django.models import FCMDevice
 from rest_framework import serializers, exceptions
-from rest_framework_simplejwt.serializers import PasswordField, TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import PasswordField
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 

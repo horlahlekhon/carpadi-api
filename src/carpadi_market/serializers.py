@@ -1,8 +1,9 @@
 from typing import List, Dict
 
-from src.models.models import CarFeature, Assets, CarProduct, AssetEntityType, Trade
-from rest_framework import serializers
 from django.db.transaction import atomic
+from rest_framework import serializers
+
+from src.models.models import CarFeature, Assets, CarProduct, AssetEntityType, Trade
 
 
 class CarFeatureSerializer(serializers.ModelSerializer):

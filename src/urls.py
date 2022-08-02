@@ -13,12 +13,12 @@ from rest_framework_simplejwt.views import (
 
 from src.carpadi_admin.urls import router as admin_router
 from src.carpadi_api.urls import router as api_router
+from src.carpadi_inspection.urls import router as inspection_router
+from src.carpadi_market.urls import router as market_router
 from src.files.urls import files_router
 from src.models.urls import model_router
-from src.carpadi_market.urls import router as market_router
 from src.models.views import TokenObtainPairViewMod
 from src.social.views import exchange_token, complete_twitter_login
-from src.carpadi_inspection.urls import router as inspection_router
 
 schema_view = get_schema_view(
     openapi.Info(title="Carpadi API", default_version='v1'),

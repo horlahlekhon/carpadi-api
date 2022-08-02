@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -23,9 +23,6 @@ from src.carpadi_admin.serializers import (
     WalletSerializerAdmin,
     TransactionSerializer,
     DisbursementSerializerAdmin,
-    TradeSerializerAdmin,
-    CarMaintenanceSerializerAdmin,
-    SparePartsSerializer,
     AccountDashboardSerializer,
     TradeDashboardSerializer,
     InventoryDashboardSerializer,
@@ -52,10 +49,8 @@ from src.models.models import (
     CarMaintenance,
     TradeUnit,
     TradeStates,
-    DisbursementStates,
     SpareParts,
     CarProduct,
-    CarFeature,
     VehicleInfo,
 )
 from src.models.serializers import CarBrandSerializer, CarMerchantSerializer, ActivitySerializer

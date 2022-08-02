@@ -1,11 +1,9 @@
-import asyncio
-import datetime
 import threading
 
+from django.db import transaction
+from django.http.response import Http404
 from django.utils import timezone
 from django_filters import rest_framework as filters
-
-from django.http.response import Http404
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -30,7 +28,6 @@ from src.models.serializers import (
     AssetsSerializer,
     NotificationsSerializer,
 )
-from django.db import transaction
 
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):

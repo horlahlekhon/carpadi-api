@@ -1,8 +1,6 @@
-from django.shortcuts import render
-
 # Create your views here.
 from django_filters import rest_framework as filters
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets
 from rest_framework.permissions import IsAdminUser
 
 from src.carpadi_inspection.filters import InspectionsFilter, InspectionsStageFilter

@@ -1,4 +1,4 @@
-from django.db.models import QuerySet, F, Q
+from django.db.models import QuerySet, Q
 from django_filters import rest_framework as filters
 
 from src.models.models import (
@@ -8,8 +8,6 @@ from src.models.models import (
     Disbursement,
     Activity,
     SpareParts,
-    CarProduct,
-    CarFeature,
     VehicleInfo,
     TradeStates,
     CarMerchant,
@@ -110,7 +108,6 @@ class SparePartsFilter(filters.FilterSet):
 
 
 class VehicleInfoFilter(filters.FilterSet):
-
     class Meta:
         model = VehicleInfo
         fields = ["transmission", "car_type", "fuel_type", 'make', 'model', 'year']

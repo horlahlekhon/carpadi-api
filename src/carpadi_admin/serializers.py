@@ -1,9 +1,16 @@
+import contextlib
 import itertools
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from src.carpadi_api.serializers import BankAccountSerializer
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Sum, Count, Avg
+from django.db.transaction import atomic
+from django.utils import timezone
+from rest_framework import exceptions
+from rest_framework import serializers
+
 from src.common.helpers import check_vin
 from src.models.models import (
     CarMerchant,
@@ -14,8 +21,6 @@ from src.models.models import (
     Disbursement,
     Activity,
     SpareParts,
-    CarProduct,
-    CarFeature,
     CarStates,
     CarMaintenance,
     MiscellaneousExpenses,
@@ -34,11 +39,6 @@ from src.models.models import (
     CarTypes,
     CarTransmissionTypes,
 )
-from rest_framework import serializers
-from django.db.transaction import atomic
-from django.utils import timezone
-from django.db.models import Sum, Count, Avg
-from rest_framework import exceptions
 
 
 class SocialSerializer(serializers.Serializer):
@@ -91,6 +91,8 @@ class CarSerializer(serializers.ModelSerializer):
     vin = serializers.CharField(max_length=17, min_length=17)
     information = serializers.SerializerMethodField()
     car_pictures = serializers.ListField(write_only=True, child=serializers.URLField(), default=[], required=False)
+    status = serializers.ChoiceField(choices=CarStates.choices, required=False, default=CarStates.New)
+    bought_price = serializers.DecimalField(required=False, max_digits=15, decimal_places=5)
 
     class Meta:
         model = Car
@@ -102,8 +104,7 @@ class CarSerializer(serializers.ModelSerializer):
         return VehicleInfoSerializer(instance=obj.information).data
 
     def get_pictures(self, obj: Car):
-        pictures = Assets.objects.filter(object_id=obj.id).values_list("asset", flat=True)
-        return pictures
+        return Assets.objects.filter(object_id=obj.id).values_list("asset", flat=True)
 
     def get_total_cost(self, obj: Car):
         return obj.total_cost_calc()
@@ -115,19 +116,17 @@ class CarSerializer(serializers.ModelSerializer):
         if self.instance:  # we are doing update
             if value == CarStates.Inspected:
                 if (
-                        not self.instance.inspection_report
-                        and not self.initial_data.get("inspection_report")
-                        and not self.instance.inspector
-                        and not self.initial_data.get("inspector")
+                    not self.instance.inspection_report
+                    and not self.initial_data.get("inspection_report")
+                    and not self.instance.inspector
+                    and not self.initial_data.get("inspector")
                 ):
-                    raise serializers.ValidationError(
-                        "Inspection report is required for a car with status of inspected")
+                    raise serializers.ValidationError("Inspection report is required for a car with status of inspected")
             if value == CarStates.Available:
                 # you can only change the status to available if the car is inspected and all the cost have been
                 # accounted for
                 if not self.instance.inspection_report and not self.initial_data.get("inspection_report"):
-                    raise serializers.ValidationError(
-                        "Inspection report is required for a car with status of available")
+                    raise serializers.ValidationError("Inspection report is required for a car with status of available")
                 if not self.instance.resale_price and not self.initial_data.get("resale_price"):
                     raise serializers.ValidationError("Resale price is required for a car with status of available")
             return value
@@ -135,15 +134,12 @@ class CarSerializer(serializers.ModelSerializer):
             # we are doing create
             if value == CarStates.Inspected:
                 if not self.initial_data.get("inspection_report"):
-                    raise serializers.ValidationError(
-                        "Inspection report is required for a car with status of inspected")
+                    raise serializers.ValidationError("Inspection report is required for a car with status of inspected")
                 if not self.initial_data.get("car_inspector"):
-                    raise serializers.ValidationError(
-                        "A valid car inspector is required for cars that have been inspected")
+                    raise serializers.ValidationError("A valid car inspector is required for cars that have been inspected")
             if value == CarStates.Available:
                 if not self.initial_data.get("inspection_report"):
-                    raise serializers.ValidationError(
-                        "Inspection report is required for a car with status of available")
+                    raise serializers.ValidationError("Inspection report is required for a car with status of available")
                 if not self.initial_data.get("resale_price"):
                     raise serializers.ValidationError("Resale price is required for a car with status of available")
             return value
@@ -153,13 +149,14 @@ class CarSerializer(serializers.ModelSerializer):
             if value < self.instance.total_cost_calc():
                 raise serializers.ValidationError("Resale price cannot be less than the total cost of the car")
         else:
-            raise serializers.ValidationError("Aye! You cannot create set the resale price of a car while creating it")
+            raise serializers.ValidationError("Aye! You cannot set the resale price of a car while creating it")
         return value
 
     def validate_vin(self, attr):
         info = VehicleInfo.objects.filter(vin=attr).first()
-        if info.car:
-            raise serializers.ValidationError(f"Car with the vin number {attr} exists before")
+        with contextlib.suppress(ObjectDoesNotExist):
+            if info.car:
+                raise serializers.ValidationError(f"Car with the vin number {attr} exists before")
         return info
 
     @atomic()
@@ -240,8 +237,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             "total_slots",
             "price_per_slot",
         )
-        extra_kwargs = {
-            "car": {"error_messages": {"required": "Car to trade on is required", "unique": "Car already " "traded"}}}
+        extra_kwargs = {"car": {"error_messages": {"required": "Car to trade on is required", "unique": "Car already " "traded"}}}
 
     def get_total_users_trading(self, obj: Trade):
         return obj.get_trade_merchants().count()
@@ -273,23 +269,23 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
 
     def validate_trade_status(self, attr):
         trade: Trade = self.instance
-        if not trade:  # we are creating
-            if attr == TradeStates.Completed:
+        if attr == TradeStates.Completed:
+            if not trade:
                 raise serializers.ValidationError("Cannot set trade status to completed when creating a trade")
-        else:
-            if attr == TradeStates.Completed:
-                if not trade.car.resale_price:
-                    raise serializers.ValidationError(
-                        "Please add resale price to the car first before completing the trade")
-                if trade.trade_status != TradeStates.Purchased:
-                    raise serializers.ValidationError(
-                        "Cannot change trade status to {}, trade is {}".format(attr, trade.trade_status)
-                    )
+
+            if not trade.car.resale_price:
+                raise serializers.ValidationError("Please add resale price to the car first before completing the trade")
+
+            if trade.trade_status != TradeStates.Purchased:
+                raise serializers.ValidationError(f"Cannot change trade status to {attr}, trade is {trade.trade_status}")
+
         return attr
 
-    def validate_car(self, value):
+    def validate_car(self, value: Car):
         if value.status != CarStates.Available:
             raise serializers.ValidationError("Car is not available for trade yet")
+        if value.bought_price == Decimal(0.0):
+            raise serializers.ValidationError("Please specify how much car was bought before creating a trade on it")
         return value
 
     def validate_min_sale_price(self, value):
@@ -314,8 +310,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         we also try to do some validation to make sure trade and its corresponding objects are valid
         :param trade: Trade object
         """
-        successful_disbursements = trade.units.filter(
-            disbursement__disbursement_status=DisbursementStates.Unsettled).count()
+        successful_disbursements = trade.units.filter(disbursement__disbursement_status=DisbursementStates.Unsettled).count()
         query = trade.units.annotate(total_disbursed=Sum('disbursement__amount'))
         total_disbursed = query.aggregate(sum=Sum('total_disbursed')).get('sum') or Decimal(0)
         if successful_disbursements == trade.units.count() and total_disbursed == trade.total_payout():
@@ -347,8 +342,7 @@ class DisbursementSerializerAdmin(serializers.ModelSerializer):
 class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
     spare_part_id = serializers.UUIDField(required=False)
     cost = serializers.DecimalField(
-        required=False, help_text="Cost of the maintenance in case it is a misc expenses", max_digits=10,
-        decimal_places=2
+        required=False, help_text="Cost of the maintenance in case it is a misc expenses", max_digits=10, decimal_places=2
     )
     description = serializers.CharField(required=False, help_text="Description of the maintenance")
     name = serializers.CharField(required=False, help_text="Name of the maintenance, in case it is a misc expenses")
@@ -597,8 +591,7 @@ class TradeUnitSerializerAdmin(serializers.ModelSerializer):
     merchant = serializers.SerializerMethodField()
 
     def get_merchant(self, unit: TradeUnit):
-        return dict(name=unit.merchant.user.username, id=unit.merchant.id,
-                    image=str(unit.merchant.user.profile_picture))
+        return dict(name=unit.merchant.user.username, id=unit.merchant.id, image=str(unit.merchant.user.profile_picture))
 
     class Meta:
         model = TradeUnit
@@ -626,11 +619,10 @@ class HomeDashboardSerializer(serializers.Serializer):
     def __init__(self, instance=None, data=None, **kwargs):
         super().__init__(instance, data, **kwargs)
         self.fields['start_date'] = serializers.DateField(
-            required=False, default=datetime.now().date().replace(day=1), allow_null=True)
-        self.fields['end_date'] = serializers.DateField(
-            required=False, default=datetime.now().date(), allow_null=True)
-        self.fields['filter_year_only'] = serializers.BooleanField(
-            default=False, required=False, allow_null=True)
+            required=False, default=datetime.now().date().replace(day=1), allow_null=True
+        )
+        self.fields['end_date'] = serializers.DateField(required=False, default=datetime.now().date(), allow_null=True)
+        self.fields['filter_year_only'] = serializers.BooleanField(default=False, required=False, allow_null=True)
 
     def validate(self, attrs):
         self.filter_year_only = attrs["filter_year_only"]
@@ -653,8 +645,8 @@ class HomeDashboardSerializer(serializers.Serializer):
                 created__date__gte=self.start_date,
                 created__date__lte=self.end_date,
             )
-                .aggregate(value=Avg("bts_time"))
-                .get("value")
+            .aggregate(value=Avg("bts_time"))
+            .get("value")
         )
 
         return bts or Decimal(0.00)
@@ -666,11 +658,11 @@ class HomeDashboardSerializer(serializers.Serializer):
         """
 
         return (
-                TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date)
-                .values("merchant")
-                .distinct()
-                .count()
-                or 0
+            TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date)
+            .values("merchant")
+            .distinct()
+            .count()
+            or 0
         )
 
     def get_average_trading_cash(self, value):
@@ -682,8 +674,8 @@ class HomeDashboardSerializer(serializers.Serializer):
 
         cash = (
             TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date)
-                .aggregate(value=Avg("unit_value"))
-                .get("value")
+            .aggregate(value=Avg("unit_value"))
+            .get("value")
         )
 
         return cash or Decimal(0.00)
@@ -698,8 +690,8 @@ class HomeDashboardSerializer(serializers.Serializer):
             Trade.objects.filter(
                 trade_status=TradeStates.Ongoing, created__date__gte=self.start_date, created__date__lte=self.end_date
             )
-                .aggregate(value=Sum("slots_available"))
-                .get("value")
+            .aggregate(value=Sum("slots_available"))
+            .get("value")
         )
 
         return shares or 0
@@ -738,8 +730,7 @@ class HomeDashboardSerializer(serializers.Serializer):
         while i < 12:
             self.start_date.replace(month=i + 1)
 
-            ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).values("slots_quantity",
-                                                                                              "unit_value")
+            ttc = TradeUnit.objects.filter(created__date__month=self.start_date.month).values("slots_quantity", "unit_value")
 
             cash[i] = sum(s["slots_quantity"] * s["unit_value"] for s in ttc) or Decimal(0)
 
@@ -749,8 +740,8 @@ class HomeDashboardSerializer(serializers.Serializer):
                     modified__date__year=self.start_date.year,
                     modified__date__month=self.start_date.month,
                 )
-                    .aggregate(value=Sum("return_on_trade"))
-                    .get("value")
+                .aggregate(value=Sum("return_on_trade"))
+                .get("value")
             )
 
             trade_return[i] = rot or Decimal(0)
@@ -774,8 +765,7 @@ class HomeDashboardSerializer(serializers.Serializer):
         graph_partition = 5
         i = 0
         while i < graph_partition:
-            ttc = TradeUnit.objects.filter(created__date__year=self.start_date.year,
-                                           created__date__week=start_week).values(
+            ttc = TradeUnit.objects.filter(created__date__year=self.start_date.year, created__date__week=start_week).values(
                 "slots_quantity", "unit_value"
             )
 
@@ -787,8 +777,8 @@ class HomeDashboardSerializer(serializers.Serializer):
                     modified__date__year=self.start_date.year,
                     modified__date__week=start_week,
                 )
-                    .aggregate(value=Sum("return_on_trade"))
-                    .get("value")
+                .aggregate(value=Sum("return_on_trade"))
+                .get("value")
             )
 
             trade_return[i] = rot or Decimal(0)
@@ -827,8 +817,7 @@ class HomeDashboardSerializer(serializers.Serializer):
         available_cars_percent = (available_cars / total_cars) * 100 or Decimal(0)
         available = dict(count=available_cars, percentage=available_cars_percent)
 
-        trading_cars = Car.objects.filter(created__date__year=datetime.now().year,
-                                          status=CarStates.OngoingTrade).count()
+        trading_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.OngoingTrade).count()
         trading_cars_percent = (trading_cars / total_cars) * 100 or Decimal(0)
         trading = dict(count=trading_cars, percentage=trading_cars_percent)
 
@@ -842,6 +831,5 @@ class HomeDashboardSerializer(serializers.Serializer):
         """
         Last Ten Trading activities carried out
         """
-        recent_activities = Activity.objects.filter(activity_type=ActivityTypes.TradeUnit).values("description",
-                                                                                                  "merchant")[:10]
+        recent_activities = Activity.objects.filter(activity_type=ActivityTypes.TradeUnit).values("description", "merchant")[:10]
         return dict(recent_activities=recent_activities)

@@ -1,9 +1,8 @@
-from django.shortcuts import render
-
 # Create your views here.
+from django_filters import rest_framework as filters
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from django_filters import rest_framework as filters
+
 from src.carpadi_market.filters import CarProductFilter
 from src.carpadi_market.serializers import CarProductSerializer
 from src.models.models import CarProduct

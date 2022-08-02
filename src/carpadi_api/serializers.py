@@ -1,17 +1,15 @@
 import datetime
+from decimal import Decimal
 from uuid import uuid4
 
 import requests
-from django.contrib.auth.hashers import make_password, check_password
 from django.db import transaction
+from django.db.models import Sum
 from django.utils import timezone
-from fcm_django.api.rest_framework import FCMDeviceSerializer
 from rest_framework import serializers, exceptions
 
 from src.config import common
-from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes, Assets
-from django.db.models import Sum
-from decimal import Decimal
+from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
 
 # from .models import Transaction
 from ..models.models import (
@@ -277,7 +275,8 @@ class TransactionSerializer(serializers.ModelSerializer):
                         transaction_reference=ref,
                         transaction_kind=TransactionKinds.Withdrawal,
                         transaction_status=TransactionStatus.Pending,
-                        transaction_description=validated_data.get("transaction_description"),  # TODO write custom message
+                        transaction_description=validated_data.get("transaction_description"),
+                        # TODO write custom message
                         transaction_type=TransactionTypes.Debit,
                         amount=validated_data["amount"],
                         wallet=wallet,

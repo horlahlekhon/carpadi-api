@@ -1,5 +1,5 @@
 from django.db.transaction import atomic
-from rest_framework import serializers, exceptions
+from rest_framework import serializers
 
 from src.models.models import InspectionStage, Inspections
 

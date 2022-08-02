@@ -12,7 +12,6 @@ from src.carpadi_api.views import (
     TradeViewSet,
     TradeUnitViewSet,
 )
-from fcm_django.api.rest_framework import FCMDeviceAuthorizedViewSet
 
 router = DefaultRouter()
 router.register(r'merchants', CarMerchantViewSet)
