@@ -344,9 +344,9 @@ class TradeSerializer(serializers.ModelSerializer):
     def serialize_car(self, car: Car):
         return {
             "id": car.id,
-            "make": car.information.make,
-            "model": car.information.model,
-            "year": car.information.year,
+            "make": car.information.brand.name,
+            "model": car.information.brand.name,
+            "year": car.information.brand.name,
             "color": car.colour,
             "name": car.name,
             "car_pictures": car.pictures.values_list("asset", flat=True),
@@ -452,7 +452,7 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         merchant: CarMerchant = validated_data["merchant"]
         share_percentage = (trade.slots_available / validated_data["slots_quantity"]) * 100
         unit_value = trade.calculate_price_per_slot() * validated_data["slots_quantity"]
-        ref = f"CP-{uuid4()}"
+        ref = f"CP-{str(uuid4()).upper()}"
         tx = Transaction.objects.create(
             transaction_reference=ref,
             transaction_kind=TransactionKinds.TradeUnitPurchases,

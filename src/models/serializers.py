@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 import re
 from decimal import Decimal
@@ -52,7 +53,7 @@ class UserSerializer(serializers.ModelSerializer):
         picture = validated_data.get("profile_picture")
         if picture:
             picture = Assets.objects.create(
-                asset=picture, content_object=instance, entity_type=AssetEntityType.UserProfilePicture
+                asset=picture, content_object=instance, entity_type=AssetEntityType.Merchant
             )
             validated_data["profile_picture"] = picture
         return super(UserSerializer, self).update(instance, validated_data)
@@ -121,10 +122,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
 
 def is_valid_phone(phone):
-    is_valid = re.search(r'\+?[\d]{3}[\d]{10}', phone)
-    if not is_valid:
+    if is_valid := re.search(r'\+?[\d]{3}[\d]{10}', phone):
+        return phone
+    else:
         raise serializers.ValidationError("Invalid phone number, phone number should match format: +234 000 000 0000")
-    return phone
 
 
 class PhoneVerificationSerializer(serializers.Serializer):
@@ -195,6 +196,11 @@ class CarBrandSerializer(serializers.ModelSerializer):
         model = CarBrand
         fields = "__all__"
 
+    def create(self, validated_data):
+        if brand := CarBrand.objects.filter(**validated_data).first():
+            return brand
+        return super(CarBrandSerializer, self).create(validated_data)
+
 
 # TokenObtainPairSerializer
 class TokenObtainModSerializer(serializers.Serializer):
@@ -203,7 +209,8 @@ class TokenObtainModSerializer(serializers.Serializer):
     default_error_messages = {
         'no_active_account': _('No active account found with the given credentials'),
         'new_device_detected': _(
-            'You are logging in to this device for the first time,' 'kindly create a new transaction pin for this ' 'device '
+            'You are logging in to this device for the first time,'
+            '' 'kindly create a new transaction pin for this ' 'device '
         ),
     }
 
@@ -218,16 +225,14 @@ class TokenObtainModSerializer(serializers.Serializer):
         self.fields["device_type"] = serializers.CharField(required=False)
 
     def validate(self, attrs):
-        # TODO check if device has a valid fcm token, if not fail login with a nice error
+        # TODO check if device has a valid fcm token,
+        #  if not fail login with a nice error
         authenticate_kwargs = {
             self.username_field: attrs[self.username_field],
             'password': attrs['password'],
         }
-        try:
+        with contextlib.suppress(KeyError):
             authenticate_kwargs['request'] = self.context['request']
-        except KeyError:
-            pass
-
         self.user: User = authenticate(**authenticate_kwargs)
 
         if not api_settings.USER_AUTHENTICATION_RULE(self.user):

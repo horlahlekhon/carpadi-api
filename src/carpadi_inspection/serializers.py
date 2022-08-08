@@ -1,7 +1,7 @@
 from django.db.transaction import atomic
 from rest_framework import serializers
 
-from src.models.models import InspectionStage, Inspections
+from src.models.models import InspectionStage, Inspections, User
 
 
 class InspectionStageSerializer(serializers.ModelSerializer):
@@ -14,8 +14,15 @@ class InspectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Inspections
         fields = "__all__"
+        # extra_kwargs = {}
+
+    def validate_inspector(self, attr: User):
+        if attr.is_staff:
+            return attr
+        raise serializers.ValidationError("inspector must be an admin user")
 
     @atomic
     def create(self, validated_data):
-        user_logged_in = self.context.get("request")
-        raise Exception("boom")
+        user_logged_in = self.context.get("request").user
+        validated_data["inspection_assignor"] = user_logged_in
+        return super(InspectionSerializer, self).create(validated_data)

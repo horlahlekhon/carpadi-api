@@ -49,7 +49,7 @@ urlpatterns = [
     path('api/v1/merchants/', include(api_router_set.urls)),
     path('api/v1/admins/', include(admin_router_set.urls)),
     path('api/v1/market/', include(market_router.urls)),
-    path('api/v1/inspections', include(inspection_router.urls)),
+    path('api/v1/inspections/', include(inspection_router.urls)),
     url(r'^api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     # auth
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),

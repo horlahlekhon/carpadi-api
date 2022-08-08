@@ -2,6 +2,7 @@ import asyncio
 import uuid
 from asyncio import AbstractEventLoop
 from decimal import Decimal
+from typing import Optional
 
 import requests
 from django.db.transaction import atomic
@@ -26,7 +27,7 @@ from src.models.models import (
     FuelTypes,
     Assets,
     AssetEntityType,
-    Banks,
+    Banks, CarBrand, Inspections, InspectionStatus, Settings,
 )
 
 PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00PVbKK4Nu2YLpiK3OliA="
@@ -46,72 +47,59 @@ class PadiSeeder:
     def seed_merchants(self):
         usernames = {'gsherman', 'brettmyers', 'curtishanson', 'russell48', "salk"}
         in_db = User.objects.filter(username__in=usernames).values_list('username', flat=True)
-        missing = usernames.difference(set(in_db))
+
         user_ids = []
-        if len(missing) > 0:
-            self.seeder.add_entity(
-                User,
-                len(missing),
-                {
-                    'username': lambda x: missing.pop(),
-                    'user_type': UserTypes.CarMerchant,
-                    'password': PASSWORD,
-                    'is_active': True,
-                    'is_staff': False,
-                    'is_superuser': False,
-                },
-            )
+        if missing := usernames.difference(set(in_db)):
+            self.seeder.add_entity(User, len(missing), {
+                'username': lambda x: missing.pop(),
+                'user_type': UserTypes.CarMerchant,
+                'password': PASSWORD, 'is_active': True,
+                'is_staff': False, 'is_superuser': False})
+
             user_ids = self.seeder.execute()[User]
         print(f"Seeded {user_ids} users")
         merch_ids = []
         for idx in user_ids:
-            self.seeder.add_entity(
-                CarMerchant,
-                1,
-                {
-                    'user': lambda x: User.objects.get(pk=idx),
-                    'bvn': lambda x: f"{self.seeder.faker.random_number(digits=10)}",
-                },
-            )
+            self.seeder.add_entity(CarMerchant, 1, {'user': lambda x: User.objects.get(pk=idx), 'bvn': lambda x: f"{self.seeder.faker.random_number(digits=10)}"})
+
             id1 = self.seeder.execute()[CarMerchant][0]
             merch_ids.append(id1)
-            self.seeder.add_entity(
-                Wallet,
-                1,
-                {
-                    'merchant': lambda x: CarMerchant.objects.get(pk=id1),
-                    'balance': Decimal(10000000.0),
-                    'withdrawable_cash': Decimal(10000000.0),
-                    'trading_cash': Decimal(0.0),
-                    'total_cash': Decimal(0.0),
-                },
-            )
-            self.seeder.execute()  # [Wallet][0]
+            self.seeder.add_entity(Wallet, 1, {
+                'merchant': lambda x: CarMerchant.objects.get(pk=id1),
+                'balance': Decimal(10000000.0), 'withdrawable_cash': Decimal(10000000.0),
+                'trading_cash': Decimal(0.0), 'total_cash': Decimal(0.0)
+            })
+
+            self.seeder.execute()
         merch_ids = CarMerchant.objects.filter(user__username__in=usernames)
         return merch_ids
 
     def seed_admin(self):
-        admin = User.objects.filter(user_type=UserTypes.Admin, is_active=True, is_staff=True, username='lekan').first()
-        if not admin:
-            self.seeder.add_entity(
-                User,
-                1,
-                {
-                    "is_staff": True,
-                    "is_superuser": True,
-                    "is_active": True,
-                    'username': 'lekan',
-                    'user_type': UserTypes.Admin,
-                    'password': PASSWORD,
-                },
-            )
+        if admin := User.objects.filter(
+                user_type=UserTypes.Admin, is_active=True, is_staff=True, username='lekan').first():
+            self.admin = admin
+            return [admin.id]
+        else:
+            self.seeder.add_entity(User, 1, {
+                "is_staff": True, "is_superuser": True,
+                "is_active": True, 'username': 'lekan',
+                'user_type': UserTypes.Admin, 'password': PASSWORD
+            })
+
             user_ids = self.seeder.execute()[User]
             print(f"Seeded {user_ids[0]} users")
             self.admin = User.objects.get(pk=user_ids[0])
             return user_ids
-        else:
-            self.admin = admin
-            return [admin.id]
+
+    def seed_inspection(self, car: str, user: Optional[User]):
+        assert not user or user.is_staff, "User doe inspection has to be a staff"
+        self.seeder.add_entity(Inspections, 1, {
+            "status": InspectionStatus.Ongoing,
+            "inspector": user or self.admin,
+            "inspection_assignor": self.admin,
+            "car": Car.objects.get(pk=car)
+        })
+        self.seeder.execute()
 
     def seed_cars(self):
         cost = self.seeder.faker.random_number(digits=4)
@@ -130,9 +118,7 @@ class PadiSeeder:
             1,
             {
                 'status': CarStates.Inspected if self.admin else CarStates.New,
-                'car_inspector': self.admin,
                 'bought_price': Decimal(100000.0),
-                'inspection_report': 'good' if self.admin else None,
                 'vin': vin,
                 'resale_price': None,
                 'colour': self.seeder.faker.color_name(),
@@ -141,11 +127,14 @@ class PadiSeeder:
             },
         )
         car = self.seeder.execute()[Car][0]
+        self.seed_inspection(car, user=None)
         data = {
             "type": "expense",
-            "cost": abs(self.seeder.faker.random_number(digits=4)),
-            "description": self.seeder.faker.sentence(),
-            "name": self.seeder.faker.name(),
+            "maintenance": {
+                "estimated_price":  abs(self.seeder.faker.random_number(digits=4)),
+                "name": self.seeder.faker.name(),
+                "picture": "https://res.cloudinary.com/balorunduro/image/upload/v1659456477/test/xbwnjjuyazcjybdxpw63.png"
+            },
             "car": car,
         }
         ser = CarMaintenanceSerializerAdmin(data=data)
@@ -183,8 +172,7 @@ class PadiSeeder:
                 'return_on_trade': None,
             },
         )
-        trade = self.seeder.execute()[Trade][0]
-        return trade
+        return self.seeder.execute()[Trade][0]
 
     def seed_units(self, trade, merchants):
         units = []
@@ -221,11 +209,18 @@ class PadiSeeder:
             self.seed_completed_trade(merch_ids, should_close=False)
             self.seed_completed_trade(merch_ids[:3])
             self.seed_completed_trade(merch_ids[:2])
+            self.seed_settings()
         else:
             print("Skipping database seed")
 
     def seed_vehicle_info(self, vin):
         vehicle = self.seeder.faker.vehicle_object()
+        self.seeder.add_entity(CarBrand, 1, {
+            "year": vehicle["Year"],
+            "model": vehicle['Model'],
+            "name": vehicle['Make'],
+        })
+        brand = self.seeder.execute()[CarBrand][0]
         self.seeder.add_entity(
             VehicleInfo,
             1,
@@ -237,10 +232,8 @@ class PadiSeeder:
                 "fuel_type": FuelTypes.Petrol,
                 "description": None,
                 "trim": "BASE",
-                "year": vehicle["Year"],
-                "model": vehicle['Model'],
                 "manufacturer": vehicle['Make'],
-                "make": vehicle['Make'],
+                "brand": CarBrand.objects.get(pk=brand)
             },
         )
         ret = self.seeder.execute()[VehicleInfo][0]
@@ -263,7 +256,7 @@ class PadiSeeder:
                     if Banks.objects.filter(bank_name=bank["name"], bank_code=bank["code"]).count() < 1:
                         b = Banks(id=uuid.uuid4(), bank_name=bank["name"], bank_code=bank["code"], bank_id=bank["id"])
                         bank_list.append(b)
-                if len(bank_list) > 0:
+                if bank_list:
                     resp = Banks.objects.bulk_create(bank_list)
                     print(f"seeded {len(resp)} banks to db...moving on without vawulence!!")
                 else:
@@ -272,3 +265,10 @@ class PadiSeeder:
                 print("Banks already seeded in the database.... and am not even cap'ng!!")
         else:
             print(f"we couldn't get banks list from the API... due to {response}")
+
+    def seed_settings(self):
+        self.seeder.add_entity(Settings, 1, {
+            "carpadi_trade_rot_percentage": Decimal(10.0),
+            "merchant_trade_rot_percentage": Decimal(5.0),
+        })
+        self.seeder.execute()

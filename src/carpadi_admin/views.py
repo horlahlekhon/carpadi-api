@@ -16,7 +16,7 @@ from src.carpadi_admin.filters import (
     TradeFilterAdmin,
     SparePartsFilter,
     VehicleInfoFilter,
-    CarMerchantFilter,
+    CarMerchantFilter, CarFilter,
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
@@ -33,6 +33,7 @@ from src.carpadi_admin.serializers import (
     VehicleInfoSerializer,
     TradeUnitSerializerAdmin,
     HomeDashboardSerializer,
+    CarMerchantAdminSerializer, SettingsSerializerAdmin
 )
 from src.carpadi_api.filters import TradeUnitFilter
 from src.carpadi_market.filters import CarProductFilter
@@ -51,9 +52,9 @@ from src.models.models import (
     TradeStates,
     SpareParts,
     CarProduct,
-    VehicleInfo,
+    VehicleInfo, Settings,
 )
-from src.models.serializers import CarBrandSerializer, CarMerchantSerializer, ActivitySerializer
+from src.models.serializers import CarBrandSerializer, ActivitySerializer
 
 
 # Create your views here.
@@ -71,7 +72,7 @@ class TransactionsViewSetAdmin(viewsets.ReadOnlyModelViewSet):
 
 class CarMerchantsViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAdminUser,)
-    serializer_class = CarMerchantSerializer
+    serializer_class = CarMerchantAdminSerializer
     queryset = CarMerchant.objects.all()
     filter_class = CarMerchantFilter
     filter_backends = (filters.DjangoFilterBackend,)
@@ -96,6 +97,8 @@ class CarViewSet(viewsets.ModelViewSet):
     serializer_class = CarSerializer
     permission_classes = (IsAdminUser,)
     queryset = Car.objects.all()
+    filter_class = CarFilter
+    filter_backends = (filters.DjangoFilterBackend,)
 
     # def update(self, request, *args, **kwargs):
     #     car = self.get_object()
@@ -246,3 +249,9 @@ class TradeUnitReadOnlyView(viewsets.ReadOnlyModelViewSet):
     queryset = TradeUnit.objects.all()
     filter_class = TradeUnitFilter
     filter_backends = (filters.DjangoFilterBackend,)
+
+
+class SettingsViewset(viewsets.ModelViewSet):
+    serializer_class = SettingsSerializerAdmin
+    permission_classes = (IsAdminUser,)
+    queryset = Settings.objects.all()

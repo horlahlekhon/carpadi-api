@@ -13,7 +13,7 @@ from src.models.models import (
     CarMerchant,
     UserStatusFilterChoices,
     TradeUnit,
-    ActivityTypes,
+    ActivityTypes, Car,
 )
 
 
@@ -108,9 +108,14 @@ class SparePartsFilter(filters.FilterSet):
 
 
 class VehicleInfoFilter(filters.FilterSet):
+
+    model = filters.CharFilter(field_name="brand__model", lookup_expr="iexact")
+    make = filters.CharFilter(field_name="brand__make", lookup_expr="iexact")
+    year = filters.CharFilter(field_name="brand__year", lookup_expr="iexact")
+
     class Meta:
         model = VehicleInfo
-        fields = ["transmission", "car_type", "fuel_type", 'make', 'model', 'year']
+        fields = ["transmission", "car_type", "fuel_type"]
 
 
 class CarMerchantFilter(filters.FilterSet):
@@ -128,3 +133,11 @@ class CarMerchantFilter(filters.FilterSet):
     class Meta:
         model = CarMerchant
         fields = ("user", "created")
+
+
+class CarFilter(filters.FilterSet):
+    manufacturer = filters.CharFilter(field_name="information__brand__name", lookup_expr="iexact")
+
+    class Meta:
+        model = Car
+        fields = ("information", "status", "vin", "colour", "licence_plate",)

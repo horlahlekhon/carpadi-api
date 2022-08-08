@@ -11,7 +11,7 @@ class InspectionsFilter(filters.FilterSet):
             "status",
             "inspection_verdict",
             "inspector",
-            "inspection_assigner",
+            "inspection_assignor",
             "car",
         )
 

@@ -128,7 +128,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         data: dict = request.data
         if data.get("new_password") and data.get("old_password"):
             user: User = self.request.user
-            if user.is_active and user.check_password(data.get("old_password")) and user.is_merchant():
+            if user.is_active and user.check_password(data.get("old_password")) and user.is_authenticated:
                 user.set_password(data.get("new_password"))
                 user.save(update_fields=["password"])
                 return Response(status=status.HTTP_200_OK)

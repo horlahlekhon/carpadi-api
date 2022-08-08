@@ -130,8 +130,10 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
     #     return Response(serialize.data, status=status.HTTP_200_OK)
 
     def get_queryset(self):
-        queryset = self.queryset.filter(wallet__merchant=self.request.user.merchant)
-        return queryset
+        if self.request.user.is_merchant:
+            queryset = self.queryset.filter(wallet__merchant=self.request.user.merchant)
+            return queryset
+        return self.queryset.none()
 
     def retrieve(self, request, pk=None):
         transaction = get_object_or_404(self.queryset, pk=pk)
@@ -179,7 +181,9 @@ class BankAccountViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def get_queryset(self):
-        return self.queryset.filter(merchant=self.request.user.merchant)
+        if self.request.user.is_merchant():
+            return self.queryset.filter(merchant=self.request.user.merchant)
+        return self.queryset.filter(merchant=None)
 
     @action(detail=False, methods=['get'], url_path='get-banks', url_name='get_banks')
     def get_banks(self, request):
@@ -287,7 +291,9 @@ class WalletViewSet(viewsets.ModelViewSet):
         return Response(serialize.data, status=status.HTTP_200_OK)
 
     def get_queryset(self):
-        return [self.request.user.merchant.wallet]
+        if self.request.user.is_merchant():
+            return [self.request.user.merchant.wallet]
+        return self.queryset.none()
 
     def create(self, request, *args, **kwargs):
         return Response({"message": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -308,7 +314,7 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         queryset = super(TradeViewSet, self).get_queryset()
-        if self.request.query_params.get("self") and bool(self.request.query_params.get("self")) == True:
+        if self.request.query_params.get("self") and bool(self.request.query_params.get("self")):
             return queryset.filter(units__merchant__id=self.request.user.merchant.id)
         return queryset
 
@@ -328,7 +334,9 @@ class TradeUnitViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user: User = self.request.user
-        return self.queryset.filter(merchant=user.merchant)
+        if user.is_merchant():
+            return self.queryset.filter(merchant=user.merchant)
+        return self.queryset.none()
 
     def perform_create(self, serializer):
         user: User = self.request.user
@@ -343,5 +351,7 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
     filter_class = ActivityFilter
 
     def get_queryset(self):
-        user: CarMerchant = self.request.user.merchant
-        return user.activity_set.all()
+        if self.request.user.is_merchant():
+            user: CarMerchant = self.request.user.merchant
+            return user.activity_set.all()
+        return Activity.objects.none()

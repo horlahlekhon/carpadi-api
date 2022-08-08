@@ -23,7 +23,8 @@ from rest_framework import exceptions
 from rest_framework.exceptions import APIException
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from src.carpadi_admin.utils import validate_inspector, checkout_transaction_validator, disbursement_trade_unit_validator
+from src.carpadi_admin.utils import validate_inspector, checkout_transaction_validator, \
+    disbursement_trade_unit_validator
 from src.config.common import OTP_EXPIRY
 from src.models.validators import PhoneNumberValidator
 
@@ -174,7 +175,8 @@ class Wallet(Base):
         return unsettled
 
     def get_trading_cash(self):
-        trading = self.merchant.units.filter(trade__trade_status__in=(TradeStates.Purchased, TradeStates.Ongoing)).aggregate(
+        trading = self.merchant.units.filter(
+            trade__trade_status__in=(TradeStates.Purchased, TradeStates.Ongoing)).aggregate(
             total=Sum("unit_value")
         ).get("total") or Decimal(0.00)
         return trading
@@ -213,7 +215,8 @@ class Wallet(Base):
                 updated_fields_wallet = updated_fields_wallet + ["unsettled_cash", "trading_cash"]
                 tx.transaction_status = TransactionStatus.Unsettled
             elif db.disbursement_status == DisbursementStates.Settled:
-                balance_after_deduction = Decimal(0.0) if self.unsettled_cash - tx.amount < 0 else self.unsettled_cash - tx.amount
+                balance_after_deduction = Decimal(
+                    0.0) if self.unsettled_cash - tx.amount < 0 else self.unsettled_cash - tx.amount
                 self.withdrawable_cash += tx.amount
                 self.unsettled_cash = balance_after_deduction
                 updated_fields_wallet = updated_fields_wallet + ["withdrawable_cash", "unsettled_cash"]
@@ -221,8 +224,6 @@ class Wallet(Base):
             else:
                 raise ValidationError("Invalid disbursement status")
         elif tx.transaction_kind == TransactionKinds.TradeUnitPurchases and tx.transaction_type == TransactionTypes.Debit:
-            # self.trading_cash += tx.amount
-            balance_after_deduction = Decimal(0.0)
             self.withdrawable_cash = (
                 Decimal(0.0) if self.withdrawable_cash - tx.amount < 0 else self.withdrawable_cash - tx.amount
             )
@@ -253,14 +254,18 @@ class TransactionStatus(models.TextChoices):
 class Transaction(Base):
     amount = models.DecimalField(max_digits=10, decimal_places=4)
     wallet = models.ForeignKey(
-        Wallet, on_delete=models.CASCADE, related_name="merchant_transactions", help_text="transactions carried out by merchant"
+        Wallet, on_delete=models.CASCADE, related_name="merchant_transactions",
+        help_text="transactions carried out by merchant"
     )
     transaction_type = models.CharField(max_length=10, choices=TransactionTypes.choices)
     transaction_reference = models.CharField(max_length=50, null=False, blank=False)
     transaction_description = models.CharField(max_length=50, null=True, blank=True)
-    transaction_status = models.CharField(max_length=10, choices=TransactionStatus.choices, default=TransactionStatus.Pending)
-    transaction_response = models.JSONField(null=True, blank=True, help_text="Transaction response from payment gateway")
-    transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices, default=TransactionKinds.Deposit)
+    transaction_status = models.CharField(max_length=10, choices=TransactionStatus.choices,
+                                          default=TransactionStatus.Pending)
+    transaction_response = models.JSONField(null=True, blank=True,
+                                            help_text="Transaction response from payment gateway")
+    transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices,
+                                        default=TransactionKinds.Deposit)
     transaction_payment_link = models.URLField(max_length=200, null=True, blank=True)
     transaction_fees = models.DecimalField(
         max_digits=10, decimal_places=4, default=0.0, help_text="Transaction fees for withdrawal transactions"
@@ -305,7 +310,8 @@ class BankAccount(Base):
     bank = models.ForeignKey(Banks, on_delete=models.CASCADE, related_name="bank_accounts")
     account_number = models.CharField(max_length=50, null=False, blank=False)
     merchant = models.ForeignKey(
-        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts", help_text="Bank account to remit merchant money to"
+        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts",
+        help_text="Bank account to remit merchant money to"
     )
     is_default = models.BooleanField(default=False)
 
@@ -417,15 +423,16 @@ class Car(Base):
     # TODO validate vin from vin api
     vin = models.CharField(max_length=17)
     pictures = GenericRelation("Assets")
-    car_inspector = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=False,
-        validators=[
-            validate_inspector,
-        ],
-    )
+    # car_inspection = models.OneToOneField(
+    #     "Inspections",
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=False,
+    #     validators=[
+    #         validate_inspector,
+    #     ],
+    #     related_name="car_inspection"
+    # )
     colour = models.CharField(max_length=50)
     bought_price = models.DecimalField(
         decimal_places=2,
@@ -433,7 +440,7 @@ class Car(Base):
         max_length=10,
         null=True,
         help_text="potential cost of  purchasing the car offered by the seller. "
-        "this should be changed to reflect the actual cost of the car when it is bought",
+                  "this should be changed to reflect the actual cost of the car when it is bought",
         validators=[MinValueValidator(Decimal(0.00))],
         default=Decimal(0.00),
     )
@@ -456,10 +463,9 @@ class Car(Base):
     #     null=True, blank=True
     # )
     resale_price = models.DecimalField(
-        decimal_places=2, max_digits=10, max_length=10, help_text="price presented to merchants", null=True, blank=True
+        decimal_places=2, max_digits=10,
+        max_length=10, help_text="price presented to merchants", null=True, blank=True
     )
-    # TODO change to a full fledge model
-    inspection_report = models.TextField(null=True, blank=True)
     margin = models.DecimalField(
         decimal_places=2,
         max_digits=10,
@@ -480,10 +486,6 @@ class Car(Base):
     def margin_calc(self):
         return self.resale_price - self.total_cost_calc() if self.resale_price else None
 
-        # def get_resale_price(self):
-
-    #     return self.total_cost_calc() if not self.resale_price else self.resale_price
-
     def update_on_sold(self):
         self.status = CarStates.Sold
         self.margin = self.margin_calc()
@@ -491,7 +493,8 @@ class Car(Base):
 
     def save(self, *args, **kwargs):
         if self._state.adding:
-            self.name = f"{self.information.make} {self.information.model} {self.information.year}"
+            self.name = f"{self.information.brand.name}" \
+                        f" {self.information.brand.model} {self.information.brand.year}"
         super().save(*args, **kwargs)
 
 
@@ -500,8 +503,8 @@ class SpareParts(Base):
     car_brand = models.ForeignKey(CarBrand, on_delete=models.CASCADE)
     estimated_price = models.DecimalField(max_digits=10, decimal_places=2)
 
-    class Meta:
-        unique_together = ('name', 'car_brand')
+    # class Meta:
+    #     unique_together = ('name', 'car_brand')
 
 
 class MiscellaneousExpenses(Base):
@@ -525,9 +528,9 @@ class CarMaintenance(Base):
         max_digits=10,
         decimal_places=2,
         help_text="cost of the maintenance a the time of the maintenance.. "
-        "cost on the maintenance might change, i.e spare parts. "
-        "the cost here is the correct one to use when calculating "
-        "total cost of car maintenance",
+                  "cost on the maintenance might change, i.e spare parts. "
+                  "the cost here is the correct one to use when calculating "
+                  "total cost of car maintenance",
     )
 
 
@@ -572,14 +575,7 @@ class Trade(Base):
         max_digits=10,
         default=Decimal(0.00),
         help_text="min price at which the car can be sold, given the expenses we already made. "
-        "this should be determined by who is creating the sales by checking the expenses made on the car",
-    )
-    max_sale_price = models.DecimalField(
-        validators=[MinValueValidator(Decimal(0.00))],
-        decimal_places=2,
-        max_digits=10,
-        default=Decimal(0.00),
-        help_text="max price at which the car " "can be sold",
+                  "this should be determined by calculating how much maintanance is done + total disbursement at the end of trade",
     )
     estimated_sales_duration = models.PositiveIntegerField(help_text="estimated sales duration in days", default=30)
     bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days", null=True, blank=True)
@@ -587,7 +583,12 @@ class Trade(Base):
 
     @property
     def resale_price(self):
-        return self.min_sale_price if not self.car.resale_price else self.car.resale_price
+        """
+            This will be the minimum sale price before the car is sold
+        """
+        if not self.car.resale_price or  (self.car.resale_price <= Decimal(0.00)) :
+            return self.min_sale_price
+        return self.car.resale_price
 
     def return_on_trade_calc(self):
         return self.resale_price - self.car.total_cost_calc()
@@ -595,19 +596,26 @@ class Trade(Base):
     def return_on_trade_calc_percent(self):
         return self.return_on_trade_calc() / self.resale_price * 100
 
-    def return_on_trade_per_slot(self):
-        return self.return_on_trade_calc() / self.slots_available
+    @property
+    def return_on_trade_per_slot(self) -> Decimal:
+        settings: Settings = Settings.objects.first()
+        return Decimal(self.price_per_slot * settings.merchant_trade_rot_percentage / 100)
 
     def return_on_trade_per_slot_percent(self):
-        return self.return_on_trade_calc_percent() / self.slots_available
+        settings: Settings = Settings.objects.first()
+        return settings.merchant_trade_rot_percentage
 
     def slots_purchased(self):
         # TODO: this is a hack, fix it using annotations
-        slots_purchased = sum([unit.slots_quantity for unit in self.units.all()])
-        return slots_purchased
+        return sum(unit.slots_quantity for unit in self.units.all())
+
+    @property
+    def carpadi_rot(self):
+        settings: Settings = Settings.objects.first()
+        return Decimal(self.car.total_cost_calc() * settings.carpadi_trade_rot_percentage / 100)
 
     def remaining_slots(self):
-        slots_purchased = sum([unit.slots_quantity for unit in self.units.all()])
+        slots_purchased = sum(unit.slots_quantity for unit in self.units.all())
         return self.slots_available - slots_purchased
 
     def total_payout(self):
@@ -617,20 +625,29 @@ class Trade(Base):
         and total amount of return on trade i.e trade_unit.return_on_trade
         across all units
         """
-        total_unit_value = self.units.aggregate(total=Sum('unit_value')).get('total')
-        if not total_unit_value:
+        if total_unit_value := self.units.aggregate(total=Sum('unit_value')).get('total'):
+            return self.return_on_trade_per_slot * self.slots_available + total_unit_value
+        else:
             raise APIException(detail="No units have been sold yet")
-        return (self.return_on_trade_per_slot() * self.slots_available) + total_unit_value
+
+    def min_sale_price_calc(self):
+        """
+            The minimum amount that this car can be sold. it is a culmination of
+            car_value + total units rot + (car_value * minimum_carpadi_commision / 100)
+        """
+        settings: Settings = Settings.objects.first()
+        total_slots_rot = self.return_on_trade_per_slot * self.slots_available
+        carpadi_rot = self.car.total_cost_calc() * settings.carpadi_trade_rot_percentage / 100
+        return self.car.total_cost_calc() + total_slots_rot + carpadi_rot
 
     def run_disbursement(self):
-        if self.trade_status == TradeStates.Completed:
-            for unit in self.units.all():
-                unit.disburse()
-        else:
-            raise ValueError(f"Trade is not in {self.trade_status} state")
+        if self.trade_status != TradeStates.Completed:
+            raise ValueError(f"Trade is in {self.trade_status} state")
+        for unit in self.units.all():
+            unit.disburse()
 
     def calculate_price_per_slot(self):
-        return self.resale_price / self.slots_available
+        return self.car.total_cost_calc() / self.slots_available
 
     def get_trade_merchants(self):
         return self.units.values_list('merchant', flat=True).distinct()
@@ -651,6 +668,7 @@ class Trade(Base):
     def save(self, *args, **kwargs):
         if self._state.adding:
             self.price_per_slot = self.calculate_price_per_slot()
+            self.min_sale_price = self.min_sale_price_calc()
             self.estimated_return_on_trade = self.return_on_trade_calc()
         else:
             self.check_updates(kwargs.get("update_fields", []))
@@ -669,16 +687,17 @@ class Trade(Base):
         Completes the trade by setting the trade status to completed and updating the car status.
         we also try to do some validation to make sure trade and its corresponding objects are valid
         """
-        successful_disbursements = self.units.filter(disbursement__disbursement_status=DisbursementStates.Unsettled).count()
+        successful_disbursements = self.units.filter(
+            disbursement__disbursement_status=DisbursementStates.Unsettled).count()
         query = self.units.annotate(total_disbursed=Sum('disbursement__amount'))
         total_disbursed = query.aggregate(sum=Sum('total_disbursed')).get('sum') or Decimal(0)
-        if successful_disbursements == self.units.count() and total_disbursed == self.total_payout():
-            car: Car = self.car
-            car.update_on_sold()
-        else:
+        if successful_disbursements != self.units.count() or total_disbursed != self.total_payout():
+            # TODO send notification for this, seems fatal
             raise exceptions.APIException(
-                "Error, cannot complete trade, because calculated" " payout seems to be unbalanced with the disbursements"
-            )
+                "Error, cannot complete trade, because calculated "
+                "payout seems to be unbalanced with the disbursements")
+        car: Car = self.car
+        car.update_on_sold()
 
     def __repr__(self):
         return (
@@ -744,13 +763,11 @@ class TradeUnit(Base):
         ordering = ["-slots_quantity"]
 
     def disburse(self):
-        disbursement = Disbursement.objects.create(
+        return Disbursement.objects.create(
             trade_unit=self,
             disbursement_status=DisbursementStates.Unsettled,
             amount=self.trade.return_on_trade_per_slot() * self.slots_quantity + self.unit_value,
         )
-        return disbursement
-        # self.checkout_transaction = disbursement.transaction
 
     def save(self, *args, **kwargs):
         if self._state.adding:
@@ -774,7 +791,8 @@ class Disbursement(Base):
         help_text="the trade unit that this disbursement is for",
     )
     amount = models.DecimalField(decimal_places=5, editable=False, max_digits=10)
-    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, related_name="disbursement", null=True, blank=True)
+    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, related_name="disbursement", null=True,
+                                       blank=True)
     disbursement_status = models.CharField(
         choices=DisbursementStates.choices, max_length=20, default=DisbursementStates.Unsettled
     )
@@ -836,6 +854,7 @@ class AssetEntityType(models.TextChoices):
     Inspection = "car_inspection", _("Car inspection pictures")
     Features = "feature", _("Picture of a feature of a car")
     InspectionReport = "inspection_report", _("Pdf report of an inspected vehicle")
+    CarSparePart = "spare_part", _("Images of spare parts")
 
 
 class Assets(Base):
@@ -847,8 +866,9 @@ class Assets(Base):
 
     @classmethod
     def create_many(cls, images: List[str], feature, entity_type: AssetEntityType):
-        if isinstance(images, list) and len(images) > 0:
-            ims = [Assets(id=uuid.uuid4(), content_object=feature, asset=image, entity_type=entity_type) for image in images]
+        if isinstance(images, list) and images:
+            ims = [Assets(id=uuid.uuid4(), content_object=feature, asset=image, entity_type=entity_type) for image in
+                   images]
             return Assets.objects.bulk_create(objs=ims)
 
     def __str__(self):
@@ -865,10 +885,8 @@ class VehicleInfo(Base):
     age = models.PositiveIntegerField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     trim = models.CharField(max_length=50, null=True, blank=False)
-    year = models.PositiveIntegerField()
-    model = models.CharField(max_length=100)
     manufacturer = models.CharField(max_length=50)
-    make = models.CharField(max_length=50)
+    brand = models.ForeignKey(CarBrand, on_delete=models.SET_NULL, null=True, blank=True)
 
 
 class CarProductStatus(models.TextChoices):
@@ -949,7 +967,7 @@ class Inspections(Base):
         max_length=10,
         default=InspectionVerdict.Bad,
         help_text="Verdict of the inspection after taking into account all"
-        " the stages and their scores. should be calculated by the system",
+                  " the stages and their scores. should be calculated by the system",
     )
     inspector = models.ForeignKey(
         User,
@@ -959,7 +977,7 @@ class Inspections(Base):
         blank=False,
         help_text="The person to undertake this inspection",
     )
-    inspection_assigner = models.ForeignKey(
+    inspection_assignor = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         null=True,
@@ -967,7 +985,7 @@ class Inspections(Base):
         blank=False,
         help_text="The user who assigned this inspection to the inspector. should be set automatically",
     )
-    car = models.ForeignKey(Car, on_delete=models.CASCADE)
+    car = models.OneToOneField(Car, on_delete=models.CASCADE)
 
 
 class Score(models.IntegerChoices):
@@ -997,4 +1015,8 @@ class InspectionStage(Base):
 
 
 class Settings(Base):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # user = models.ForeignKey(User, on_delete=models.CASCADE)
+    carpadi_trade_rot_percentage = models.DecimalField(decimal_places=2, max_digits=25)
+    merchant_trade_rot_percentage = models.DecimalField(decimal_places=2, max_digits=25)
+    transfer_fee = models.DecimalField(decimal_places=2, max_digits=25, default=Decimal(0.00))
+    close_trade_fee = models.DecimalField(decimal_places=2, max_digits=25, default=Decimal(0.00))
