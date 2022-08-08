@@ -52,9 +52,7 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         picture = validated_data.get("profile_picture")
         if picture:
-            picture = Assets.objects.create(
-                asset=picture, content_object=instance, entity_type=AssetEntityType.Merchant
-            )
+            picture = Assets.objects.create(asset=picture, content_object=instance, entity_type=AssetEntityType.Merchant)
             validated_data["profile_picture"] = picture
         return super(UserSerializer, self).update(instance, validated_data)
 
@@ -209,8 +207,7 @@ class TokenObtainModSerializer(serializers.Serializer):
     default_error_messages = {
         'no_active_account': _('No active account found with the given credentials'),
         'new_device_detected': _(
-            'You are logging in to this device for the first time,'
-            '' 'kindly create a new transaction pin for this ' 'device '
+            'You are logging in to this device for the first time,' '' 'kindly create a new transaction pin for this ' 'device '
         ),
     }
 

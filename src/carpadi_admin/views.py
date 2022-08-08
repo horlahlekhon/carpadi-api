@@ -16,7 +16,8 @@ from src.carpadi_admin.filters import (
     TradeFilterAdmin,
     SparePartsFilter,
     VehicleInfoFilter,
-    CarMerchantFilter, CarFilter,
+    CarMerchantFilter,
+    CarFilter,
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
@@ -33,7 +34,8 @@ from src.carpadi_admin.serializers import (
     VehicleInfoSerializer,
     TradeUnitSerializerAdmin,
     HomeDashboardSerializer,
-    CarMerchantAdminSerializer, SettingsSerializerAdmin
+    CarMerchantAdminSerializer,
+    SettingsSerializerAdmin,
 )
 from src.carpadi_api.filters import TradeUnitFilter
 from src.carpadi_market.filters import CarProductFilter
@@ -52,7 +54,8 @@ from src.models.models import (
     TradeStates,
     SpareParts,
     CarProduct,
-    VehicleInfo, Settings,
+    VehicleInfo,
+    Settings,
 )
 from src.models.serializers import CarBrandSerializer, ActivitySerializer
 

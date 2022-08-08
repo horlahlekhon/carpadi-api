@@ -13,7 +13,8 @@ from src.models.models import (
     CarMerchant,
     UserStatusFilterChoices,
     TradeUnit,
-    ActivityTypes, Car,
+    ActivityTypes,
+    Car,
 )
 
 
@@ -140,4 +141,10 @@ class CarFilter(filters.FilterSet):
 
     class Meta:
         model = Car
-        fields = ("information", "status", "vin", "colour", "licence_plate",)
+        fields = (
+            "information",
+            "status",
+            "vin",
+            "colour",
+            "licence_plate",
+        )

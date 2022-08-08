@@ -14,7 +14,8 @@ from src.carpadi_admin.views import (
     DashboardViewSet,
     CarProductViewSetAdmin,
     VehicleInfoViewSet,
-    TradeUnitReadOnlyView, SettingsViewset,
+    TradeUnitReadOnlyView,
+    SettingsViewset,
 )
 from src.models.views import UserViewSet
 

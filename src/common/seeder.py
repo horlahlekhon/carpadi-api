@@ -27,7 +27,11 @@ from src.models.models import (
     FuelTypes,
     Assets,
     AssetEntityType,
-    Banks, CarBrand, Inspections, InspectionStatus, Settings,
+    Banks,
+    CarBrand,
+    Inspections,
+    InspectionStatus,
+    Settings,
 )
 
 PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00PVbKK4Nu2YLpiK3OliA="
@@ -50,41 +54,64 @@ class PadiSeeder:
 
         user_ids = []
         if missing := usernames.difference(set(in_db)):
-            self.seeder.add_entity(User, len(missing), {
-                'username': lambda x: missing.pop(),
-                'user_type': UserTypes.CarMerchant,
-                'password': PASSWORD, 'is_active': True,
-                'is_staff': False, 'is_superuser': False})
+            self.seeder.add_entity(
+                User,
+                len(missing),
+                {
+                    'username': lambda x: missing.pop(),
+                    'user_type': UserTypes.CarMerchant,
+                    'password': PASSWORD,
+                    'is_active': True,
+                    'is_staff': False,
+                    'is_superuser': False,
+                },
+            )
 
             user_ids = self.seeder.execute()[User]
         print(f"Seeded {user_ids} users")
         merch_ids = []
         for idx in user_ids:
-            self.seeder.add_entity(CarMerchant, 1, {'user': lambda x: User.objects.get(pk=idx), 'bvn': lambda x: f"{self.seeder.faker.random_number(digits=10)}"})
+            self.seeder.add_entity(
+                CarMerchant,
+                1,
+                {'user': lambda x: User.objects.get(pk=idx), 'bvn': lambda x: f"{self.seeder.faker.random_number(digits=10)}"},
+            )
 
             id1 = self.seeder.execute()[CarMerchant][0]
             merch_ids.append(id1)
-            self.seeder.add_entity(Wallet, 1, {
-                'merchant': lambda x: CarMerchant.objects.get(pk=id1),
-                'balance': Decimal(10000000.0), 'withdrawable_cash': Decimal(10000000.0),
-                'trading_cash': Decimal(0.0), 'total_cash': Decimal(0.0)
-            })
+            self.seeder.add_entity(
+                Wallet,
+                1,
+                {
+                    'merchant': lambda x: CarMerchant.objects.get(pk=id1),
+                    'balance': Decimal(10000000.0),
+                    'withdrawable_cash': Decimal(10000000.0),
+                    'trading_cash': Decimal(0.0),
+                    'total_cash': Decimal(0.0),
+                },
+            )
 
             self.seeder.execute()
         merch_ids = CarMerchant.objects.filter(user__username__in=usernames)
         return merch_ids
 
     def seed_admin(self):
-        if admin := User.objects.filter(
-                user_type=UserTypes.Admin, is_active=True, is_staff=True, username='lekan').first():
+        if admin := User.objects.filter(user_type=UserTypes.Admin, is_active=True, is_staff=True, username='lekan').first():
             self.admin = admin
             return [admin.id]
         else:
-            self.seeder.add_entity(User, 1, {
-                "is_staff": True, "is_superuser": True,
-                "is_active": True, 'username': 'lekan',
-                'user_type': UserTypes.Admin, 'password': PASSWORD
-            })
+            self.seeder.add_entity(
+                User,
+                1,
+                {
+                    "is_staff": True,
+                    "is_superuser": True,
+                    "is_active": True,
+                    'username': 'lekan',
+                    'user_type': UserTypes.Admin,
+                    'password': PASSWORD,
+                },
+            )
 
             user_ids = self.seeder.execute()[User]
             print(f"Seeded {user_ids[0]} users")
@@ -93,12 +120,16 @@ class PadiSeeder:
 
     def seed_inspection(self, car: str, user: Optional[User]):
         assert not user or user.is_staff, "User doe inspection has to be a staff"
-        self.seeder.add_entity(Inspections, 1, {
-            "status": InspectionStatus.Ongoing,
-            "inspector": user or self.admin,
-            "inspection_assignor": self.admin,
-            "car": Car.objects.get(pk=car)
-        })
+        self.seeder.add_entity(
+            Inspections,
+            1,
+            {
+                "status": InspectionStatus.Ongoing,
+                "inspector": user or self.admin,
+                "inspection_assignor": self.admin,
+                "car": Car.objects.get(pk=car),
+            },
+        )
         self.seeder.execute()
 
     def seed_cars(self):
@@ -131,9 +162,9 @@ class PadiSeeder:
         data = {
             "type": "expense",
             "maintenance": {
-                "estimated_price":  abs(self.seeder.faker.random_number(digits=4)),
+                "estimated_price": abs(self.seeder.faker.random_number(digits=4)),
                 "name": self.seeder.faker.name(),
-                "picture": "https://res.cloudinary.com/balorunduro/image/upload/v1659456477/test/xbwnjjuyazcjybdxpw63.png"
+                "picture": "https://res.cloudinary.com/balorunduro/image/upload/v1659456477/test/xbwnjjuyazcjybdxpw63.png",
             },
             "car": car,
         }
@@ -215,11 +246,15 @@ class PadiSeeder:
 
     def seed_vehicle_info(self, vin):
         vehicle = self.seeder.faker.vehicle_object()
-        self.seeder.add_entity(CarBrand, 1, {
-            "year": vehicle["Year"],
-            "model": vehicle['Model'],
-            "name": vehicle['Make'],
-        })
+        self.seeder.add_entity(
+            CarBrand,
+            1,
+            {
+                "year": vehicle["Year"],
+                "model": vehicle['Model'],
+                "name": vehicle['Make'],
+            },
+        )
         brand = self.seeder.execute()[CarBrand][0]
         self.seeder.add_entity(
             VehicleInfo,
@@ -233,7 +268,7 @@ class PadiSeeder:
                 "description": None,
                 "trim": "BASE",
                 "manufacturer": vehicle['Make'],
-                "brand": CarBrand.objects.get(pk=brand)
+                "brand": CarBrand.objects.get(pk=brand),
             },
         )
         ret = self.seeder.execute()[VehicleInfo][0]
@@ -267,8 +302,12 @@ class PadiSeeder:
             print(f"we couldn't get banks list from the API... due to {response}")
 
     def seed_settings(self):
-        self.seeder.add_entity(Settings, 1, {
-            "carpadi_trade_rot_percentage": Decimal(10.0),
-            "merchant_trade_rot_percentage": Decimal(5.0),
-        })
+        self.seeder.add_entity(
+            Settings,
+            1,
+            {
+                "carpadi_trade_rot_percentage": Decimal(10.0),
+                "merchant_trade_rot_percentage": Decimal(5.0),
+            },
+        )
         self.seeder.execute()
