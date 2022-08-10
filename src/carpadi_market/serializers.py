@@ -3,7 +3,25 @@ from typing import List, Dict
 from django.db.transaction import atomic
 from rest_framework import serializers
 
-from src.models.models import CarFeature, Assets, CarProduct, AssetEntityType, Trade
+from src.models.models import CarFeature, Assets, CarProduct, AssetEntityType, Trade, VehicleInfo, CarStates, Car
+
+
+class CarSerializerField(serializers.RelatedField):
+
+    def to_internal_value(self, data):
+        try:
+            return Car.objects.get(pk=data, product=None)
+        except Car.DoesNotExist as reason:
+            raise serializers.ValidationError(
+                f"Car with id {data} does not exist or "
+                f"is already listed under a car product") from reason
+
+    def to_representation(self, value: Car):
+        return dict(id=value.id, status=value.status,
+                    model=value.information.brand.model,
+                    vin=value.vin, make=value.information.brand.name,
+                    year=value.information.brand.year,
+                    fuel_type=value.information.fuel_type)
 
 
 class CarFeatureSerializer(serializers.ModelSerializer):
@@ -16,8 +34,7 @@ class CarFeatureSerializer(serializers.ModelSerializer):
         read_only_fields = ('sales_image',)
 
     def get_feature_images(self, obj: CarFeature):
-        pictures = Assets.objects.filter(object_id=obj.id).values_list("asset", flat=True)
-        return pictures
+        return Assets.objects.filter(object_id=obj.id).values_list("asset", flat=True)
 
     @atomic()
     def create(self, validated_data):
@@ -34,15 +51,15 @@ class CarProductSerializer(serializers.ModelSerializer):
     car_features = serializers.SerializerMethodField()
     highlight = serializers.CharField(required=False, max_length=100)
     trade = serializers.SerializerMethodField()
+    car = CarSerializerField(queryset=Car.objects.filter(status=CarStates.Available))
 
     class Meta:
         model = CarProduct
         fields = "__all__"
 
     def get_trade(self, obj: CarProduct):
-        trade = Trade.objects.filter(car__information__product=obj.id).first()
-        if trade:
-            return trade.id
+        if obj.car.status == CarStates.Available and obj.car.trade:
+            return obj.car.trade.id
         return None
 
     def get_car_features(self, obj: CarProduct):
@@ -53,15 +70,21 @@ class CarProductSerializer(serializers.ModelSerializer):
             data = [d.update({"car": product_id}) for d in attr]
             feature_serializer = CarFeatureSerializer(data=attr, many=True)
             feature_serializer.is_valid(raise_exception=True)
-            resp = feature_serializer.save()
-            return resp
+            return feature_serializer.save()
         return None
 
     def get_product_images(self, obj: CarProduct):
-        pictures = Assets.objects.filter(object_id=obj.id).values_list("asset", flat=True)
-        return pictures
+        return Assets.objects.filter(object_id=obj.id).values_list("asset", flat=True)
 
     # def validate_car(self):
+    #     ...
+
+    # def vehicle_details(self, vehicle: VehicleInfo):
+    #     return dict()
+
+    def to_representation(self, instance):
+        data = super(CarProductSerializer, self).to_representation(instance)
+        return data
 
     @atomic()
     def create(self, validated_data):
@@ -79,5 +102,4 @@ class CarProductSerializer(serializers.ModelSerializer):
         features = self._create_features(car_features, instance.id)
         feat: CarProduct = super(CarProductSerializer, self).update(instance, validated_data)
         Assets.create_many(images=images, feature=feat, entity_type=AssetEntityType.CarProduct)
-
         return feat

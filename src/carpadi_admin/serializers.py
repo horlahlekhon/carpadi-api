@@ -233,6 +233,7 @@ class CarSerializerField(serializers.RelatedField):
             model=value.information.brand.model,
             make=value.information.brand.name,
             maintenance_cost=value.maintenance_cost_calc(),
+            resale_price=value.resale_price,
         )
 
 
@@ -246,6 +247,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     total_users_trading = serializers.SerializerMethodField()
     sold_slots_price = serializers.SerializerMethodField()
     carpadi_rot = serializers.SerializerMethodField()
+    trade_margin = serializers.SerializerMethodField()
 
     class Meta:
         model = Trade
@@ -261,6 +263,9 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             "min_sale_price",
         )
         extra_kwargs = {"car": {"error_messages": {"required": "Car to trade on is required", "unique": "Car already " "traded"}}}
+
+    def get_trade_margin(self, trade: Trade):
+        return trade.car.margin_calc()
 
     def get_carpadi_rot(self, trade: Trade):
         return trade.carpadi_rot
@@ -313,18 +318,6 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         if value.bought_price == Decimal(0.0):
             raise serializers.ValidationError("Please specify how much car was bought before creating a trade on it")
         return value
-
-    # def validate_min_sale_price(self, value):
-    #     car: Car = Car.objects.get(id=self.initial_data.get("car"))
-    #     if value < car.total_cost_calc():
-    #         raise serializers.ValidationError("Minimum sale price cannot be less than the total cost of the car")
-    #     return value
-
-    # def validate_max_sale_price(self, value):
-    #     car: Car = Car.objects.get(id=self.initial_data.get("car"))
-    #     if value < car.total_cost_calc():
-    #         raise serializers.ValidationError("Maximum sale price cannot be less than the total cost of the car")
-    #     return value
 
     @atomic()
     def create(self, validated_data):

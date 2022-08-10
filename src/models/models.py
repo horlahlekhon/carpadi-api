@@ -445,7 +445,7 @@ class Car(Base):
         null=True,
         blank=True,
         max_digits=10,
-        help_text="Total cost = bought_price + cost_of_repairs + maintainance_cost + misc",
+        help_text="Total cost = bought_price + cost_of_repairs + maintenance_cost + misc",
     )
     # maintainance_cost = models.DecimalField(
     #     decimal_places=2,
@@ -881,18 +881,23 @@ class CarProductStatus(models.TextChoices):
         "Car is still in the market",
     )
     Sold = "sold", _("Car has been sold")
-    Inactive = "inactive", _("Car has been recalled due to fault or other issues")
+    Inactive = "inactive", _(
+        "Car has been recalled due to"
+        " fault or other issues, or just added and not made active yet")
 
 
 class CarProduct(Base):
-    car = models.OneToOneField(VehicleInfo, on_delete=models.CASCADE, related_name="product")
+    car = models.OneToOneField(Car, on_delete=models.CASCADE, related_name="product")
     selling_price = models.DecimalField(decimal_places=2, max_digits=25)
     highlight = models.CharField(max_length=100, help_text="A short description of the vehicle")
     status = models.CharField(choices=CarProductStatus.choices, default=CarProductStatus.Active, max_length=10)
 
     def save(self, *args, **kwargs):
         if self._state.adding and not self.highlight:
-            self.highlight = f"{self.car.manufacturer} | {self.car.make} | {self.car.model} | {self.car.year}"
+            self.highlight = f"{self.car.information.manufacturer}" \
+                             f" | {self.car.information.brand.name}" \
+                             f" | {self.car.information.brand.model} " \
+                             f"| {self.car.information.brand.year}"
         return super(CarProduct, self).save(args, kwargs)
 
 

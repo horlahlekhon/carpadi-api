@@ -12,6 +12,7 @@ from rest_framework import status
 
 from src.carpadi_admin.serializers import CarMaintenanceSerializerAdmin
 from src.carpadi_api.serializers import TradeUnitSerializer
+from src.carpadi_market.serializers import CarProductSerializer
 from src.config import common
 from src.models.models import (
     CarMerchant,
@@ -31,7 +32,7 @@ from src.models.models import (
     CarBrand,
     Inspections,
     InspectionStatus,
-    Settings,
+    Settings, CarProduct,
 )
 
 PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00PVbKK4Nu2YLpiK3OliA="
@@ -242,6 +243,7 @@ class PadiSeeder:
             self.seed_completed_trade(merch_ids, should_close=False)
             self.seed_completed_trade(merch_ids[:3])
             self.seed_completed_trade(merch_ids[:2])
+            self.seed_car_product()
             print("seeding completed successfully!")
         else:
             print("Skipping database seed")
@@ -313,3 +315,35 @@ class PadiSeeder:
             },
         )
         self.seeder.execute()
+
+    def get_pictures(self, count):
+        resp = requests.get(f'https://picsum.photos/v2/list?page=100&limit={count}')
+        data = resp.json()
+        return [d['download_url'] for d in data]
+
+    def seed_car_product(self):
+        products = []
+        cars = Car.objects.filter(product=None)
+        for car in cars:
+            if car.trade:
+                product = {
+                    "car": str(car.id),
+                    "selling_price": car.bought_price + car.maintenance_cost_calc(),
+                    "images": [i.asset for i in car.pictures.all()],
+                    "features": [{
+                        "name": self.seeder.faker.name(),
+                        "images": self.get_pictures(2)
+                    },
+                        {
+                            "name": self.seeder.faker.name(),
+                            "images": self.get_pictures(2)
+                        }
+                    ]
+                }
+                products.append(product)
+        car_product_serializer = CarProductSerializer(data=products, many=True)
+        car_product_serializer.is_valid(raise_exception=True)
+        car_product_serializer.save()
+
+
+
