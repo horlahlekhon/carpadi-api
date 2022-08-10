@@ -755,7 +755,7 @@ class TradeUnit(Base):
         return Disbursement.objects.create(
             trade_unit=self,
             disbursement_status=DisbursementStates.Unsettled,
-            amount=self.trade.return_on_trade_per_slot() * self.slots_quantity + self.unit_value,
+            amount=self.trade.return_on_trade_per_slot * self.slots_quantity + self.unit_value,
         )
 
     def save(self, *args, **kwargs):

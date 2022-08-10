@@ -74,7 +74,8 @@ class PadiSeeder:
             self.seeder.add_entity(
                 CarMerchant,
                 1,
-                {'user': lambda x: User.objects.get(pk=idx), 'bvn': lambda x: f"{self.seeder.faker.random_number(digits=10)}"},
+                {'user': lambda x: User.objects.get(pk=idx),
+                 'bvn': lambda x: f"{self.seeder.faker.random_number(digits=10)}"},
             )
 
             id1 = self.seeder.execute()[CarMerchant][0]
@@ -96,7 +97,8 @@ class PadiSeeder:
         return merch_ids
 
     def seed_admin(self):
-        if admin := User.objects.filter(user_type=UserTypes.Admin, is_active=True, is_staff=True, username='lekan').first():
+        if admin := User.objects.filter(user_type=UserTypes.Admin, is_active=True, is_staff=True,
+                                        username='lekan').first():
             self.admin = admin
             return [admin.id]
         else:
@@ -196,7 +198,6 @@ class PadiSeeder:
                 'car': car,
                 'slots_available': 5,
                 'min_sale_price': Decimal(120000.0),
-                'max_sale_price': Decimal(200000.0),
                 'trade_status': status,
                 'date_of_sale': None,
                 'bts_time': None,
@@ -233,14 +234,15 @@ class PadiSeeder:
     @atomic
     def seed(self):
         # wallet_ids, merch_ids = self.seed_merchants()
-        if shouldseed == True or self.request is not None:
+        if shouldseed or self.request is not None:
+            self.seed_settings()
             self.seed_admin()
             merch_ids = self.seed_merchants()
             self.seed_completed_trade(merch_ids, should_close=True)
             self.seed_completed_trade(merch_ids, should_close=False)
             self.seed_completed_trade(merch_ids[:3])
             self.seed_completed_trade(merch_ids[:2])
-            self.seed_settings()
+            print("seeding completed successfully!")
         else:
             print("Skipping database seed")
 

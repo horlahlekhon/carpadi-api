@@ -437,7 +437,7 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         remaining_slots = trade.remaining_slots()
         if remaining_slots < attrs["slots_quantity"]:
             raise serializers.ValidationError({"trade": "Trade does not have enough slots available"})
-        rot = trade.return_on_trade_per_slot() * attrs["slots_quantity"]
+        rot = trade.return_on_trade_per_slot * attrs["slots_quantity"]
         unit_value = trade.price_per_slot * attrs["slots_quantity"]
         if unit_value > wallet.get_withdrawable_cash():
             raise serializers.ValidationError("Wallet balance is insufficient for this transaction")
