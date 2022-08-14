@@ -97,7 +97,7 @@ class TradeFilterAdmin(filters.FilterSet):
 
     class Meta:
         model = Trade
-        fields = ['created', 'modified', 'min_sale_price', 'max_sale_price']
+        fields = ['created', 'modified', 'min_sale_price', 'max_sale_price', 'car']
 
 
 class SparePartsFilter(filters.FilterSet):
