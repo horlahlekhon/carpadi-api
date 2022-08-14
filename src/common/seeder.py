@@ -32,7 +32,8 @@ from src.models.models import (
     CarBrand,
     Inspections,
     InspectionStatus,
-    Settings, CarProduct,
+    Settings,
+    CarProduct,
 )
 
 PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00PVbKK4Nu2YLpiK3OliA="
@@ -75,8 +76,7 @@ class PadiSeeder:
             self.seeder.add_entity(
                 CarMerchant,
                 1,
-                {'user': lambda x: User.objects.get(pk=idx),
-                 'bvn': lambda x: f"{self.seeder.faker.random_number(digits=10)}"},
+                {'user': lambda x: User.objects.get(pk=idx), 'bvn': lambda x: f"{self.seeder.faker.random_number(digits=10)}"},
             )
 
             id1 = self.seeder.execute()[CarMerchant][0]
@@ -98,8 +98,7 @@ class PadiSeeder:
         return merch_ids
 
     def seed_admin(self):
-        if admin := User.objects.filter(user_type=UserTypes.Admin, is_active=True, is_staff=True,
-                                        username='lekan').first():
+        if admin := User.objects.filter(user_type=UserTypes.Admin, is_active=True, is_staff=True, username='lekan').first():
             self.admin = admin
             return [admin.id]
         else:
@@ -330,20 +329,12 @@ class PadiSeeder:
                     "car": str(car.id),
                     "selling_price": car.bought_price + car.maintenance_cost_calc(),
                     "images": [i.asset for i in car.pictures.all()],
-                    "features": [{
-                        "name": self.seeder.faker.name(),
-                        "images": self.get_pictures(2)
-                    },
-                        {
-                            "name": self.seeder.faker.name(),
-                            "images": self.get_pictures(2)
-                        }
-                    ]
+                    "features": [
+                        {"name": self.seeder.faker.name(), "images": self.get_pictures(2)},
+                        {"name": self.seeder.faker.name(), "images": self.get_pictures(2)},
+                    ],
                 }
                 products.append(product)
         car_product_serializer = CarProductSerializer(data=products, many=True)
         car_product_serializer.is_valid(raise_exception=True)
         car_product_serializer.save()
-
-
-

@@ -15,7 +15,15 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='carproduct',
             name='status',
-            field=models.CharField(choices=[('active', 'Car is still in the market'), ('sold', 'Car has been sold'), ('inactive', 'Car has been recalled due to fault or other issues, or just added and not made active yet')], default='active', max_length=10),
+            field=models.CharField(
+                choices=[
+                    ('active', 'Car is still in the market'),
+                    ('sold', 'Car has been sold'),
+                    ('inactive', 'Car has been recalled due to fault or other issues, or just added and not made active yet'),
+                ],
+                default='active',
+                max_length=10,
+            ),
         ),
         migrations.AlterField(
             model_name='otp',

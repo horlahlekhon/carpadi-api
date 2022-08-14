@@ -881,9 +881,7 @@ class CarProductStatus(models.TextChoices):
         "Car is still in the market",
     )
     Sold = "sold", _("Car has been sold")
-    Inactive = "inactive", _(
-        "Car has been recalled due to"
-        " fault or other issues, or just added and not made active yet")
+    Inactive = "inactive", _("Car has been recalled due to" " fault or other issues, or just added and not made active yet")
 
 
 class CarProduct(Base):
@@ -894,10 +892,12 @@ class CarProduct(Base):
 
     def save(self, *args, **kwargs):
         if self._state.adding and not self.highlight:
-            self.highlight = f"{self.car.information.manufacturer}" \
-                             f" | {self.car.information.brand.name}" \
-                             f" | {self.car.information.brand.model} " \
-                             f"| {self.car.information.brand.year}"
+            self.highlight = (
+                f"{self.car.information.manufacturer}"
+                f" | {self.car.information.brand.name}"
+                f" | {self.car.information.brand.model} "
+                f"| {self.car.information.brand.year}"
+            )
         return super(CarProduct, self).save(args, kwargs)
 
 

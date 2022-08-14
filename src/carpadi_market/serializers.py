@@ -7,21 +7,24 @@ from src.models.models import CarFeature, Assets, CarProduct, AssetEntityType, T
 
 
 class CarSerializerField(serializers.RelatedField):
-
     def to_internal_value(self, data):
         try:
             return Car.objects.get(pk=data, product=None)
         except Car.DoesNotExist as reason:
             raise serializers.ValidationError(
-                f"Car with id {data} does not exist or "
-                f"is already listed under a car product") from reason
+                f"Car with id {data} does not exist or " f"is already listed under a car product"
+            ) from reason
 
     def to_representation(self, value: Car):
-        return dict(id=value.id, status=value.status,
-                    model=value.information.brand.model,
-                    vin=value.vin, make=value.information.brand.name,
-                    year=value.information.brand.year,
-                    fuel_type=value.information.fuel_type)
+        return dict(
+            id=value.id,
+            status=value.status,
+            model=value.information.brand.model,
+            vin=value.vin,
+            make=value.information.brand.name,
+            year=value.information.brand.year,
+            fuel_type=value.information.fuel_type,
+        )
 
 
 class CarFeatureSerializer(serializers.ModelSerializer):

@@ -16,7 +16,14 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='car',
             name='total_cost',
-            field=models.DecimalField(blank=True, decimal_places=2, editable=False, help_text='Total cost = bought_price + cost_of_repairs + maintenance_cost + misc', max_digits=10, null=True),
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=2,
+                editable=False,
+                help_text='Total cost = bought_price + cost_of_repairs + maintenance_cost + misc',
+                max_digits=10,
+                null=True,
+            ),
         ),
         migrations.AlterField(
             model_name='carproduct',

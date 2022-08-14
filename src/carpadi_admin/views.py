@@ -254,10 +254,7 @@ class TradeUnitReadOnlyView(viewsets.ReadOnlyModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
 
 
-class SettingsViewset(viewsets.GenericViewSet,
-                      mixins.RetrieveModelMixin,
-                      mixins.UpdateModelMixin, mixins.ListModelMixin):
+class SettingsViewset(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin):
     serializer_class = SettingsSerializerAdmin
     permission_classes = (IsAdminUser,)
     queryset = Settings.objects.all()
-
