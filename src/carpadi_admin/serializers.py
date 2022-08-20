@@ -321,7 +321,11 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
 
     @atomic()
     def create(self, validated_data):
-        return super().create(validated_data)
+        trade = super().create(validated_data)
+        car = trade.car
+        car.status = CarStates.OngoingTrade
+        car.save(update_fields=["status"])
+        return trade
 
     def complete_trade(self, trade: Trade):
         """

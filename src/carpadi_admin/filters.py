@@ -15,6 +15,7 @@ from src.models.models import (
     TradeUnit,
     ActivityTypes,
     Car,
+    CarStates,
 )
 
 
@@ -138,6 +139,11 @@ class CarMerchantFilter(filters.FilterSet):
 
 class CarFilter(filters.FilterSet):
     manufacturer = filters.CharFilter(field_name="information__brand__name", lookup_expr="iexact")
+    available_for_sale = filters.BooleanFilter(method="available_for_sales_filter")
+
+    def available_for_sales_filter(self, queryset, name, value):
+        if value:
+            return queryset.filter(product=None, status__in=(CarStates.Available, CarStates.OngoingTrade))
 
     class Meta:
         model = Car
