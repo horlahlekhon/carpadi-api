@@ -10,9 +10,13 @@ from ...common.seeder import PadiSeeder
 
 class TestCreateUserSerializer(TestCase):
     def setUp(self):
-        self.merchant_user_data = {'username': 'test', 'password': 'test',
-                                   "email": "olalekan@gmail.com",
-                                   "phone": "+2348129014778", "user_type": UserTypes.CarMerchant.value}
+        self.merchant_user_data = {
+            'username': 'test',
+            'password': 'test',
+            "email": "olalekan@gmail.com",
+            "phone": "+2348129014778",
+            "user_type": UserTypes.CarMerchant.value,
+        }
 
     def test_serializer_with_empty_data(self):
         serializer = CreateUserSerializer(data={})
@@ -43,16 +47,21 @@ class TestUserSerializer(TestCase):
     faker = seeder.faker
 
     def setUp(self) -> None:
-        self.user = {'username': 'test', 'password': 'test',
-                                   "email": "olalekan@gmail.com",
-                                   "phone": "+2348129014778", "user_type": UserTypes.CarMerchant.value}
+        self.user = {
+            'username': 'test',
+            'password': 'test',
+            "email": "olalekan@gmail.com",
+            "phone": "+2348129014778",
+            "user_type": UserTypes.CarMerchant.value,
+        }
         serializer = CreateUserSerializer(data=self.user)
         isvalid = serializer.is_valid()
         user = serializer.save()
 
     def test_user_update_sucessful(self):
-        update = dict(profile_picture=PadiSeeder.get_asset(1)[0],
-                      first_name=self.faker.first_name(), last_name=self.faker.last_name())
+        update = dict(
+            profile_picture=PadiSeeder.get_asset(1)[0], first_name=self.faker.first_name(), last_name=self.faker.last_name()
+        )
         serializer = UserSerializer(data=update, partial=True)
         eq_(serializer.is_valid(), True)
         user = serializer.save()

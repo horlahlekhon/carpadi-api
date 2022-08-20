@@ -52,8 +52,7 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         picture = validated_data.get("profile_picture")
         if picture:
-            picture = Assets.objects.create(
-                asset=picture, content_object=instance, entity_type=AssetEntityType.Merchant)
+            picture = Assets.objects.create(asset=picture, content_object=instance, entity_type=AssetEntityType.Merchant)
             validated_data["profile_picture"] = picture
         return super(UserSerializer, self).update(instance, validated_data)
 

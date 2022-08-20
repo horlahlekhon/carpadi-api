@@ -5,6 +5,7 @@ from os.path import join
 import dotenv
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
+
 APP_ENV = os.getenv("APP_ENV", default="dev")
 TESTING = True if APP_ENV.lower() == "test" else False
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

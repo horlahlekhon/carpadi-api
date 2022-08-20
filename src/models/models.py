@@ -35,8 +35,6 @@ class InspectionStatus(models.TextChoices):
     Expired = "expired", _("Inspection has been scheduled for" " more than a week without being ongoing or completed")
 
 
-
-
 class Base(UUIDModel, TimeStampedModel):
     pass
 
@@ -489,7 +487,10 @@ class Car(Base):
     def update_on_inspection_changes(self, inspection: "Inspections"):
         if inspection.status == InspectionStatus.Completed:
             self.status = CarStates.Inspected
-        elif inspection.status in (InspectionStatus.Ongoing, InspectionStatus.Pending,):
+        elif inspection.status in (
+            InspectionStatus.Ongoing,
+            InspectionStatus.Pending,
+        ):
             self.status = CarStates.OngoingInspection
         else:
             self.status = CarStates.FailedInspection
@@ -939,6 +940,7 @@ class Notifications(Base):
     @atomic()
     def save(self, *args, **kwargs):
         return super().save(*args, **kwargs)
+
 
 class InspectionVerdict(models.TextChoices):
     Great = "great", _("Average rating above 90 percentile")

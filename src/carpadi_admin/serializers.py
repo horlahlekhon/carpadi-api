@@ -678,14 +678,14 @@ class TradeUnitSerializerAdmin(serializers.ModelSerializer):
 
     def get_trade_car(self, unit: TradeUnit):
         return dict(
-            id=unit.trade.car.id, manufacturer=unit.trade.car.information.manufacturer,
+            id=unit.trade.car.id,
+            manufacturer=unit.trade.car.information.manufacturer,
             model=unit.trade.car.information.brand.model,
-            year=unit.trade.car.information.brand.year
+            year=unit.trade.car.information.brand.year,
         )
 
     def get_merchant(self, unit: TradeUnit):
-        return dict(name=unit.merchant.user.username, id=unit.merchant.id,
-                    image=str(unit.merchant.user.profile_picture))
+        return dict(name=unit.merchant.user.username, id=unit.merchant.id, image=str(unit.merchant.user.profile_picture))
 
     def get_rot_per_slot(self, unit: TradeUnit):
         return unit.estimated_rot / unit.slots_quantity
@@ -708,7 +708,7 @@ class TradeUnitSerializerAdmin(serializers.ModelSerializer):
             "rot_per_slot",
             "price_per_slot",
             "payment_transaction_ref",
-            "trade_status"
+            "trade_status",
         )
 
 
