@@ -1,7 +1,7 @@
 from django.db.transaction import atomic
 from rest_framework import serializers
 
-from src.models.models import InspectionStage, Inspections, User
+from src.models.models import InspectionStage, Inspections, User, CarStates
 
 
 class InspectionStageSerializer(serializers.ModelSerializer):
@@ -25,4 +25,12 @@ class InspectionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_logged_in = self.context.get("request").user
         validated_data["inspection_assignor"] = user_logged_in
-        return super(InspectionSerializer, self).create(validated_data)
+        inspection: Inspections = super(InspectionSerializer, self).create(validated_data)
+        inspection.car.update_on_inspection_changes(inspection)
+        return inspection
+
+    @atomic
+    def update(self, instance, validated_data):
+        inspection = super(InspectionSerializer, self).update(instance, validated_data)
+        inspection.car.update_on_inspection_changes(inspection)
+        return inspection

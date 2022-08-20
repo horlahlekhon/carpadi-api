@@ -28,6 +28,15 @@ from src.config.common import OTP_EXPIRY
 from src.models.validators import PhoneNumberValidator
 
 
+class InspectionStatus(models.TextChoices):
+    Ongoing = "ongoing", _("Ongoing inspection")
+    Completed = "completed", _("Completed inspection")
+    Pending = "pending", _("New inspection")
+    Expired = "expired", _("Inspection has been scheduled for" " more than a week without being ongoing or completed")
+
+
+
+
 class Base(UUIDModel, TimeStampedModel):
     pass
 
@@ -374,6 +383,7 @@ class CarStates(models.TextChoices):
     Sold = "sold", _(
         "sold",
     )
+    OngoingInspection = "ongoing_inspection", _("Being inspected")
     New = "new", _("New car waiting to be inspected")
 
     Archived = "archived", _("Archived")
@@ -386,6 +396,7 @@ class CarTransmissionTypes(models.TextChoices):
     Automatic = "automatic", _(
         "Automatic",
     )
+    Standar = "standard", _("Who knows")
 
 
 class FuelTypes(models.TextChoices):
@@ -447,13 +458,6 @@ class Car(Base):
         max_digits=10,
         help_text="Total cost = bought_price + cost_of_repairs + maintenance_cost + misc",
     )
-    # maintainance_cost = models.DecimalField(
-    #     decimal_places=2,
-    #     editable=False,
-    #     max_digits=10,
-    #     help_text="fuel, parking, mechanic workmanship costs",
-    #     null=True, blank=True
-    # )
     resale_price = models.DecimalField(
         decimal_places=2, max_digits=10, max_length=10, help_text="price presented to merchants", null=True, blank=True
     )
@@ -481,6 +485,15 @@ class Car(Base):
         self.status = CarStates.Sold
         self.margin = self.margin_calc()
         self.save(update_fields=["status", "margin"])
+
+    def update_on_inspection_changes(self, inspection: "Inspections"):
+        if inspection.status == InspectionStatus.Completed:
+            self.status = CarStates.Inspected
+        elif inspection.status in (InspectionStatus.Ongoing, InspectionStatus.Pending,):
+            self.status = CarStates.OngoingInspection
+        else:
+            self.status = CarStates.FailedInspection
+        self.save(update_fields=["status"])
 
     def save(self, *args, **kwargs):
         if self._state.adding:
@@ -927,19 +940,12 @@ class Notifications(Base):
     def save(self, *args, **kwargs):
         return super().save(*args, **kwargs)
 
-
-class InspectionStatus(models.TextChoices):
-    Ongoing = "ongoing", _("Ongoing inspection")
-    Completed = "completed", _("Completed inspection")
-    Pending = "pending", _("New inspection")
-    Expired = "expired", _("Inspection has been scheduled for" " more than a week without being ongoing or completed")
-
-
 class InspectionVerdict(models.TextChoices):
     Great = "great", _("Average rating above 90 percentile")
     Good = "good", _("Average rating above 60 percentile up to 89")
     Fair = "fair", _("Average rating above 40 percentile up to 60")
     Bad = "bad", _("Average rating below 39 percentile")
+    NA = "not_available", _("The default status for newly created inspection which is still pending.")
 
 
 class Inspections(Base):
@@ -956,8 +962,8 @@ class Inspections(Base):
     status = models.CharField(choices=InspectionStatus.choices, max_length=20, default=InspectionStatus.Pending)
     inspection_verdict = models.CharField(
         choices=InspectionVerdict.choices,
-        max_length=10,
-        default=InspectionVerdict.Bad,
+        max_length=15,
+        default=InspectionVerdict.NA,
         help_text="Verdict of the inspection after taking into account all"
         " the stages and their scores. should be calculated by the system",
     )
@@ -1012,3 +1018,12 @@ class Settings(Base):
     merchant_trade_rot_percentage = models.DecimalField(decimal_places=2, max_digits=25)
     transfer_fee = models.DecimalField(decimal_places=2, max_digits=25, default=Decimal(0.00))
     close_trade_fee = models.DecimalField(decimal_places=2, max_digits=25, default=Decimal(0.00))
+
+
+class File(models.Model):
+    THUMBNAIL_SIZE = (360, 360)
+
+    file = models.FileField(blank=False, null=False)
+    thumbnail = models.ImageField(blank=True, null=True)
+    author = models.ForeignKey(User, related_name='files', on_delete=models.DO_NOTHING)
+    created_at = models.DateTimeField(auto_now_add=True)

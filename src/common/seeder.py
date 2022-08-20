@@ -178,11 +178,15 @@ class PadiSeeder:
 
     def seed_assets(self, entity, ent_type, count=1):
         # https://picsum.photos/v2/list?page=100&limit=2
-        resp = requests.get('https://picsum.photos/v2/list?page=100&limit={}'.format(count))
-        data = resp.json()
-        urls = [d['download_url'] for d in data]
+        urls = self.get_asset(1)
         car = Car.objects.get(pk=entity)
         Assets.create_many(urls, car, ent_type)
+
+    @classmethod
+    def get_asset(cls, count=1):
+        resp = requests.get('https://picsum.photos/v2/list?page=100&limit={}'.format(count))
+        data = resp.json()
+        return [d['download_url'] for d in data]
 
     def seed_trade(self, car, status: TradeStates):
         assert status not in (

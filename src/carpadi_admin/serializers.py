@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Optional, Union
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
 from django.db.models import Sum, Count, Avg
 from django.db.transaction import atomic
 from django.utils import timezone
@@ -92,7 +93,7 @@ class VehicleInfoSerializer(serializers.ModelSerializer):
                 validated_data["brand"] = ins
                 return super(VehicleInfoSerializer, self).create(validated_data)
             else:
-                raise serializers.ValidationError(detail="No vehicle is associated with that vin", code=400)
+                raise serializers.ValidationError(detail={"vin": "No vehicle is associated with that vin"}, code=400)
         return info
 
 
@@ -159,14 +160,17 @@ class CarSerializer(serializers.ModelSerializer):
         return value
 
     def validate_resale_price(self, value):
-        if self.instance and self.instance.trade:
-            if value < self.instance.trade.min_sale_price:
-                raise serializers.ValidationError(
-                    f"Resale price cannot be less than " f"{self.instance.trade.min_sale_price} of the car"
-                )
-        else:
-            raise serializers.ValidationError("Aye! You cannot set the resale price of a car while creating it")
-        return value
+        car_trade = None
+        with contextlib.suppress(models.ObjectDoesNotExist):
+            car_trade = self.instance.trade
+            if self.instance and car_trade:
+                if value < self.instance.trade.min_sale_price:
+                    raise serializers.ValidationError(
+                        f"Resale price cannot be less than " f"{self.instance.trade.min_sale_price} of the car"
+                    )
+            else:
+                raise serializers.ValidationError("Aye! You cannot set the resale price of a car while creating it")
+            return value
 
     def validate_vin(self, attr):
         info = VehicleInfo.objects.filter(vin=attr).first()
@@ -656,9 +660,38 @@ class MerchantDashboardSerializer(serializers.Serializer):
 
 class TradeUnitSerializerAdmin(serializers.ModelSerializer):
     merchant = serializers.SerializerMethodField()
+    trade_sold_date = serializers.SerializerMethodField()
+    trade_car = serializers.SerializerMethodField()
+    rot_per_slot = serializers.SerializerMethodField()
+    price_per_slot = serializers.SerializerMethodField()
+    payment_transaction_ref = serializers.SerializerMethodField()
+    trade_status = serializers.SerializerMethodField()
+
+    def get_trade_status(self, unit: TradeUnit):
+        return unit.trade.trade_status
+
+    def get_payment_transaction_ref(self, unit: TradeUnit):
+        return unit.buy_transaction.transaction_reference
+
+    def get_trade_sold_date(self, unit: TradeUnit):
+        return unit.trade.date_of_sale
+
+    def get_trade_car(self, unit: TradeUnit):
+        return dict(
+            id=unit.trade.car.id, manufacturer=unit.trade.car.information.manufacturer,
+            model=unit.trade.car.information.brand.model,
+            year=unit.trade.car.information.brand.year
+        )
 
     def get_merchant(self, unit: TradeUnit):
-        return dict(name=unit.merchant.user.username, id=unit.merchant.id, image=str(unit.merchant.user.profile_picture))
+        return dict(name=unit.merchant.user.username, id=unit.merchant.id,
+                    image=str(unit.merchant.user.profile_picture))
+
+    def get_rot_per_slot(self, unit: TradeUnit):
+        return unit.estimated_rot / unit.slots_quantity
+
+    def get_price_per_slot(self, unit: TradeUnit):
+        return unit.unit_value / unit.slots_quantity
 
     class Meta:
         model = TradeUnit
@@ -669,6 +702,13 @@ class TradeUnitSerializerAdmin(serializers.ModelSerializer):
             "estimated_rot",
             "merchant",
             "trade",
+            "id",
+            "trade_sold_date",
+            "trade_car",
+            "rot_per_slot",
+            "price_per_slot",
+            "payment_transaction_ref",
+            "trade_status"
         )
 
 

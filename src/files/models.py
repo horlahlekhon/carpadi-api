@@ -1,18 +1,13 @@
 from PIL import UnidentifiedImageError
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from easy_thumbnails.exceptions import EasyThumbnailsError
 from easy_thumbnails.files import get_thumbnailer
 
-
-class File(models.Model):
-    THUMBNAIL_SIZE = (360, 360)
-
-    file = models.FileField(blank=False, null=False)
-    thumbnail = models.ImageField(blank=True, null=True)
-    author = models.ForeignKey('models.User', related_name='files', on_delete=models.DO_NOTHING)
-    created_at = models.DateTimeField(auto_now_add=True)
+# User = get_user_model()
+from src.models.models import File
 
 
 @receiver(post_delete, sender=File)

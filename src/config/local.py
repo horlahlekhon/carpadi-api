@@ -7,3 +7,6 @@ INSTALLED_APPS += (
 )  # noqa
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 NOSE_ARGS = ['-s', '--nologcapture', '--with-fixture-bundling']
+# REUSE_DB = True
+# MIGRATE = True
+# MIGRATION_MODULES = {"models": "src.models.migrations"}

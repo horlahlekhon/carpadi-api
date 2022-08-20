@@ -16,7 +16,7 @@ install:
 	./manage.py migrate
 
 test:
-	python manage.py test --noinput --parallel=4 #--pdb
+	APP_ENV="test" python manage.py test --noinput --parallel=4 #--pdb
 
 
 shell:
@@ -35,5 +35,11 @@ teardown:
 migrate:
 	python manage.py makemigrations
 	python manage.py migrate
+
+migrate-test:
+	APP_ENV="test" DB_NAME="test_postgres" python manage.py migrate
+
+
+run-test: migrate-test test
 
 all: clean install run_stage

@@ -5,9 +5,8 @@ from os.path import join
 import dotenv
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
-
-TESTING = True
-
+APP_ENV = os.getenv("APP_ENV", default="dev")
+TESTING = True if APP_ENV.lower() == "test" else False
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 if not TESTING:
@@ -45,8 +44,8 @@ INSTALLED_APPS = (
     'health_check.contrib.migrations',
     'health_check.contrib.celery_ping',  # requires celery
     # Your apps
-    'src.notifications',
     'src.models',
+    'src.notifications',
     'src.social',
     'src.files',
     'src.common',
@@ -128,11 +127,11 @@ CELERY_TIMEZONE = 'UTC'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST', 'db'),
-        'PORT': os.getenv('DB_PORT'),
+        'NAME': os.getenv('DB_NAME', default="postgres"),
+        'USER': os.getenv('DB_USER', default="postgres"),
+        'PASSWORD': os.getenv('DB_PASSWORD', default="password"),
+        'HOST': os.getenv('DB_HOST', default="localhost"),
+        'PORT': os.getenv('DB_PORT', default=5432),
     }
 }
 
@@ -319,7 +318,7 @@ THUMBNAIL_ALIASES = {
 # Django Rest Framework
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend', 'rest_framework.filters.OrderingFilter'],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'PAGE_SIZE': int(os.getenv('DJANGO_PAGINATION_LIMIT', 18)),
     'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S.%fZ',
     'DEFAULT_RENDERER_CLASSES': (
