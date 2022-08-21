@@ -10,8 +10,8 @@ APP_ENV = os.getenv("APP_ENV", default="dev")
 TESTING = True if APP_ENV.lower() == "test" else False
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-if not TESTING:
-    dotenv.read_dotenv(ROOT_DIR)
+# if not TESTING:
+#     dotenv.read_dotenv(ROOT_DIR)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
