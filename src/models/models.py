@@ -937,10 +937,25 @@ class Notifications(Base):
     is_active = models.BooleanField(default=True)
     notice_type = models.CharField(choices=NotificationTypes.choices, max_length=20)
     entity_id = models.UUIDField(null=True, blank=True)
+    title = models.CharField(max_length=50, null=False,blank=False, default="New notification")
 
     @atomic()
     def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.title = self.get_title()
         return super().save(*args, **kwargs)
+
+    def get_title(self):
+        if self.notice_type == NotificationTypes.TradeUnit:
+            return "New Unit purchased"
+        elif self.notice_type == NotificationTypes.NewTrade:
+            return "New trade available"
+        elif self.notice_type == NotificationTypes.PasswordReset:
+            return "Password reset success"
+        elif self.notice_type == NotificationTypes.Disbursement:
+            return "ROT disbursed"
+        else:
+            return "New notice"
 
 
 class InspectionVerdict(models.TextChoices):
