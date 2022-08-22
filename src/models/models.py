@@ -937,7 +937,7 @@ class Notifications(Base):
     is_active = models.BooleanField(default=True)
     notice_type = models.CharField(choices=NotificationTypes.choices, max_length=20)
     entity_id = models.UUIDField(null=True, blank=True)
-    title = models.CharField(max_length=50, null=False,blank=False, default="New notification")
+    title = models.CharField(max_length=50, null=False, blank=False, default="New notification")
 
     @atomic()
     def save(self, *args, **kwargs):
