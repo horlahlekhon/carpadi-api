@@ -1,0 +1,14 @@
+<p>Hi {{ username }},</p>
+<p>
+
+    {% if status == "failed" %}
+        Oops! we are sorry, Your payment has {{ status }} Please try again!
+    {% elif status == "success" %}
+        Thanks for using our services, your payment has been completed successfully.
+    {% elif status == "cancelled" %}
+        Oops! we are sorry, Your payment has {{ status }} Please try again or check with your financial institution!
+    {% else %}
+        Ok! this is strange, but we are on top of it. thanks for trusting us.
+    {% endif %}
+
+</p>

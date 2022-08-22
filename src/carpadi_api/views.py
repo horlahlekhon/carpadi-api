@@ -1,6 +1,6 @@
 import requests
 from django.db import transaction
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django_filters import rest_framework as filters
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
@@ -154,19 +154,24 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
             data = request.data
             tx_ref = data.get("transfer").get("reference")
             transaction_id = data.get("transfer").get("id")
-            tx = get_object_or_404(self.queryset, transaction_reference=tx_ref)
+            tx: Transaction = get_object_or_404(self.queryset, transaction_reference=tx_ref)
             headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
             response = requests.get(url=common.FLW_GET_TRANSFER_URL(transaction_id), headers=headers)
             res, code = Transaction.verify_deposit(response, tx)
-            return Response(res, status=code)
+            res["username"] = tx.wallet.merchant.user.username
+            res["status"] = tx.transaction_status
+            return render(request, "transactions/verify_transaction.html", res, status=200)
         elif request.method == 'GET':
             tx_ref = request.query_params.get('tx_ref')
+            tx_status = request.query_params.get('status')
             transaction_id = request.query_params.get('transaction_id')
             tx = get_object_or_404(self.queryset, transaction_reference=tx_ref)
             headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
             response = requests.get(url=common.FLW_PAYMENT_VERIFY_URL(transaction_id), headers=headers)
             res, code = Transaction.verify_deposit(response, tx)
-            return Response(res, code)
+            res["username"] = tx.wallet.merchant.user.username
+            res["status"] = tx.transaction_status
+            return render(request, "transactions/verify_transaction.html", res, status=200)
         else:
             return Response({"error": "Invalid request"}, status=status.HTTP_400_BAD_REQUEST)
 

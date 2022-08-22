@@ -251,6 +251,7 @@ class TransactionStatus(models.TextChoices):
     )
     Success = "success", _("Success")
     Failed = "failed", _("Failed")
+    Cancelled = "cancelled", _("Payment cancelled by user")
     Pending = "pending", _("Pending")
 
 
