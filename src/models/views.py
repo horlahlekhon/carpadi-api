@@ -59,9 +59,10 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
                 data = CarMerchantSerializer(instance=user.merchant).data
             else:
                 data = UserSerializer(self.request.user, context={'request': self.request}).data
+
             return Response(data, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response({'error': 'Wrong auth token' + e}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': f'Wrong auth token{e}'}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'], url_path='verify-phone', url_name='verify_phone')
     def verify_phone(self, instance):
@@ -92,14 +93,12 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
     def validate_otp(self, instance):
         try:
             data = instance.data.get("otp")
-            # TODO probably add this to serializer and handle cases for status explicitly
-            if data:
-                self.get_object()
-                otp = Otp.objects.filter(otp=data, user=self.get_object(), status=OtpStatus.Pending).latest()
-                if otp.expiry < timezone.now():
-                    return Response(data={"error": "Otp has expired"}, status=status.HTTP_400_BAD_REQUEST)
-            else:
+            if not data:
                 return Response(data={"error": "otp is a required field"}, status=status.HTTP_400_BAD_REQUEST)
+            user = self.get_object()
+            otp = Otp.objects.filter(otp=data, user=user, status=OtpStatus.Pending).latest()
+            if otp.expiry < timezone.now():
+                return Response(data={"error": "Otp has expired"}, status=status.HTTP_400_BAD_REQUEST)
             otp.status = OtpStatus.Verified
             otp.save()
             return Response(data={"status": "otp is valid"}, status=status.HTTP_200_OK)

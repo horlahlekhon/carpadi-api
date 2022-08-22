@@ -246,7 +246,6 @@ class TransactionPinsViewSet(viewsets.ModelViewSet):
         return ctx
 
     def partial_update(self, request, *args, **kwargs):
-        data = request.data
         device = request.auth.payload["device_imei"]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

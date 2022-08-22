@@ -50,8 +50,7 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
-        picture = validated_data.get("profile_picture")
-        if picture:
+        if picture := validated_data.get("profile_picture"):
             picture = Assets.objects.create(asset=picture, content_object=instance, entity_type=AssetEntityType.Merchant)
             validated_data["profile_picture"] = picture
         return super(UserSerializer, self).update(instance, validated_data)
@@ -68,9 +67,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     merchant_id = serializers.SerializerMethodField()
 
     def get_merchant_id(self, user: User):
-        if user.is_merchant():
-            return user.merchant.id
-        return None
+        return user.merchant.id if user.is_merchant() else None
 
     def get_tokens(self, user):
         return user.get_tokens()
@@ -93,7 +90,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             else:
                 raise exceptions.ValidationError("Invalid user type")
         except IntegrityError as reason:
-            raise exceptions.ValidationError("phone or email or username already exists", 400)
+            raise exceptions.ValidationError("phone or email or username already exists", 400) from reason
         return user
 
     # def update(self, instance, validated_data):
@@ -132,22 +129,18 @@ class PhoneVerificationSerializer(serializers.Serializer):
     device_imei = serializers.CharField(required=True, write_only=True)
 
     def get_tokens(self, user):
-        token = user.get_tokens(self.validated_data["device_imei"])
-        return token
+        return user.get_tokens(self.validated_data["device_imei"])
 
     def validate(self, attrs):
-        user = User.objects.get(phone=attrs["phone"])
-        if user:
-            otp = user.otps.latest()
-            if otp.expiry > now() and otp.otp == attrs["token"]:
-                # if user.user_type == UserTypes.CarMerchant:
-                pass
-            elif otp.expiry < now() and otp.otp == attrs["token"]:
-                raise serializers.ValidationError("Otp has expired", 400)
-            else:
-                raise serializers.ValidationError("Invalid OTP", 400)
-        else:
+        if not (user := User.objects.filter(phone=attrs["phone"]).first()):
             raise serializers.ValidationError(f"User with the phone {attrs['phone']} does not exist")
+        otp = user.otps.latest()
+        if otp.expiry > now() and otp.otp == attrs["token"]:
+            pass
+        elif otp.expiry < now() and otp.otp == attrs["token"]:
+            raise serializers.ValidationError("Otp has expired", 400)
+        else:
+            raise serializers.ValidationError("Invalid OTP", 400)
         return attrs
 
     @transaction.atomic()
@@ -207,7 +200,7 @@ class TokenObtainModSerializer(serializers.Serializer):
     default_error_messages = {
         'no_active_account': _('No active account found with the given credentials'),
         'new_device_detected': _(
-            'You are logging in to this device for the first time,' '' 'kindly create a new transaction pin for this ' 'device '
+            'You are logging in to this device for the first time,' '' 'kindly create a new transaction pin for this ' 'device'
         ),
     }
 
@@ -278,9 +271,10 @@ class TokenObtainModSerializer(serializers.Serializer):
         return data
 
     def validate_firebase_(self, token: str, user: User, imei: str, device_type: str):
-        device: FCMDevice = FCMDevice.objects.filter(registration_id=token, user=user).first()
-        if not device:
-            FCMDevice.objects.create(device_id=imei, registration_id=token, name=user.first_name, type=device_type, user=user)
+        if token:
+            device: FCMDevice = FCMDevice.objects.filter(registration_id=token, user=user).first()
+            if not device:
+                FCMDevice.objects.create(device_id=imei, registration_id=token, name=user.first_name, type=device_type, user=user)
 
 
 class OtpSerializer(serializers.Serializer):

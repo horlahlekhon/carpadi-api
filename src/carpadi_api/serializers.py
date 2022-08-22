@@ -47,10 +47,12 @@ class CarSerializer(serializers.ModelSerializer):
 
 
 class TransactionPinSerializers(serializers.ModelSerializer):
+    device_serial_number = serializers.CharField(max_length=50, required=False, default="")
+
     class Meta:
         model = TransactionPin
         fields = "__all__"
-        read_only_fields = ("id", "created", "modified", "status", "user", "device_serial_number")
+        read_only_fields = ("id", "created", "modified", "status", "user")
         extra_kwargs = {'pin': {'write_only': True}}
 
     def validate_pin(self, pin):
@@ -73,7 +75,7 @@ class TransactionPinSerializers(serializers.ModelSerializer):
                 {"error": "You have a pin configured for this device already," " only one pin can be used on one device"}
             )
         if len(active_pins.filter(pin=pin)) > 0:
-            raise serializers.ValidationError({"error": "Pin already belong to one of your devices, please use another one"})
+            raise serializers.ValidationError({"error": "Pin already belong to one of your devices, please use " "another one"})
         validated_data["pin"] = pin
         validated_data["status"] = TransactionPinStatus.Active
         return TransactionPin.objects.create(**validated_data)
@@ -102,7 +104,7 @@ class UpdateTransactionPinSerializers(serializers.Serializer):
             pin.refresh_from_db()
             return pin
         except TransactionPin.DoesNotExist as reason:
-            raise serializers.ValidationError({"error": "Pin is not correct"})
+            raise serializers.ValidationError({"error": "Pin is not correct"}) from reason
 
 
 class CarMerchantUpdateSerializer(serializers.Serializer):
