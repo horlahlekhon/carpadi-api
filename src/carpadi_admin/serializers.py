@@ -677,11 +677,13 @@ class TradeUnitSerializerAdmin(serializers.ModelSerializer):
         return unit.trade.date_of_sale
 
     def get_trade_car(self, unit: TradeUnit):
+        pictures = unit.trade.car.pictures.count()
         return dict(
             id=unit.trade.car.id,
             manufacturer=unit.trade.car.information.manufacturer,
             model=unit.trade.car.information.brand.model,
             year=unit.trade.car.information.brand.year,
+            images=unit.trade.car.pictures.first() if pictures else None
         )
 
     def get_merchant(self, unit: TradeUnit):
