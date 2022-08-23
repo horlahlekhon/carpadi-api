@@ -83,6 +83,3 @@ class TestTransactionPinSerializers(TestCase):
             ser.save(user=self.user)
         except Exception as reason:
             eq_(reason.args[0]["error"], 'Pin already belong to one of your devices, please use another one')
-
-
-# class TestWalletSerializer(TestCase):

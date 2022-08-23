@@ -141,7 +141,7 @@ class CarSerializer(serializers.ModelSerializer):
                 # accounted for
                 try:
                     inst: Car = self.instance
-                    if not inst.inspections or inst.inspections.status != InspectionStatus.Completed:
+                    if not inst.inspections or inst.inspections.status[0] != InspectionStatus.Completed.value:
                         raise serializers.ValidationError(
                             "Inspection report is required and must be completed for a car to be available"
                         )
