@@ -190,38 +190,43 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Notifications.objects.all()
     serializer_class = NotificationsSerializer
     permission_classes = (IsAuthenticated,)
-    ffilter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend,)
     filter_class = NotificationsFilter
 
     def get_queryset(self):
         return super(NotificationViewSet, self).get_queryset().filter(user=self.request.user)
 
     @action(detail=False, methods=['post'], url_path='read', url_name='read')
-    def mark_all_as_read_or_unread(self, request, *args, **kwargs):
-        """
-        Mark all notifications as read
-        """
-        try:
-            notifications = Notifications.objects.filter(user=request.user)
-            if request.data.get('read', False):
-                notifications.update(read=True)
-            else:
-                notifications.update(read=False)
-            return Response(status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    @action(detail=False, methods=['post'], url_path='read/<int:id>', url_name='read')
     def mark_as_read(self, request, *args, **kwargs):
         """
         Mark a notification as read
         """
+        notice_id = request.query_params.get("id")
+        read = request.query_params.get("read")
+        if type(bool(read)) != bool or str(read).lower() not in ["true", "false", "1", "0"]:
+            return Response(
+                {'error': "you need to specify `read` query parametre as a valid boolean"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        read_option = bool(read)
+        if read_all := request.query_params.get("all"):
+            return self.mark_all_as_read_or_unread(read=read_option)
         try:
-            notifications = Notifications.objects.filter(user=request.user, id=kwargs.get('id'))
+            notifications = Notifications.objects.filter(user=request.user, id=notice_id)
             if notifications.exists():
-                notifications.update(read=True)
+                notifications.update(is_read=read_option)
                 return Response(status=status.HTTP_200_OK)
             else:
                 return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def mark_all_as_read_or_unread(self, read: bool):
+        """
+        Mark all notifications as read
+        """
+        try:
+            notifications = Notifications.objects.filter(user=self.request.user)
+            notifications.update(is_read=read)
+            return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
