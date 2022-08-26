@@ -11,9 +11,7 @@ class CarSerializerField(serializers.RelatedField):
         try:
             return Car.objects.get(pk=data, product=None)
         except Car.DoesNotExist as reason:
-            raise serializers.ValidationError(
-                f"Car with id {data} does not exist or " f"is already listed under a car product"
-            ) from reason
+            raise serializers.ValidationError('Car does not exist or is already listed under a car product') from reason
 
     def to_representation(self, value: Car):
         return dict(
@@ -65,9 +63,17 @@ class CarProductSerializer(serializers.ModelSerializer):
             return obj.car.trade.id
         return None
 
-    # TODO validate that the car has trade and return error
     def validate_car(self, car: Car):
-        pass
+        try:
+            if car.trade:
+                return car
+            raise serializers.ValidationError(
+                "car is not available for trade." " None traded cars are not allowed for sales listing"
+            )
+        except Exception as reason:
+            raise serializers.ValidationError(
+                "car is not available for trade." " None traded cars are not allowed for sales listing"
+            ) from reason
 
     def get_car_features(self, obj: CarProduct):
         return CarFeatureSerializer(instance=obj.features.all(), many=True).data

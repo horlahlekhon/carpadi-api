@@ -6,7 +6,7 @@ from typing import Optional, Union
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import Sum, Count, Avg
+from django.db.models import Sum, Count, Avg, Q
 from django.db.transaction import atomic
 from django.utils import timezone
 from rest_framework import exceptions
@@ -141,8 +141,7 @@ class CarSerializer(serializers.ModelSerializer):
                 # accounted for
                 try:
                     inst: Car = self.instance
-                    # TODO this if statement is not working at alllllll
-                    if not inst.inspections or inst.inspections.status[0] != InspectionStatus.Completed.value:
+                    if not inst.inspections or inst.inspections.status != InspectionStatus.Completed.value:
                         raise serializers.ValidationError(
                             "Inspection report is required and must be completed for a car to be available"
                         )
@@ -431,10 +430,11 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
             return MiscellaneousExpensesSerializer(instance=obj.maintenance).data
         return SparePartsSerializer(instance=obj.maintenance).data
 
-    def validate_spare_part(self, value):
+    def validate_maintenance_kind(self, value: dict, car: Car):
         maintenance_type = self.initial_data["type"]
         result = dict(type=maintenance_type)
         if maintenance_type == CarMaintenanceTypes.SparePart:
+            value["car_brand"] = car.information.brand.id
             part = SparePartsSerializer(data=value)
             return self.validate_part(part, result)
         elif maintenance_type == CarMaintenanceTypes.Expense:
@@ -453,11 +453,10 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
 
     @atomic()
     def create(self, validated_data):
-        # TODO remove carbrands from payload since we know the car, and the carbrand is attached to it by default
         car: Car = validated_data["car"]
         if car.status == CarStates.Available:
             raise serializers.ValidationError({"error": "new maintenance cannot be created for an available car"})
-        data = self.validate_spare_part(validated_data.pop("maintenance"))
+        data = self.validate_maintenance_kind(validated_data.pop("maintenance"), car)
         validated_data.update(data)
         return super(CarMaintenanceSerializerAdmin, self).create(validated_data)
 
@@ -615,29 +614,26 @@ class InventoryDashboardSerializer(serializers.Serializer):
 
     def get_car_listing(self, value):
         """The total amount of cars in the system"""
-        return Car.objects.filter(status=CarStates.Available).count()
+        return Car.objects.exclude(status=CarStates.Available).count()
 
-    # TODO check this, doesnt seem to work
     def get_under_inspection(self, value):
         """The total amount of cars under inspection"""
-        return Car.objects.filter(status=CarStates.New).count()
+        return Car.objects.filter(status=CarStates.OngoingInspection).count()
 
-    # TODO check this, doesnt seem to work
     def get_passed_for_trade(self, value):
         """The total amount of cars passed for trade"""
         return Car.objects.filter(status=CarStates.Available).count()
 
-    # TODO check this, doesnt seem to work
     def get_ongoing_trade(self, value):
         """The total amount of cars in trade"""
-        return Trade.objects.filter(trade_status=TradeStates.Ongoing).count()
+        return Car.objects.filter(
+            trade__trade_status=TradeStates.Ongoing
+        ).count()  # Trade.objects.filter(trade_status=TradeStates.Ongoing).count()
 
-    # TODO check this, doesnt seem to work
     def get_sold(self, value):
         """The total amount of cars sold"""
         return Car.objects.filter(status=CarStates.Sold).count()
 
-    # TODO check this, doesnt seem to work
     def get_archived(self, value):
         """The total amount of cars archived"""
         return Car.objects.filter(status=CarStates.Archived).count()

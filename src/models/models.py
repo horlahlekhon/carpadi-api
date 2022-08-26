@@ -422,19 +422,8 @@ class FuelTypes(models.TextChoices):
 class Car(Base):
     information = models.OneToOneField("VehicleInfo", on_delete=models.SET_NULL, null=True)
     status = models.CharField(choices=CarStates.choices, null=True, max_length=30, default=CarStates.New)
-    # TODO validate vin from vin api
     vin = models.CharField(max_length=17)
     pictures = GenericRelation("Assets")
-    # car_inspection = models.OneToOneField(
-    #     "Inspections",
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=False,
-    #     validators=[
-    #         validate_inspector,
-    #     ],
-    #     related_name="car_inspection"
-    # )
     colour = models.CharField(max_length=50)
     bought_price = models.DecimalField(
         decimal_places=2,
@@ -584,7 +573,7 @@ class Trade(Base):
     )
     estimated_sales_duration = models.PositiveIntegerField(help_text="estimated sales duration in days", default=30)
     bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days", null=True, blank=True)
-    date_of_sale = models.DateField(null=True, blank=True) # TODO this should be added whem car is sold
+    date_of_sale = models.DateField(null=True, blank=True)
 
     @property
     def resale_price(self):
