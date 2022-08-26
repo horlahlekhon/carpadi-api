@@ -65,6 +65,10 @@ class CarProductSerializer(serializers.ModelSerializer):
             return obj.car.trade.id
         return None
 
+    # TODO validate that the car has trade and return error
+    def validate_car(self, car: Car):
+        pass
+
     def get_car_features(self, obj: CarProduct):
         return CarFeatureSerializer(instance=obj.features.all(), many=True).data
 

@@ -584,7 +584,7 @@ class Trade(Base):
     )
     estimated_sales_duration = models.PositiveIntegerField(help_text="estimated sales duration in days", default=30)
     bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days", null=True, blank=True)
-    date_of_sale = models.DateField(null=True, blank=True)
+    date_of_sale = models.DateField(null=True, blank=True) # TODO this should be added whem car is sold
 
     @property
     def resale_price(self):

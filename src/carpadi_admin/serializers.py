@@ -141,6 +141,7 @@ class CarSerializer(serializers.ModelSerializer):
                 # accounted for
                 try:
                     inst: Car = self.instance
+                    # TODO this if statement is not working at alllllll
                     if not inst.inspections or inst.inspections.status[0] != InspectionStatus.Completed.value:
                         raise serializers.ValidationError(
                             "Inspection report is required and must be completed for a car to be available"
@@ -452,6 +453,7 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
 
     @atomic()
     def create(self, validated_data):
+        # TODO remove carbrands from payload since we know the car, and the carbrand is attached to it by default
         car: Car = validated_data["car"]
         if car.status == CarStates.Available:
             raise serializers.ValidationError({"error": "new maintenance cannot be created for an available car"})
@@ -615,22 +617,27 @@ class InventoryDashboardSerializer(serializers.Serializer):
         """The total amount of cars in the system"""
         return Car.objects.filter(status=CarStates.Available).count()
 
+    # TODO check this, doesnt seem to work
     def get_under_inspection(self, value):
         """The total amount of cars under inspection"""
         return Car.objects.filter(status=CarStates.New).count()
 
+    # TODO check this, doesnt seem to work
     def get_passed_for_trade(self, value):
         """The total amount of cars passed for trade"""
         return Car.objects.filter(status=CarStates.Available).count()
 
+    # TODO check this, doesnt seem to work
     def get_ongoing_trade(self, value):
         """The total amount of cars in trade"""
         return Trade.objects.filter(trade_status=TradeStates.Ongoing).count()
 
+    # TODO check this, doesnt seem to work
     def get_sold(self, value):
         """The total amount of cars sold"""
         return Car.objects.filter(status=CarStates.Sold).count()
 
+    # TODO check this, doesnt seem to work
     def get_archived(self, value):
         """The total amount of cars archived"""
         return Car.objects.filter(status=CarStates.Archived).count()
