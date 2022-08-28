@@ -430,8 +430,7 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
             return MiscellaneousExpensesSerializer(instance=obj.maintenance).data
         return SparePartsSerializer(instance=obj.maintenance).data
 
-    def validate_maintenance_kind(self, value: dict, car: Car):
-        maintenance_type = self.initial_data["type"]
+    def validate_maintenance_kind(self, value: dict, car: Car, maintenance_type: str):
         result = dict(type=maintenance_type)
         if maintenance_type == CarMaintenanceTypes.SparePart:
             value["car_brand"] = car.information.brand.id
@@ -456,7 +455,7 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
         car: Car = validated_data["car"]
         if car.status == CarStates.Available:
             raise serializers.ValidationError({"error": "new maintenance cannot be created for an available car"})
-        data = self.validate_maintenance_kind(validated_data.pop("maintenance"), car)
+        data = self.validate_maintenance_kind(validated_data.pop("maintenance"), car, validated_data.pop("type"))
         validated_data.update(data)
         return super(CarMaintenanceSerializerAdmin, self).create(validated_data)
 

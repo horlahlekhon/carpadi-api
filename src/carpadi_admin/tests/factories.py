@@ -78,3 +78,10 @@ class InspectionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Inspections
+
+
+# class MaintenanceFactory(factory.django.DjangoModelFactory):
+#     car =  None
+#
+#     class Meta:
+#         model = CarMaintenance
