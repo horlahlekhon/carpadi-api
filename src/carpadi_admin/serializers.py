@@ -686,7 +686,7 @@ class TradeUnitSerializerAdmin(serializers.ModelSerializer):
             manufacturer=unit.trade.car.information.manufacturer,
             model=unit.trade.car.information.brand.model,
             year=unit.trade.car.information.brand.year,
-            images=unit.trade.car.pictures.first() if pictures else None,
+            images=unit.trade.car.pictures.first().asset if pictures else None,
         )
 
     def get_merchant(self, unit: TradeUnit):
