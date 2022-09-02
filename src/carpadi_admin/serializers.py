@@ -397,7 +397,8 @@ class SparePartsSerializer(serializers.ModelSerializer):
                 asset=picture, content_object=instance, entity_type=AssetEntityType.CarSparePart
             )
             validated_data["picture"] = asset.asset
-        return super(SparePartsSerializer, self).update(instance, validated_data)
+        ins = super(SparePartsSerializer, self).update(instance, validated_data)
+        return ins
 
 
 class MiscellaneousExpensesSerializer(serializers.ModelSerializer):
@@ -408,22 +409,19 @@ class MiscellaneousExpensesSerializer(serializers.ModelSerializer):
 
 class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
     maintenance = serializers.DictField(write_only=True, help_text="An object of either the expense or spare part")
-    cost = serializers.DecimalField(
-        required=False,
-        help_text="Cost of the maintenance in case it is a misc expenses",
-        max_digits=10,
-        decimal_places=2,
-        read_only=True,
-    )
     object_id = serializers.HiddenField(required=False, default=None)
     content_type = serializers.HiddenField(required=False, default=None)
     maintenance_data = serializers.SerializerMethodField()
+    cost = serializers.SerializerMethodField()
 
     class Meta:
         model = CarMaintenance
         fields = "__all__"
         read_only_fields = ("created", "modified")
         hidden_fields = ("object_id", "content_type")
+
+    def get_cost(self, instance: CarMaintenance):
+        return instance.cost()
 
     def get_maintenance_data(self, obj: CarMaintenance):
         if obj.type == CarMaintenanceTypes.Expense:
@@ -447,7 +445,6 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
         part.is_valid(raise_exception=True)
         instance: Union[SpareParts, MiscellaneousExpenses] = part.save()
         data["maintenance"] = instance
-        data["cost"] = instance.estimated_price
         return data
 
     @atomic()
@@ -458,6 +455,28 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
         data = self.validate_maintenance_kind(validated_data.pop("maintenance"), car, validated_data.pop("type"))
         validated_data.update(data)
         return super(CarMaintenanceSerializerAdmin, self).create(validated_data)
+
+    @atomic()
+    def update(self, instance: CarMaintenance, validated_data):
+        type = instance.type
+        car = instance.car
+        if validated_data.get("type") or validated_data.get("car"):
+            raise serializers.ValidationError({"error": "car or type cannot be updated"})
+        if car.status in (CarStates.Available, CarStates.OngoingTrade, CarStates.Bought, CarStates.Archived):
+            raise serializers.ValidationError(
+                {"error": "Maintenance can only be created or updated for cars that have not been traded."}
+            )
+        if validated_data.get("maintenance"):
+            if type == CarMaintenanceTypes.SparePart:
+                ser = SparePartsSerializer(data=validated_data["maintenance"], partial=True)
+                ser.is_valid(raise_exception=True)
+                maint_inst: SpareParts = ser.update(instance.maintenance, validated_data["maintenance"])
+            else:
+                ser = MiscellaneousExpensesSerializer(data=validated_data["maintenance"], partial=True)
+                ser.is_valid(raise_exception=True)
+                maint_inst: MiscellaneousExpenses = ser.update(instance.maintenance, validated_data["maintenance"])
+        instance.refresh_from_db()
+        return instance
 
 
 class TradeDashboardSerializer(serializers.Serializer):

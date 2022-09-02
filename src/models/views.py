@@ -1,6 +1,7 @@
 import threading
 
 from django.db import transaction
+from django.db.models import Q
 from django.http.response import Http404
 from django.utils import timezone
 from django_filters import rest_framework as filters
@@ -203,11 +204,12 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         """
         notice_id = request.query_params.get("id")
         read = request.query_params.get("read")
-        if type(bool(read)) != bool or str(read).lower() not in ["true", "false", "1", "0"]:
+        if str(read) not in ["True", "False"]:
             return Response(
-                {'error': "you need to specify `read` query parametre as a valid boolean"}, status=status.HTTP_400_BAD_REQUEST
+                {'error': "you need to specify `read` query parametre as a valid boolean i.e `True` or `False`"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        read_option = bool(read)
+        read_option = eval(read)
         if read_all := request.query_params.get("all"):
             return self.mark_all_as_read_or_unread(read=read_option)
         try:
@@ -225,7 +227,7 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         Mark all notifications as read
         """
         try:
-            notifications = Notifications.objects.filter(user=self.request.user)
+            notifications = Notifications.objects.filter(user=self.request.user).filter(~Q(is_read=read))
             notifications.update(is_read=read)
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
