@@ -269,7 +269,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         extra_kwargs = {"car": {"error_messages": {"required": "Car to trade on is required", "unique": "Car already " "traded"}}}
 
     def get_trade_margin(self, trade: Trade):
-        return trade.car.margin_calc()
+        return trade.margin_calc()
 
     def get_carpadi_rot(self, trade: Trade):
         return trade.carpadi_rot
@@ -285,9 +285,6 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
 
     def get_return_on_trade_percentage(self, obj: Trade):
         return obj.return_on_trade_calc_percent()
-
-    def calculate_price_per_slot(self, car_price, slots_availble):
-        return car_price / slots_availble
 
     def get_sold_slots_price(self, instance: Trade):
         return instance.sold_slots_price()
@@ -330,23 +327,6 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         car.status = CarStates.OngoingTrade
         car.save(update_fields=["status"])
         return trade
-
-    def complete_trade(self, trade: Trade):
-        """
-        Completes the trade by setting the trade status to completed and updating the car status.
-        we also try to do some validation to make sure trade and its corresponding objects are valid
-        :param trade: Trade object
-        """
-        successful_disbursements = trade.units.filter(disbursement__disbursement_status=DisbursementStates.Unsettled).count()
-        query = trade.units.annotate(total_disbursed=Sum('disbursement__amount'))
-        total_disbursed = query.aggregate(sum=Sum('total_disbursed')).get('sum') or Decimal(0)
-        if successful_disbursements == trade.units.count() and total_disbursed == trade.total_payout():
-            car: Car = trade.car
-            car.update_on_sold()
-        else:
-            raise exceptions.APIException(
-                "Error, cannot complete trade, because calculated" " payout seems to be unbalanced with the disbursements"
-            )
 
     @atomic()
     def update(self, instance: Trade, validated_data):
@@ -689,7 +669,10 @@ class TradeUnitSerializerAdmin(serializers.ModelSerializer):
         )
 
     def get_merchant(self, unit: TradeUnit):
-        return dict(name=unit.merchant.user.username, id=unit.merchant.id, image=str(unit.merchant.user.profile_picture))
+        return dict(
+            name=unit.merchant.user.username,
+            id=unit.merchant.id, image=str(unit.merchant.user.profile_picture)
+        )
 
     def get_rot_per_slot(self, unit: TradeUnit):
         return unit.estimated_rot / unit.slots_quantity

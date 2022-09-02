@@ -448,6 +448,10 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         attrs["estimated_rot"] = rot
         return attrs
 
+    # TODO
+    def estimated_rot(self, trade: Trade, slot_quantity: int):
+        ...
+
     @transaction.atomic()
     def create(self, validated_data):
         trade: Trade = validated_data["trade"]

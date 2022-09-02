@@ -224,3 +224,4 @@ class CarMaintenanceSerializerTest(TestCase):
         eq_(is_valid, True)
         maint = car_maintenance_ser.save()
         ok_(maint)
+
