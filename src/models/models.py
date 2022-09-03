@@ -471,7 +471,7 @@ class Car(Base):
     licence_plate = models.CharField(max_length=20, null=True, blank=True, validators=[LicensePlateValidator, ])
 
     def maintenance_cost_calc(self):
-        return self.maintenances.all().aggregate(sum=Sum("cost")).get("sum") or Decimal(0.00)
+        return sum(i.cost() for i in self.maintenances.all()) or Decimal(0.00)
 
     def total_cost_calc(self):
         return self.bought_price + self.maintenance_cost_calc()
@@ -506,15 +506,24 @@ class SpareParts(Base):
     name = models.CharField(max_length=100)
     car_brand = models.ForeignKey(CarBrand, on_delete=models.CASCADE)
     estimated_price = models.DecimalField(max_digits=10, decimal_places=2)
+    repair_cost = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal(0.00))
 
     # class Meta:
     #     unique_together = ('name', 'car_brand')
+
+    @property
+    def cost(self) -> Decimal:
+        return Decimal(self.estimated_price) + Decimal(self.repair_cost)
 
 
 class MiscellaneousExpenses(Base):
     name = models.CharField(max_length=100)
     estimated_price = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(null=True, blank=True)
+
+    @property
+    def cost(self):
+        return self.estimated_price
 
 
 class CarMaintenanceTypes(models.TextChoices):
@@ -528,14 +537,17 @@ class CarMaintenance(Base):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     object_id = models.UUIDField(null=True, blank=True)
     maintenance = GenericForeignKey("content_type", "object_id")
-    cost = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        help_text="cost of the maintenance a the time of the maintenance.. "
-                  "cost on the maintenance might change, i.e spare parts. "
-                  "the cost here is the correct one to use when calculating "
-                  "total cost of car maintenance",
-    )
+    # cost = models.DecimalField(
+    #     max_digits=10,
+    #     decimal_places=2,
+    #     help_text="cost of the maintenance a the time of the maintenance.. "
+    #     "cost on the maintenance might change, i.e spare parts. "
+    #     "the cost here is the correct one to use when calculating "
+    #     "total cost of car maintenance",
+    # )
+
+    def cost(self):
+        return self.maintenance.cost
 
 
 class TradeStates(models.TextChoices):
