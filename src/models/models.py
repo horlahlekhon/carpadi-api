@@ -26,8 +26,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from src.carpadi_admin.utils import validate_inspector, checkout_transaction_validator, \
     disbursement_trade_unit_validator
 from src.config.common import OTP_EXPIRY
-from src.models.validators import PhoneNumberValidator
 import logging
+from src.models.validators import PhoneNumberValidator, LicensePlateValidator
 
 logger = logging.getLogger(__name__)
 
@@ -468,7 +468,7 @@ class Car(Base):
     )
     description = models.TextField(null=True, blank=True)
     name = models.CharField(max_length=50, null=True, blank=True)
-    licence_plate = models.CharField(max_length=20, null=True, blank=True)
+    licence_plate = models.CharField(max_length=20, null=True, blank=True, validators=[LicensePlateValidator, ])
 
     def maintenance_cost_calc(self):
         return self.maintenances.all().aggregate(sum=Sum("cost")).get("sum") or Decimal(0.00)
