@@ -126,6 +126,7 @@ class TradeUnitFactory(factory.django.DjangoModelFactory):
     trade = None
     merchant = None
     slots_quantity = 1
+    buy_transaction = None
 
     class Meta:
         model = TradeUnit

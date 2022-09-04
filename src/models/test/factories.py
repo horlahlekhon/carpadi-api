@@ -27,7 +27,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
 class CarMerchantFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory, user_type=UserTypes.CarMerchant)
-    bvn = factory.Sequence(lambda n: f"2334892900292{n}")
+    bvn = factory.Sequence(lambda n: f"233489290029{n}")
 
     class Meta:
         model = CarMerchant

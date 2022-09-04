@@ -190,6 +190,7 @@ def disbursement_completed(sender, instance, created, **kwargs):
                     owned in {dis.trade_unit.trade.car.information.brand.name}"
             f" {dis.trade_unit.trade.car.information.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
         )
+
         Notifications.objects.create(
             notice_type=NotificationTypes.Disbursement,
             is_read=False,
