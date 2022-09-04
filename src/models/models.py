@@ -602,7 +602,8 @@ class Trade(Base):
         return self.resale_price - self.car.total_cost_calc()
 
     def return_on_trade_calc_percent(self):
-        return self.return_on_trade_calc() / self.resale_price * 100
+        settings: Settings = Settings.objects.first()
+        return settings.merchant_trade_rot_percentage
 
     @property
     def return_on_trade_per_slot(self) -> Decimal:
