@@ -596,6 +596,8 @@ class Trade(Base):
             return self.min_sale_price
         return self.car.resale_price
 
+    # FIXME this calculation seems way off, shouldn't we
+    #  be using settings.merchant_trade_rot_percentage
     def return_on_trade_calc(self):
         return self.resale_price - self.car.total_cost_calc()
 
