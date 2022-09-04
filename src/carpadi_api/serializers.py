@@ -326,7 +326,8 @@ class TradeSerializer(serializers.ModelSerializer):
     trade_status = serializers.SerializerMethodField()
     slots_purchased = serializers.SerializerMethodField()
     return_on_trade_percentage = serializers.SerializerMethodField()
-    return_on_trade = serializers.SerializerMethodField()
+    # return_on_trade = serializers.SerializerMethodField()
+    return_on_trade_per_unit = serializers.SerializerMethodField()
 
     class Meta:
         model = Trade
@@ -342,6 +343,8 @@ class TradeSerializer(serializers.ModelSerializer):
             "trade_status",
             "car",
         )
+        hidden_fields = ("return_on_trade", "expected_return_on_trade",
+                         "estimated_return_on_trade", "min_sale_price")
 
     def serialize_car(self, car: Car):
         return {
@@ -355,6 +358,13 @@ class TradeSerializer(serializers.ModelSerializer):
             # "image": c,
         }
 
+    def get_fields(self):
+        fields = super(TradeSerializer, self).get_fields()
+        fields.pop("return_on_trade")
+        fields.pop("estimated_return_on_trade")
+        fields.pop("min_sale_price")
+        return fields
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["car"] = self.serialize_car(instance.car)
@@ -363,8 +373,10 @@ class TradeSerializer(serializers.ModelSerializer):
     def get_slots_purchased(self, obj):
         return obj.slots_purchased()
 
-    def get_return_on_trade(self, obj: Trade):
-        return obj.return_on_trade_calc()
+    # def get_return_on_trade(self, obj: Trade):
+    #     return obj.return_on_trade_calc()
+    def get_return_on_trade_per_unit(self, obj: Trade):
+        return obj.return_on_trade_per_slot
 
     def get_return_on_trade_percentage(self, obj: Trade):
         return obj.return_on_trade_calc_percent()
