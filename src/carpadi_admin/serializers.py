@@ -688,10 +688,7 @@ class TradeUnitSerializerAdmin(serializers.ModelSerializer):
         )
 
     def get_merchant(self, unit: TradeUnit):
-        return dict(
-            name=unit.merchant.user.username,
-            id=unit.merchant.id, image=str(unit.merchant.user.profile_picture)
-        )
+        return dict(name=unit.merchant.user.username, id=unit.merchant.id, image=str(unit.merchant.user.profile_picture))
 
     def get_rot_per_slot(self, unit: TradeUnit):
         return unit.estimated_rot / unit.slots_quantity
