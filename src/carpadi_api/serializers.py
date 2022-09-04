@@ -343,8 +343,7 @@ class TradeSerializer(serializers.ModelSerializer):
             "trade_status",
             "car",
         )
-        hidden_fields = ("return_on_trade", "expected_return_on_trade",
-                         "estimated_return_on_trade", "min_sale_price")
+        hidden_fields = ("return_on_trade", "expected_return_on_trade", "estimated_return_on_trade", "min_sale_price")
 
     def serialize_car(self, car: Car):
         return {
