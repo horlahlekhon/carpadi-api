@@ -264,7 +264,7 @@ class TransactionStatus(models.TextChoices):
 
 # Transactions
 class Transaction(Base):
-    amount = models.DecimalField(max_digits=10, decimal_places=4)
+    amount = models.DecimalField(max_digits=30, decimal_places=10)
     wallet = models.ForeignKey(
         Wallet, on_delete=models.CASCADE, related_name="merchant_transactions",
         help_text="transactions carried out by merchant"
@@ -943,7 +943,7 @@ class Disbursement(Base):
         validators=[disbursement_trade_unit_validator],
         help_text="the trade unit that this disbursement is for",
     )
-    amount = models.DecimalField(decimal_places=5, editable=False, max_digits=10)
+    amount = models.DecimalField(decimal_places=10, editable=False, max_digits=30)
     transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, related_name="disbursement", null=True,
                                        blank=True)
     disbursement_status = models.CharField(
@@ -1159,8 +1159,7 @@ class Inspections(Base):
         if self._state.adding:
             return super(Inspections, self).save(*args, **kwargs)
         updated_fields = kwargs.get("updated_fields", [])
-        if "status" in updated_fields:
-            self.car.update_on_inspection_changes(self)
+        self.car.update_on_inspection_changes(self)
         super(Inspections, self).save(*args, **kwargs)
 
 

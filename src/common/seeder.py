@@ -132,49 +132,55 @@ class PadiSeeder:
                 "car": Car.objects.get(pk=car),
             },
         )
-        self.seeder.execute()
+        ins = self.seeder.execute()[Inspections][0]
+        return Inspections.objects.get(id=ins)
 
-    def seed_cars(self):
-        cost = self.seeder.faker.random_number(digits=4)
-        self.seeder.add_entity(
-            MiscellaneousExpenses,
-            1,
-            {
-                'estimated_price': cost,
-            },
-        )
-        exp = self.seeder.execute()[MiscellaneousExpenses][0]
+    def seed_cars(self, count=1):
+        # cost = self.seeder.faker.random_number(digits=4)
+        # self.seeder.add_entity(
+        #     MiscellaneousExpenses,
+        #     1,
+        #     {
+        #         'estimated_price': cost,
+        #     },
+        # )
+        # exp = self.seeder.execute()[MiscellaneousExpenses][0]
         # exp = MiscellaneousExpenses.objects.get(pk=exp)
-        vin = self.seeder.faker.random_number(digits=17)
         self.seeder.add_entity(
             Car,
-            1,
+            count,
             {
                 'status': CarStates.Inspected if self.admin else CarStates.New,
-                'bought_price': Decimal(100000.0),
-                'vin': vin,
+                'bought_price': Decimal(1000000.0),
+                'vin': lambda x: self.seeder.faker.random_number(digits=17),
                 'resale_price': None,
                 'colour': self.seeder.faker.color_name(),
-                'information': self.seed_vehicle_info(vin)
+                'information': lambda x: self.seed_vehicle_info()
                 # 'maintenance_cost': Decimal(cost),
             },
         )
-        car = self.seeder.execute()[Car][0]
-        self.seed_inspection(car, user=None)
-        data = {
-            "type": "expense",
-            "maintenance": {
-                "estimated_price": abs(self.seeder.faker.random_number(digits=4)),
-                "name": self.seeder.faker.name(),
-                "picture": "https://res.cloudinary.com/balorunduro/image/upload/v1659456477/test/xbwnjjuyazcjybdxpw63.png",
-            },
-            "car": car,
-        }
-        ser = CarMaintenanceSerializerAdmin(data=data)
-        if ser.is_valid(raise_exception=True):
-            ser.save()
-        self.seed_assets(car, AssetEntityType.Car)
-        return car
+        cars = self.seeder.execute()[Car]
+        for car in cars:
+            car_obj = Car.objects.get(id=car)
+            car_obj.vin = car_obj.information.vin
+            car_obj.save(update_fields=["vin"])
+            inspection = self.seed_inspection(car, user=None)
+            data = {
+                "type": "expense",
+                "maintenance": {
+                    "estimated_price": abs(self.seeder.faker.random_number(digits=4)),
+                    "name": self.seeder.faker.name(),
+                    "picture": "https://res.cloudinary.com/balorunduro/image/upload/v1659456477/test/xbwnjjuyazcjybdxpw63.png",
+                },
+                "car": car,
+            }
+            ser = CarMaintenanceSerializerAdmin(data=data)
+            if ser.is_valid(raise_exception=True):
+                ser.save()
+            inspection.status = InspectionStatus.Completed
+            inspection.save(update_fields=["status"])
+            self.seed_assets(car, AssetEntityType.Car)
+        return cars
 
     def seed_assets(self, entity, ent_type, count=1):
         # https://picsum.photos/v2/list?page=100&limit=2
@@ -194,7 +200,7 @@ class PadiSeeder:
             TradeStates.Closed,
             TradeStates.Purchased,
         ), "Invalid status when creating trade"
-        assert car.status == CarStates.Inspected, "Invalid car status when creating trade"
+        assert car.status == CarStates.Available, f"Invalid car status when creating trade: {car.status}"
         self.seeder.add_entity(
             Trade,
             1,
@@ -222,7 +228,7 @@ class PadiSeeder:
         return units
 
     def seed_completed_trade(self, merchants, should_close=False):
-        car = self.seed_cars()
+        car = self.seed_cars()[0]
         car = Car.objects.get(pk=car)
         trade = self.seed_trade(car, TradeStates.Ongoing)
         trade = Trade.objects.get(pk=trade)
@@ -242,16 +248,17 @@ class PadiSeeder:
             self.seed_settings()
             self.seed_admin()
             merch_ids = self.seed_merchants()
-            self.seed_completed_trade(merch_ids, should_close=True)
-            self.seed_completed_trade(merch_ids, should_close=False)
-            self.seed_completed_trade(merch_ids[:3])
-            self.seed_completed_trade(merch_ids[:2])
-            self.seed_car_product()
+            t1 = self.seed_completed_trade(merch_ids, should_close=True)
+            t2 = self.seed_completed_trade(merch_ids, should_close=False)
+            t3 = self.seed_completed_trade(merch_ids[:3])
+            t4 = self.seed_completed_trade(merch_ids[:2])
+            self.seed_car_product(cars=[t4.car_id, t3.car_id, t2.car_id, t1.car_id])
+            self.seed_cars(count=5)
             print("seeding completed successfully!")
         else:
             print("Skipping database seed")
 
-    def seed_vehicle_info(self, vin):
+    def seed_vehicle_info(self, vin=None):
         vehicle = self.seeder.faker.vehicle_object()
         self.seeder.add_entity(
             CarBrand,
@@ -267,7 +274,8 @@ class PadiSeeder:
             VehicleInfo,
             1,
             {
-                "vin": vin,
+                "id": uuid.uuid4(),
+                "vin": lambda x: self.seeder.faker.random_number(digits=17),
                 "engine": "L4, 1.8L; DOHC; 16V",
                 "transmission": "STANDARD",
                 "car_type": vehicle["Category"],
@@ -309,24 +317,19 @@ class PadiSeeder:
             print(f"we couldn't get banks list from the API... due to {response}")
 
     def seed_settings(self):
-        self.seeder.add_entity(
-            Settings,
-            1,
-            {
-                "carpadi_trade_rot_percentage": Decimal(10.0),
-                "merchant_trade_rot_percentage": Decimal(5.0),
-            },
+        Settings.objects.create(
+            merchant_trade_rot_percentage=Decimal(5.00), carpadi_commision=Decimal(50.00),
+            bonus_percentage=Decimal(50.00)
         )
-        self.seeder.execute()
 
     def get_pictures(self, count):
         resp = requests.get(f'https://picsum.photos/v2/list?page=100&limit={count}')
         data = resp.json()
         return [d['download_url'] for d in data]
 
-    def seed_car_product(self):
+    def seed_car_product(self, cars):
         products = []
-        cars = Car.objects.filter(product=None)
+        cars = Car.objects.filter(product=None, id__in=cars)
         for car in cars:
             if car.trade:
                 product = {
