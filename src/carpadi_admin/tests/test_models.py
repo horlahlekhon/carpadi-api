@@ -242,9 +242,39 @@ class TestTrade(BaseTest):
         # assert trade.
 
     def test_trade_with_trade_unit_with_loss(self):
-        #  TODO finish this
         bought_price = Decimal(100000)
         maintenance = Decimal(2000)
-        resale_price = Decimal(50000.0) + maintenance
+        resale_price = Decimal(90000.0) + maintenance
         self.prepare_car(resale=resale_price)
         trade = TradeFactory(car=self.car, trade_status=TradeStates.Ongoing)
+        units = []
+        wallets = WalletFactory.create_batch(size=5, balance=Decimal(20400.00), withdrawable_cash=Decimal(20400.00), total_cash = Decimal(20400.00))
+        merchants: List[CarMerchant] = [i.merchant for i in wallets]
+        for merchant in merchants:
+            tx = TransactionsFactory(amount=trade.price_per_slot,
+                                     wallet=merchant.wallet,
+                                     transaction_type=TransactionTypes.Debit,
+                                     transaction_kind=TransactionKinds.TradeUnitPurchases,
+                                     transaction_status=TransactionStatus.Success)
+            unit = TradeUnitFactory(merchant=merchant, trade=trade, buy_transaction=tx)
+            tx.wallet.update_balance(tx=tx)
+            units.append(unit)
+        trade.refresh_from_db()
+        assert trade.trade_status == TradeStates.Purchased
+        assert trade.remaining_slots() == 0
+        assert trade.units.count() == len(units)
+        assert trade.deficit_balance() == Decimal(10000.00)
+        trade.trade_status = TradeStates.Completed
+        trade.save(update_fields=["trade_status"])
+        # unit = trade.units.first()
+        for unit in trade.units.all():
+            assert unit.merchant.wallet.unsettled_cash == unit.disbursement.amount
+            assert unit.disbursement.transaction.transaction_status == TransactionStatus.Unsettled
+            assert unit.disbursement.disbursement_status == DisbursementStates.Unsettled
+        trade.close()
+        trade.refresh_from_db()
+        assert trade.trade_status == TradeStates.Closed
+        # unit = trade.units.first()
+        for unit in trade.units.all():
+            ideal_return = (unit.unit_value + trade.return_on_trade_per_slot * unit.slots_quantity) - (trade.deficit_balance() / 5) * unit.slots_quantity
+            assert unit.merchant.wallet.withdrawable_cash == ideal_return

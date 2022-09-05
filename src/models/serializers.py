@@ -14,7 +14,7 @@ from rest_framework_simplejwt.serializers import PasswordField
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from src.carpadi_api.serializers import TransactionSerializer, TradeUnitSerializer, WalletSerializer
+from src.carpadi_api.serializers import TransactionSerializer, TradeUnitSerializer, WalletSerializer,CarSerializer
 from src.config.common import OTP_EXPIRY
 from src.models.models import (
     Wallet,
@@ -341,6 +341,8 @@ class ActivitySerializer(serializers.ModelSerializer):
             return CarMerchantSerializer(instance=ent).data
         elif isinstance(ent, Wallet):
             return WalletSerializer(instance=ent).data
+        elif isinstance(ent, Car):
+            return CarSerializer(instance=ent).data
         #  we don't know what this activity is, so we bailed
         return {}
 

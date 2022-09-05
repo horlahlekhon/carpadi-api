@@ -237,7 +237,8 @@ class Wallet(Base):
             self.withdrawable_cash = (
                 Decimal(0.0) if self.withdrawable_cash - tx.amount < 0 else self.withdrawable_cash - tx.amount
             )
-            updated_fields_wallet.append("withdrawable_cash")
+            self.trading_cash += tx.amount
+            updated_fields_wallet.extend(["withdrawable_cash", "trading_cash"])
             tx.transaction_status = TransactionStatus.Success
         else:
             raise ValidationError("Invalid transaction type and kind combination")
@@ -495,7 +496,9 @@ class Car(Base):
         self.save(update_fields=["status", "margin", "total_cost", "cost_of_repairs"])
 
     def update_on_inspection_changes(self, inspection: "Inspections"):
-        if inspection.status == InspectionStatus.Completed:
+        if inspection.status == InspectionStatus.Completed and self.bought_price > Decimal(0.00):
+            self.status = CarStates.Available
+        elif inspection.status == InspectionStatus.Completed:
             self.status = CarStates.Inspected
         elif inspection.status in (
                 InspectionStatus.Ongoing,
