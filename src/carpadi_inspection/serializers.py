@@ -31,5 +31,6 @@ class InspectionSerializer(serializers.ModelSerializer):
 
     @atomic
     def update(self, instance, validated_data):
-        inspection = super(InspectionSerializer, self).update(instance, validated_data)
-        return inspection
+        upd: Inspections = super(InspectionSerializer, self).update(instance, validated_data)
+        upd.car.update_on_inspection_changes(upd)
+        return upd

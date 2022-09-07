@@ -318,8 +318,7 @@ class PadiSeeder:
 
     def seed_settings(self):
         Settings.objects.create(
-            merchant_trade_rot_percentage=Decimal(5.00), carpadi_commision=Decimal(50.00),
-            bonus_percentage=Decimal(50.00)
+            merchant_trade_rot_percentage=Decimal(5.00), carpadi_commision=Decimal(50.00), bonus_percentage=Decimal(50.00)
         )
 
     def get_pictures(self, count):

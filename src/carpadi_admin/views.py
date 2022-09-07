@@ -18,6 +18,7 @@ from src.carpadi_admin.filters import (
     VehicleInfoFilter,
     CarMerchantFilter,
     CarFilter,
+    CarDocumentsFilter,
 )
 from src.carpadi_admin.serializers import (
     CarSerializer,
@@ -36,6 +37,7 @@ from src.carpadi_admin.serializers import (
     HomeDashboardSerializer,
     CarMerchantAdminSerializer,
     SettingsSerializerAdmin,
+    CarDocumentsSerializer,
 )
 from src.carpadi_api.filters import TradeUnitFilter
 from src.carpadi_market.filters import CarProductFilter
@@ -56,6 +58,7 @@ from src.models.models import (
     CarProduct,
     VehicleInfo,
     Settings,
+    CarDocuments,
 )
 from src.models.serializers import CarBrandSerializer, ActivitySerializer
 
@@ -141,6 +144,23 @@ class TradeViewSetAdmin(viewsets.ModelViewSet):
             )
         trade.close()
         return Response({"message": "Trade disbursed successfully"}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='rollback-trade', url_name='rollback_trade')
+    def rollback_trade(self, request):
+        """
+        This endpoint is used to rollback a trade that have been completed. and will do the follwoing
+        * set all disbursements to failed and also fail all related transactions
+        * return the unit_value back to the wallet's trading_cash
+        * set the status of the trade back to Purchased
+        """
+        trade = get_object_or_404(Trade, pk=request.data.get("trade"))
+        if trade.trade_status != TradeStates.Completed:
+            return Response(
+                {"message": "Trade is not completed, please complete this trade before disbursing"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        trade.rollback()
+        return Response({"message": "Trade rolled back to purchased state"}, status=status.HTTP_200_OK)
 
 
 class DisbursementViewSetAdmin(viewsets.ReadOnlyModelViewSet):
@@ -258,3 +278,11 @@ class SettingsViewset(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins
     serializer_class = SettingsSerializerAdmin
     permission_classes = (IsAdminUser,)
     queryset = Settings.objects.all()
+
+
+class CarDocumentsViewset(viewsets.ModelViewSet):
+    serializer_class = CarDocumentsSerializer
+    queryset = CarDocuments.objects.all()
+    permission_classes = (IsAdminUser,)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = CarDocumentsFilter

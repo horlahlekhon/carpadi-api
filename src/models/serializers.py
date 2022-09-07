@@ -14,7 +14,7 @@ from rest_framework_simplejwt.serializers import PasswordField
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from src.carpadi_api.serializers import TransactionSerializer, TradeUnitSerializer, WalletSerializer,CarSerializer
+from src.carpadi_api.serializers import TransactionSerializer, TradeUnitSerializer, WalletSerializer, CarSerializer
 from src.config.common import OTP_EXPIRY
 from src.models.models import (
     Wallet,

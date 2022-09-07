@@ -6,8 +6,15 @@ from django.test import TestCase
 from faker import factory
 
 from src.carpadi_admin.tests import BaseTest
-from src.carpadi_admin.tests.factories import VehicleFactory, CarFactory, InspectionFactory, SparePartFactory, \
-    TradeFactory, TradeUnitFactory, TransactionsFactory
+from src.carpadi_admin.tests.factories import (
+    VehicleFactory,
+    CarFactory,
+    InspectionFactory,
+    SparePartFactory,
+    TradeFactory,
+    TradeUnitFactory,
+    TransactionsFactory,
+)
 from src.models.models import (
     User,
     UserTypes,
@@ -16,7 +23,13 @@ from src.models.models import (
     CarMaintenance,
     CarStates,
     Settings,
-    TradeStates, CarMerchant, TransactionTypes, TransactionKinds, TransactionStatus, DisbursementStates,
+    TradeStates,
+    CarMerchant,
+    TransactionTypes,
+    TransactionKinds,
+    TransactionStatus,
+    DisbursementStates,
+    Disbursement,
 )
 from src.models.test.factories import UserFactory, WalletFactory
 
@@ -138,14 +151,13 @@ class TestTrade(BaseTest):
         assert trade.carpadi_bonus_calc() == bonus - traders_bonus
         assert trade.carpadi_rot_calc() == (bonus - traders_bonus) + rot / 2
 
-
     def test_create_trade_with_loss(self):
         """
-                bought_price = Decimal(100000)
-                resale_price = Decimal(50000.0)
-                maintenance = Decimal(2000)
-                bonus_percentage=Decimal(50.00)
-            """
+        bought_price = Decimal(100000)
+        resale_price = Decimal(50000.0)
+        maintenance = Decimal(2000)
+        bonus_percentage=Decimal(50.00)
+        """
         bought_price = Decimal(100000)
         maintenance = Decimal(2000)
         resale_price = Decimal(50000.0) + maintenance
@@ -176,17 +188,20 @@ class TestTrade(BaseTest):
         units = []
         merchants: List[CarMerchant] = [i.merchant for i in self.wallets]
         for merchant in merchants:
-            tx = TransactionsFactory(amount=trade.price_per_slot,
-                                     wallet=merchant.wallet,
-                                     transaction_type=TransactionTypes.Debit,
-                                     transaction_kind=TransactionKinds.TradeUnitPurchases,
-                                     transaction_status=TransactionStatus.Success)
+            tx = TransactionsFactory(
+                amount=trade.price_per_slot,
+                wallet=merchant.wallet,
+                transaction_type=TransactionTypes.Debit,
+                transaction_kind=TransactionKinds.TradeUnitPurchases,
+                transaction_status=TransactionStatus.Success,
+            )
             unit = TradeUnitFactory(merchant=merchant, trade=trade, buy_transaction=tx)
             units.append(unit)
         trade.refresh_from_db()
         assert trade.trade_status == TradeStates.Purchased
         assert trade.remaining_slots() == 0
         assert trade.units.count() == len(units)
+        assert trade.return_on_trade_calc() == trade.return_on_trade_per_slot * trade.slots_available
         trade.trade_status = TradeStates.Completed
         trade.save(update_fields=["trade_status"])
         trade.refresh_from_db()
@@ -215,11 +230,13 @@ class TestTrade(BaseTest):
         units = []
         merchants: List[CarMerchant] = [i.merchant for i in self.wallets]
         for merchant in merchants:
-            tx = TransactionsFactory(amount=trade.price_per_slot,
-                                     wallet=merchant.wallet,
-                                     transaction_type=TransactionTypes.Debit,
-                                     transaction_kind=TransactionKinds.TradeUnitPurchases,
-                                     transaction_status=TransactionStatus.Success)
+            tx = TransactionsFactory(
+                amount=trade.price_per_slot,
+                wallet=merchant.wallet,
+                transaction_type=TransactionTypes.Debit,
+                transaction_kind=TransactionKinds.TradeUnitPurchases,
+                transaction_status=TransactionStatus.Success,
+            )
             unit = TradeUnitFactory(merchant=merchant, trade=trade, buy_transaction=tx)
             units.append(unit)
         trade.refresh_from_db()
@@ -248,14 +265,18 @@ class TestTrade(BaseTest):
         self.prepare_car(resale=resale_price)
         trade = TradeFactory(car=self.car, trade_status=TradeStates.Ongoing)
         units = []
-        wallets = WalletFactory.create_batch(size=5, balance=Decimal(20400.00), withdrawable_cash=Decimal(20400.00), total_cash = Decimal(20400.00))
+        wallets = WalletFactory.create_batch(
+            size=5, balance=Decimal(20400.00), withdrawable_cash=Decimal(20400.00), total_cash=Decimal(20400.00)
+        )
         merchants: List[CarMerchant] = [i.merchant for i in wallets]
         for merchant in merchants:
-            tx = TransactionsFactory(amount=trade.price_per_slot,
-                                     wallet=merchant.wallet,
-                                     transaction_type=TransactionTypes.Debit,
-                                     transaction_kind=TransactionKinds.TradeUnitPurchases,
-                                     transaction_status=TransactionStatus.Success)
+            tx = TransactionsFactory(
+                amount=trade.price_per_slot,
+                wallet=merchant.wallet,
+                transaction_type=TransactionTypes.Debit,
+                transaction_kind=TransactionKinds.TradeUnitPurchases,
+                transaction_status=TransactionStatus.Success,
+            )
             unit = TradeUnitFactory(merchant=merchant, trade=trade, buy_transaction=tx)
             tx.wallet.update_balance(tx=tx)
             units.append(unit)
@@ -276,5 +297,64 @@ class TestTrade(BaseTest):
         assert trade.trade_status == TradeStates.Closed
         # unit = trade.units.first()
         for unit in trade.units.all():
-            ideal_return = (unit.unit_value + trade.return_on_trade_per_slot * unit.slots_quantity) - (trade.deficit_balance() / 5) * unit.slots_quantity
+            ideal_return = (unit.unit_value + trade.return_on_trade_per_slot * unit.slots_quantity) - (
+                trade.deficit_balance() / 5
+            ) * unit.slots_quantity
             assert unit.merchant.wallet.withdrawable_cash == ideal_return
+
+    def test_rollback_trade_completion(self):
+        self.car.update_on_inspection_changes(self.inspection)
+        self.maintenance = CarMaintenance.objects.create(maintenance=self.spare_part, car=self.car)
+        self.car.bought_price = Decimal(100000)
+        self.car.resale_price = Decimal(150000)
+        self.car.save()
+        trade = TradeFactory(car=self.car, trade_status=TradeStates.Ongoing)
+        units = []
+        merchants: List[CarMerchant] = [i.merchant for i in self.wallets]
+        for merchant in merchants:
+            tx = TransactionsFactory(
+                amount=trade.price_per_slot,
+                wallet=merchant.wallet,
+                transaction_type=TransactionTypes.Debit,
+                transaction_kind=TransactionKinds.TradeUnitPurchases,
+                transaction_status=TransactionStatus.Success,
+            )
+            unit = TradeUnitFactory(merchant=merchant, trade=trade, buy_transaction=tx)
+            units.append(unit)
+        trade.refresh_from_db()
+        assert trade.trade_status == TradeStates.Purchased
+        assert trade.remaining_slots() == 0
+        assert trade.units.count() == len(units)
+        trade.trade_status = TradeStates.Completed
+        trade.save(update_fields=["trade_status"])
+        trade.refresh_from_db()
+        for unit in trade.units.all():
+            assert unit.disbursement is not None
+            assert unit.disbursement.disbursement_status == DisbursementStates.Unsettled
+            assert unit.checkout_transaction is not None
+            assert unit.checkout_transaction == unit.disbursement.transaction
+            trade_bonus = (unit.trade.bonus_calc() * self.set.bonus_percentage / 100) / 5
+            base = unit.trade.return_on_trade_per_slot + unit.unit_value
+            assert unit.disbursement.transaction.amount == base + trade_bonus
+            assert unit.trade_bonus == trade_bonus
+        self.car.refresh_from_db()
+        assert self.car.cost_of_repairs == Decimal(2000)
+        assert self.car.total_cost == Decimal(2000.0) + Decimal(100000)
+        assert self.car.margin == Decimal(150000) - Decimal(100000) - Decimal(2000)
+        assert self.car.status == CarStates.Sold
+        trade.rollback()
+        trade.refresh_from_db()
+        assert trade.trade_status == TradeStates.Purchased
+        assert trade.car.status == CarStates.OngoingTrade
+        assert trade.carpadi_bonus == Decimal(0.00)
+        assert trade.total_carpadi_rot == Decimal(0.00)
+        assert trade.traders_bonus_per_slot == Decimal(0.00)
+        assert trade.car.cost_of_repairs == Decimal(0.00)
+        assert trade.car.margin == Decimal(0.00)
+        for unit in trade.units.all():
+            dis: Disbursement = unit.disbursement
+            assert dis.disbursement_status == DisbursementStates.RolledBack
+            assert dis.transaction.transaction_status == TransactionStatus.RolledBack
+            wallet = unit.merchant.wallet
+            assert wallet.unsettled_cash == Decimal(0.00)
+            assert wallet.trading_cash == unit.unit_value

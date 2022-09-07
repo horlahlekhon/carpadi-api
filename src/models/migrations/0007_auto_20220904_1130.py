@@ -17,7 +17,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='tradeunit',
             name='trade_bonus',
-            field=models.DecimalField(decimal_places=2, default=Decimal('0'), editable=False, help_text='The bonus that the trade unit got if any', max_digits=10, validators=[django.core.validators.MinValueValidator(Decimal('0'))]),
+            field=models.DecimalField(
+                decimal_places=2,
+                default=Decimal('0'),
+                editable=False,
+                help_text='The bonus that the trade unit got if any',
+                max_digits=10,
+                validators=[django.core.validators.MinValueValidator(Decimal('0'))],
+            ),
         ),
         migrations.AlterField(
             model_name='otp',

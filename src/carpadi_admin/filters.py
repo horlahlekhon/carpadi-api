@@ -16,6 +16,7 @@ from src.models.models import (
     ActivityTypes,
     Car,
     CarStates,
+    CarDocuments,
 )
 
 
@@ -154,3 +155,11 @@ class CarFilter(filters.FilterSet):
             "colour",
             "licence_plate",
         )
+
+
+class CarDocumentsFilter(filters.FilterSet):
+    car = filters.CharFilter(field_name="car_id")
+
+    class Meta:
+        model = CarDocuments
+        fields = ("car", "is_verified", "name")

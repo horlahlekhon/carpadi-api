@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Optional, Union
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import URLValidator
 from django.db import models
 from django.db.models import Sum, Count, Avg, Q
 from django.db.transaction import atomic
@@ -44,6 +45,7 @@ from src.models.models import (
     CarBrand,
     Settings,
     InspectionStatus,
+    CarDocuments,
 )
 from src.models.serializers import UserSerializer, CarBrandSerializer
 
@@ -250,7 +252,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     return_on_trade_per_unit = serializers.SerializerMethodField()
     total_users_trading = serializers.SerializerMethodField()
     sold_slots_price = serializers.SerializerMethodField()
-    carpadi_rot = serializers.SerializerMethodField()
+    # carpadi_rot = serializers.SerializerMethodField()
     trade_margin = serializers.SerializerMethodField()
 
     class Meta:
@@ -271,8 +273,8 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     def get_trade_margin(self, trade: Trade):
         return trade.margin_calc()
 
-    def get_carpadi_rot(self, trade: Trade):
-        return trade.carpadi_rot
+    # def get_carpadi_rot(self, trade: Trade):
+    #     return trade.carpadi_rot
 
     def get_total_users_trading(self, obj: Trade):
         return obj.get_trade_merchants().count()
@@ -377,8 +379,7 @@ class SparePartsSerializer(serializers.ModelSerializer):
                 asset=picture, content_object=instance, entity_type=AssetEntityType.CarSparePart
             )
             validated_data["picture"] = asset.asset
-        ins = super(SparePartsSerializer, self).update(instance, validated_data)
-        return ins
+        return super(SparePartsSerializer, self).update(instance, validated_data)
 
 
 class MiscellaneousExpensesSerializer(serializers.ModelSerializer):
@@ -965,3 +966,19 @@ class SettingsSerializerAdmin(serializers.ModelSerializer):
     class Meta:
         model = Settings
         fields = "__all__"
+
+
+class CarDocumentsSerializer(serializers.ModelSerializer):
+    asset = serializers.URLField(required=True)
+
+    class Meta:
+        model = CarDocuments
+        fields = "__all__"
+
+    def create(self, validated_data):
+        url = validated_data.pop("asset")
+        doc = super(CarDocumentsSerializer, self).create(validated_data)
+        asset = Assets.objects.create(asset=url, content_object=doc, entity_type=AssetEntityType.CarDocument)
+        doc.asset = asset
+        doc.save(update_fields=["asset"])
+        return doc
