@@ -151,11 +151,14 @@ class PadiSeeder:
             count,
             {
                 'status': CarStates.Inspected if self.admin else CarStates.New,
-                'bought_price': Decimal(1000000.0),
+                'bought_price': Decimal(100_000.0),
                 'vin': lambda x: self.seeder.faker.random_number(digits=17),
                 'resale_price': None,
                 'colour': self.seeder.faker.color_name(),
-                'information': lambda x: self.seed_vehicle_info()
+                'information': lambda x: self.seed_vehicle_info(),
+                "cost_of_repairs": Decimal(0.00),
+                "margin": Decimal(0.00),
+                "total_cost": Decimal(0.00)
                 # 'maintenance_cost': Decimal(cost),
             },
         )
@@ -168,7 +171,7 @@ class PadiSeeder:
             data = {
                 "type": "expense",
                 "maintenance": {
-                    "estimated_price": abs(self.seeder.faker.random_number(digits=4)),
+                    "estimated_price": Decimal(5000.00),
                     "name": self.seeder.faker.name(),
                     "picture": "https://res.cloudinary.com/balorunduro/image/upload/v1659456477/test/xbwnjjuyazcjybdxpw63.png",
                 },
@@ -190,7 +193,7 @@ class PadiSeeder:
 
     @classmethod
     def get_asset(cls, count=1):
-        resp = requests.get('https://picsum.photos/v2/list?page=100&limit={}'.format(count))
+        resp = requests.get(f'https://picsum.photos/v2/list?page=100&limit={count}')
         data = resp.json()
         return [d['download_url'] for d in data]
 
@@ -212,9 +215,16 @@ class PadiSeeder:
                 'date_of_sale': None,
                 'bts_time': None,
                 'return_on_trade': None,
+                'carpadi_bonus': Decimal(0.00),
+                'total_carpadi_rot': Decimal(0.00),
+                'traders_bonus_per_slot': Decimal(0.00),
+                'carpadi_commission': Decimal(0.00),
             },
         )
-        return self.seeder.execute()[Trade][0]
+        trade = self.seeder.execute()[Trade][0]
+        car.status = CarStates.OngoingTrade
+        car.save(update_fields=['status'])
+        return trade
 
     def seed_units(self, trade, merchants):
         units = []
@@ -235,6 +245,8 @@ class PadiSeeder:
         units = self.seed_units(trade, merchants)
         if len(merchants) < trade.slots_available:
             return trade
+        car.resale_price = car.bought_price + car.maintenance_cost_calc() + Decimal(5000)
+        car.save(update_fields=["resale_price"])
         trade.trade_status = TradeStates.Completed
         trade.save(update_fields=['trade_status'])
         if should_close:

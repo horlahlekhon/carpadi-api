@@ -234,26 +234,23 @@ class TransactionSerializer(serializers.ModelSerializer):
             tx = None
             response: requests.Response = requests.post(url=common.FLW_PAYMENT_URL, json=payload, headers=headers)
             data = response.json()
-            if response.status_code == 200:
-                if data["status"] == "success":
-                    tx = Transaction.objects.create(
-                        transaction_reference=reference,
-                        transaction_kind=validated_data["transaction_kind"],
-                        transaction_status=TransactionStatus.Pending,
-                        transaction_description=validated_data.get("transaction_description") or "carpadi deposit",
-                        # noqa
-                        transaction_type=TransactionTypes.Credit,
-                        amount=validated_data["amount"],
-                        wallet=wallet,
-                        transaction_payment_link=data["data"]["link"],
-                    )
-                else:
-                    raise serializers.ValidationError(data["message"])
+            if response.status_code == 200 and data["status"] == "success":
+                tx = Transaction.objects.create(
+                    transaction_reference=reference,
+                    transaction_kind=validated_data["transaction_kind"],
+                    transaction_status=TransactionStatus.Pending,
+                    transaction_description=validated_data.get("transaction_description") or "carpadi deposit",
+                    # noqa
+                    transaction_type=TransactionTypes.Credit,
+                    amount=validated_data["amount"],
+                    wallet=wallet,
+                    transaction_payment_link=data["data"]["link"],
+                )
             else:
                 raise serializers.ValidationError(data["message"])
             return tx
         except Exception as e:
-            raise exceptions.APIException(f"Error while making transaction {e}")
+            raise exceptions.APIException(f"Error while making transaction {e}") from e
 
     def withdraw(self, validated_data, wallet, ref):
         payload = {

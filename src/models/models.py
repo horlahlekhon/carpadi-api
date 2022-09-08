@@ -57,9 +57,9 @@ class User(AbstractUser, Base):
     phone = models.CharField(max_length=15, unique=True, help_text="International format phone number")
     username = models.CharField(max_length=50, validators=[username_validator], unique=True, null=True)
 
-    def get_tokens(self):
+    def get_tokens(self, imei):
+        #  the token here doesnt container IMEI
         refresh = RefreshToken.for_user(self)
-
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
@@ -799,6 +799,7 @@ class Trade(Base):
             self.carpadi_commission = self.carpadi_commission_calc()
             self.carpadi_bonus = self.carpadi_bonus_calc()
             self.total_carpadi_rot = self.carpadi_rot_calc()
+            self.return_on_trade = self.return_on_trade_calc()
             self.run_disbursement()
             self.complete_trade()
             update_fields.extend(
@@ -1236,6 +1237,12 @@ class Settings(Base):
     bonus_percentage = models.DecimalField(
         decimal_places=2, max_digits=25, default=Decimal(50.00), help_text="Percentage of the bonus that will go to the traders"
     )
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            if exists := Settings.objects.first():
+                return exists
+        return super(Settings, self).save(*args, **kwargs)
 
 
 class File(models.Model):

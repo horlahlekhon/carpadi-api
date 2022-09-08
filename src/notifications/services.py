@@ -1,8 +1,12 @@
 import logging
+from abc import ABC
 
 from actstream import action
+from fcm_django.models import FCMDevice
 
+from src.models.models import User
 from src.notifications.channels.email import EmailChannel
+from src.notifications.channels.firebase import FirebaseChannel
 
 logger = logging.getLogger(__name__)
 
@@ -11,17 +15,23 @@ USER_PHONE_VERIFICATION = "VERIFY PHONE"
 # PASSWORD_RESET_TOKEEN = "RESEET"
 NOTIFICATIONS = {
     ACTIVITY_USER_RESETS_PASS: {
+        "type": "email",
         'email': {
             'email_subject': 'Password Reset',
             'email_html_template': 'emails/user_reset_password.html',
-        }
+        },
     },
     USER_PHONE_VERIFICATION: {
+        "type": "email",
         'email': {
             'email_subject': 'Verify phone',
             'email_html_template': 'emails/verify_phone.html',
-        }
+        },
     },
+    'TRADE_UNIT_PURCHASE': {
+        "type": "in_app",
+        'firebase': {'template': 'in_app/unit_purchase', 'subject': 'Trade slot bought successfully'},
+    }
     # PASSWORD_RESET_TOKEEN
 }
 
@@ -29,22 +39,28 @@ NOTIFICATIONS = {
 def _send_email(email_notification_config, context, to):
     email_html_template = email_notification_config.get('email_html_template')
     email_subject = email_notification_config.get('email_subject')
-
     EmailChannel.send(context=context, html_template=email_html_template, subject=email_subject, to=to)
+
+
+def _send_firebase(notification_config, context, to: User):
+    template = notification_config.get("firebase_template")
+    subject = notification_config.get("subject")
+    device = FCMDevice(user_id=to.id)
+    FirebaseChannel.send(context, template, subject, device)
 
 
 def notify(verb, **kwargs):
     notification_config = NOTIFICATIONS.get(verb)
 
-    if notification_config and notification_config.get('email'):
+    if notification_config and notification_config.get('type') == "email":
         email_notification_config = notification_config.get('email')
         context = kwargs.get('context', {})
         email_to = kwargs.get('email_to', [])
-
         if not email_to:
             logger.debug('Please provide list of emails (email_to argument).')
-
         _send_email(email_notification_config, context, email_to)
+    elif notification_config and notification_config.get('type') == "in_app":
+        noot
 
 
 # Use only with actstream activated

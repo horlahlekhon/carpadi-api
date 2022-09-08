@@ -164,14 +164,21 @@ class CarSerializer(serializers.ModelSerializer):
     def validate_resale_price(self, value):
         car_trade = None
         with contextlib.suppress(models.ObjectDoesNotExist):
-            car_trade = self.instance.trade
-            if self.instance and car_trade:
-                if value < self.instance.trade.min_sale_price:
-                    raise serializers.ValidationError(
-                        f"Resale price cannot be less than " f"{self.instance.trade.min_sale_price} of the car"
-                    )
-            else:
+            car_trade: Trade = self.instance.trade
+            if not self.instance or not car_trade:
                 raise serializers.ValidationError("Aye! You cannot set the resale price of a car while creating it")
+            if value < self.instance.trade.min_sale_price:
+                raise serializers.ValidationError(
+                    f"Resale price cannot be less than " f"{self.instance.trade.min_sale_price} of the car"
+                )
+            if self.instance and car_trade.trade_status not in (
+                TradeStates.Purchased,
+                TradeStates.Ongoing,
+                TradeStates.Pending,
+            ):  # noqa
+                raise serializers.ValidationError(
+                    "Resale price foor a car that has a trade can only" "be set after trade have been purchased "
+                )
             return value
 
     def validate_vin(self, attr):
@@ -431,8 +438,8 @@ class CarMaintenanceSerializerAdmin(serializers.ModelSerializer):
     @atomic()
     def create(self, validated_data):
         car: Car = validated_data["car"]
-        if car.status == CarStates.Available:
-            raise serializers.ValidationError({"error": "new maintenance cannot be created for an available car"})
+        if car.status in [CarStates.OngoingTrade, CarStates.Sold, CarStates.Archived]:
+            raise serializers.ValidationError({"error": f"new maintenance cannot be created for an {car.status} car"})
         data = self.validate_maintenance_kind(validated_data.pop("maintenance"), car, validated_data.pop("type"))
         validated_data.update(data)
         return super(CarMaintenanceSerializerAdmin, self).create(validated_data)
@@ -464,9 +471,11 @@ class TradeDashboardSerializer(serializers.Serializer):
     active_trades = serializers.SerializerMethodField()
     sold_trades = serializers.SerializerMethodField()
     closed_trades = serializers.SerializerMethodField()
+    expired_trades = serializers.SerializerMethodField()
+    purchased_trades = serializers.SerializerMethodField()
 
     def get_active_trades(self, obj):
-        trds = Trade.objects.filter(trade_status__in=(TradeStates.Ongoing, TradeStates.Purchased))
+        trds = Trade.objects.filter(trade_status=TradeStates.Ongoing)
         trading_users = trds.annotate(trading_user=Count('units')).aggregate(trading_users=Sum('trading_user')).get(
             'trading_users'
         ) or Decimal(0)
@@ -483,6 +492,18 @@ class TradeDashboardSerializer(serializers.Serializer):
         trading_users = [trd.get_trade_merchants() for trd in trds]
         users = list(itertools.chain(*trading_users))
         return dict(trading_users=len(users), closed_trades=len(trds))
+
+    def get_purchased_trades(self, obj):
+        trds = Trade.objects.filter(trade_status=TradeStates.Purchased)
+        trading_users = [trd.get_trade_merchants() for trd in trds]
+        users = list(itertools.chain(*trading_users))
+        return dict(trading_users=len(users), purchased_trades=len(trds))
+
+    def get_expired_trades(self, obj):
+        trds = Trade.objects.filter(trade_status=TradeStates.Expired)
+        trading_users = [trd.get_trade_merchants() for trd in trds]
+        users = list(itertools.chain(*trading_users))
+        return dict(trading_users=len(users), expired_trades=len(trds))
 
 
 class AccountDashboardSerializer(serializers.Serializer):
