@@ -787,13 +787,10 @@ class Trade(Base):
             self.price_per_slot = self.calculate_price_per_slot()
             self.min_sale_price = self.min_sale_price_calc()
             self.estimated_return_on_trade = self.return_on_trade_calc()
-            return super(Trade, self).save(*args, **kwargs)
-        else:
-            update_fields = self.check_updates(kwargs.get("update_fields", []))
-            return super().save(*args, **kwargs)
+        return super(Trade, self).save(*args, **kwargs)
 
-    def check_updates(self, update_fields):
-        if "trade_status" in update_fields and self.trade_status == TradeStates.Completed:
+    def check_updates(self):
+        if self.trade_status == TradeStates.Completed:
             self.date_of_sale = timezone.now()
             self.traders_bonus_per_slot = self.traders_bonus() / self.slots_available
             self.carpadi_commission = self.carpadi_commission_calc()
@@ -802,11 +799,8 @@ class Trade(Base):
             self.return_on_trade = self.return_on_trade_calc()
             self.run_disbursement()
             self.complete_trade()
-            update_fields.extend(
-                ["date_of_sale", "traders_bonus_per_slot", "carpadi_commission", "carpadi_bonus", "total_carpadi_rot"]
-            )
-
-        return update_fields
+            update_fields = ["date_of_sale", "traders_bonus_per_slot", "carpadi_commission", "carpadi_bonus", "total_carpadi_rot"]
+            self.save(update_fields=update_fields)
 
     def complete_trade(self):
         """

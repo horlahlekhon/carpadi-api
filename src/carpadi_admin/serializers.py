@@ -341,11 +341,16 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     def update(self, instance: Trade, validated_data):
         if instance.trade_status == TradeStates.Closed:
             raise serializers.ValidationError("Cannot update a closed trade.. Geez!!")
+
         # if validated_data.get("trade_status") and validated_data.get("trade_status") == TradeStates.Completed:
         #     instance.run_disbursement()
         #     # check disbursements and update trade state
         #     self.complete_trade(instance)
-        return super(TradeSerializerAdmin, self).update(instance, validated_data)
+        updated_instance: Trade = super(TradeSerializerAdmin, self).update(instance, validated_data)
+        if "trade_status" in validated_data.keys() and  updated_instance.trade_status == TradeStates.Completed:
+            updated_instance.check_updates()
+            updated_instance.refresh_from_db()
+        return updated_instance
 
 
 class DisbursementSerializerAdmin(serializers.ModelSerializer):
