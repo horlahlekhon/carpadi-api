@@ -59,10 +59,11 @@ class User(AbstractUser, Base):
 
     def get_tokens(self, imei):
         #  the token here doesnt container IMEI
-        refresh = RefreshToken.for_user(self)
+        token = RefreshToken.for_user(self)
+        token["device_imei"] = imei
         return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
+            'refresh': str(token),
+            'access': str(token.access_token),
         }
 
     def __str__(self):

@@ -147,21 +147,14 @@ class PhoneVerificationSerializer(serializers.Serializer):
     def create(self, validated_data):
         user: User = User.objects.get(phone=validated_data["phone"])
         user_wallet = Wallet.objects.filter(merchant=user.merchant)
-        if user.is_active and len(user_wallet) > 0:
-            pass
-        else:
+        if not user.is_active or len(user_wallet) <= 0:
             user.is_active = True
-            if user.user_type == UserTypes.CarMerchant:
+            if user.user_type == UserTypes.CarMerchant and len(user_wallet) < 1:
                 # we have validated user, lets create the wallet
-                if len(user_wallet) < 1:
-                    Wallet.objects.create(
-                        merchant=user.merchant,
-                        balance=Decimal(0),
-                        trading_cash=Decimal(0),
-                        withdrawable_cash=Decimal(0),
-                        unsettled_cash=Decimal(0),
-                        total_cash=Decimal(0),
-                    )
+                Wallet.objects.create(
+                    merchant=user.merchant, balance=Decimal(0), trading_cash=Decimal(0),
+                    withdrawable_cash=Decimal(0), unsettled_cash=Decimal(0),
+                    total_cash=Decimal(0))
             user.save(update_fields=["is_active"])
             user.refresh_from_db()
         return user

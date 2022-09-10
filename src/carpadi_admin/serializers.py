@@ -177,7 +177,7 @@ class CarSerializer(serializers.ModelSerializer):
                 TradeStates.Pending,
             ):  # noqa
                 raise serializers.ValidationError(
-                    "Resale price foor a car that has a trade can only" "be set after trade have been purchased "
+                    "Resale price for a car that has a trade can only" "be set after trade have been purchased "
                 )
             return value
 
@@ -347,7 +347,9 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         #     # check disbursements and update trade state
         #     self.complete_trade(instance)
         updated_instance: Trade = super(TradeSerializerAdmin, self).update(instance, validated_data)
-        if "trade_status" in validated_data.keys() and  updated_instance.trade_status == TradeStates.Completed:
+        if "trade_status" in validated_data.keys() and\
+                updated_instance.trade_status == TradeStates.Completed and\
+                instance.trade_status != TradeStates.Completed:
             updated_instance.check_updates()
             updated_instance.refresh_from_db()
         return updated_instance
@@ -479,9 +481,10 @@ class TradeDashboardSerializer(serializers.Serializer):
     expired_trades = serializers.SerializerMethodField()
     purchased_trades = serializers.SerializerMethodField()
 
+    # TODO trading users here includes duplicates pls distinct them
     def get_active_trades(self, obj):
         trds = Trade.objects.filter(trade_status=TradeStates.Ongoing)
-        trading_users = trds.annotate(trading_user=Count('units')).aggregate(trading_users=Sum('trading_user')).get(
+        trading_users = trds.annotate(trading_user=Count('units')).distinct().aggregate(trading_users=Sum('trading_user')).get(
             'trading_users'
         ) or Decimal(0)
         return dict(trading_users=trading_users, active_trades=trds.count())
@@ -489,26 +492,23 @@ class TradeDashboardSerializer(serializers.Serializer):
     def get_sold_trades(self, obj):
         trds = Trade.objects.filter(trade_status=TradeStates.Completed)
         trading_users = [trd.get_trade_merchants() for trd in trds]
-        users = list(itertools.chain(*trading_users))
-        return dict(trading_users=len(users), sold_trades=len(trds))
+        # users = list(itertools.chain(*trading_users))
+        return dict(trading_users=len(trading_users), sold_trades=len(trds))
 
     def get_closed_trades(self, obj):
         trds = Trade.objects.filter(trade_status=TradeStates.Closed)
-        trading_users = [trd.get_trade_merchants() for trd in trds]
-        users = list(itertools.chain(*trading_users))
-        return dict(trading_users=len(users), closed_trades=len(trds))
+        trading_users = {trd.get_trade_merchants() for trd in trds}
+        return dict(trading_users=len(trading_users), closed_trades=len(trds))
 
     def get_purchased_trades(self, obj):
         trds = Trade.objects.filter(trade_status=TradeStates.Purchased)
         trading_users = [trd.get_trade_merchants() for trd in trds]
-        users = list(itertools.chain(*trading_users))
-        return dict(trading_users=len(users), purchased_trades=len(trds))
+        return dict(trading_users=len(trading_users), purchased_trades=len(trds))
 
     def get_expired_trades(self, obj):
         trds = Trade.objects.filter(trade_status=TradeStates.Expired)
         trading_users = [trd.get_trade_merchants() for trd in trds]
-        users = list(itertools.chain(*trading_users))
-        return dict(trading_users=len(users), expired_trades=len(trds))
+        return dict(trading_users=len(trading_users), expired_trades=len(trds))
 
 
 class AccountDashboardSerializer(serializers.Serializer):

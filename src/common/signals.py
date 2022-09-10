@@ -176,6 +176,8 @@ def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
         if trade.slots_available == trade.slots_purchased():
             trade.trade_status = TradeStates.Purchased
             trade.save(update_fields=["trade_status"])
+        # ctx = dict(id=instance.id)
+        # notify('TRADE_UNIT_PURCHASE', )
 
 
 def disbursement_completed(sender, instance, created, **kwargs):

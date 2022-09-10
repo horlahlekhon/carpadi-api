@@ -17,7 +17,7 @@ from rest_framework_simplejwt.views import TokenViewBase
 
 from src.common.seeder import PadiSeeder
 from src.models.filters import NotificationsFilter
-from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus
+from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant
 from src.models.permissions import IsUserOrReadOnly
 from src.models.serializers import (
     CreateUserSerializer,
@@ -29,6 +29,7 @@ from src.models.serializers import (
     AssetsSerializer,
     NotificationsSerializer,
 )
+from src.notifications.services import notify
 
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -139,7 +140,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
     @action(detail=False, methods=['post'], url_path='seed', url_name='seed')
     def seed(self, request, *args, **kwargs):
         """
-        Seed the database with some data
+            Seed the database with some data
         """
         try:
             seed_type = str(request.query_params.get('type', None)).lower()
@@ -149,6 +150,10 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             t = threading.Thread(target=seed_func)
             t.setDaemon(True)
             t.start()
+            # user: User = User.objects.get(id='5cf558d3-6f3e-4b94-bf67-d152a07b64d1')
+            # unit: TradeUnit = TradeUnit.objects.first()
+            # kw = dict(context=dict(id=str(unit.id), user=str(user.id)))
+            # notify('TRADE_UNIT_PURCHASE', **kw)
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

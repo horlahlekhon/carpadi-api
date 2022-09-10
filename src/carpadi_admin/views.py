@@ -148,7 +148,7 @@ class TradeViewSetAdmin(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='rollback-trade', url_name='rollback_trade')
     def rollback_trade(self, request):
         """
-        This endpoint is used to rollback a trade that have been completed. and will do the follwoing
+        This endpoint is used to roll back a trade that have been completed. and will do the follwoing
         * set all disbursements to failed and also fail all related transactions
         * return the unit_value back to the wallet's trading_cash
         * set the status of the trade back to Purchased

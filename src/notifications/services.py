@@ -30,7 +30,8 @@ NOTIFICATIONS = {
     },
     'TRADE_UNIT_PURCHASE': {
         "type": "in_app",
-        'firebase': {'template': 'in_app/unit_purchase', 'subject': 'Trade slot bought successfully'},
+        "notice_type": "trade_unit",
+        'firebase': {'message': 'You have successfully bought {} units from the car {}'},
     }
     # PASSWORD_RESET_TOKEEN
 }
@@ -42,25 +43,25 @@ def _send_email(email_notification_config, context, to):
     EmailChannel.send(context=context, html_template=email_html_template, subject=email_subject, to=to)
 
 
-def _send_firebase(notification_config, context, to: User):
-    template = notification_config.get("firebase_template")
-    subject = notification_config.get("subject")
-    device = FCMDevice(user_id=to.id)
-    FirebaseChannel.send(context, template, subject, device)
+def _send_firebase(notification_config, context):
+    # to: User = context.get("user")
+    subject = notification_config.get("message")
+    context["notice_type"] = notification_config.get("notice_type")
+    device = FCMDevice.objects.get(user_id=context.get("user"))
+    FirebaseChannel.send(context, subject, device)
 
 
 def notify(verb, **kwargs):
-    notification_config = NOTIFICATIONS.get(verb)
-
-    if notification_config and notification_config.get('type') == "email":
-        email_notification_config = notification_config.get('email')
-        context = kwargs.get('context', {})
-        email_to = kwargs.get('email_to', [])
-        if not email_to:
-            logger.debug('Please provide list of emails (email_to argument).')
-        _send_email(email_notification_config, context, email_to)
-    elif notification_config and notification_config.get('type') == "in_app":
-        noot
+    if notification_config := NOTIFICATIONS.get(verb):
+        if notification_config.get('type') == "email":
+            email_notification_config = notification_config.get('email')
+            context = kwargs.get('context', {})
+            email_to = kwargs.get('email_to', [])
+            if not email_to:
+                logger.debug('Please provide list of emails (email_to argument).')
+            _send_email(email_notification_config, context, email_to)
+        elif notification_config.get('type') == "in_app":
+            _send_firebase(notification_config, kwargs.get("context"))
 
 
 # Use only with actstream activated
