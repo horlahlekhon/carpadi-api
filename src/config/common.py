@@ -223,18 +223,19 @@ LOGGING = {
         },
     },
     'handlers': {
+        'console': {'level': 'DEBUG', 'class': 'logging.StreamHandler'},
         'django.server': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'django.server',
         },
-        'console': {'level': 'DEBUG', 'class': 'logging.StreamHandler', 'formatter': 'simple'},
         'mail_admins': {'level': 'ERROR', 'class': 'django.utils.log.AdminEmailHandler'},
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
             'propagate': True,
+            'level': 'INFO',
         },
         'django.server': {
             'handlers': ['django.server'],

@@ -15,25 +15,44 @@ USER_PHONE_VERIFICATION = "VERIFY PHONE"
 # PASSWORD_RESET_TOKEEN = "RESEET"
 NOTIFICATIONS = {
     ACTIVITY_USER_RESETS_PASS: {
-        "type": "email",
+        "notice_type": "password_reset",
         'email': {
             'email_subject': 'Password Reset',
             'email_html_template': 'emails/user_reset_password.html',
         },
     },
     USER_PHONE_VERIFICATION: {
-        "type": "email",
+        "notice_type": "new_user",
         'email': {
             'email_subject': 'Verify phone',
             'email_html_template': 'emails/verify_phone.html',
         },
     },
     'TRADE_UNIT_PURCHASE': {
-        "type": "in_app",
         "notice_type": "trade_unit",
-        'firebase': {'message': 'You have successfully bought {} units from the car {}'},
+        "in_app": {'message': 'You have successfully bought {} units from the car {}', "title": "New unit purchased"},
+        "email": {
+            'email_subject': 'New unit purchased',
+            'email_html_template': 'emails/trade_unit_purchase.html',
+        },
+    },
+    'NEW_TRADE': {
+        "notice_type": "new_trade",
+        "in_app": {'message': 'A new trade was just added', "title": "New trade"},
+        "email": {
+            'email_subject': 'New trade',
+            'email_html_template': 'emails/new_trade.html',
+        },
+    },
+    'DISBURSEMENT': {
+        "notice_type": "disbursement",
+        "in_app": {'message': 'You have a new return on trade disbursement', "title": "ROT disbursement"},
+        "email": {
+            'email_subject': 'ROT disbursement',
+            'email_html_template': 'emails/disbursement.html',
+        },
     }
-    # PASSWORD_RESET_TOKEEN
+    # PASSWORD_RESET_TOKEN
 }
 
 
@@ -44,24 +63,20 @@ def _send_email(email_notification_config, context, to):
 
 
 def _send_firebase(notification_config, context):
-    # to: User = context.get("user")
-    subject = notification_config.get("message")
-    context["notice_type"] = notification_config.get("notice_type")
-    device = FCMDevice.objects.get(user_id=context.get("user"))
-    FirebaseChannel.send(context, subject, device)
+    FirebaseChannel.send(context, context.get("user"))
 
 
 def notify(verb, **kwargs):
-    if notification_config := NOTIFICATIONS.get(verb):
-        if notification_config.get('type') == "email":
-            email_notification_config = notification_config.get('email')
-            context = kwargs.get('context', {})
-            email_to = kwargs.get('email_to', [])
-            if not email_to:
-                logger.debug('Please provide list of emails (email_to argument).')
-            _send_email(email_notification_config, context, email_to)
-        elif notification_config.get('type') == "in_app":
-            _send_firebase(notification_config, kwargs.get("context"))
+    notification_config = NOTIFICATIONS.get(verb)
+    if "email" in notification_config.keys():
+        email_notification_config = notification_config.get('email')
+        context = kwargs.get('context', {})
+        email_to = kwargs.get('email_to', [])
+        if not email_to:
+            logger.debug('Please provide list of emails (email_to argument).')
+        _send_email(email_notification_config, context, email_to)
+    if "in_app" in notification_config.keys():
+        _send_firebase(notification_config, kwargs)
 
 
 # Use only with actstream activated

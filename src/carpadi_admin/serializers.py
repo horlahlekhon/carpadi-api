@@ -331,6 +331,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
 
     @atomic()
     def create(self, validated_data):
+        validated_data["trade_status"] = TradeStates.Ongoing
         trade = super().create(validated_data)
         car = trade.car
         car.status = CarStates.OngoingTrade
@@ -347,9 +348,11 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
         #     # check disbursements and update trade state
         #     self.complete_trade(instance)
         updated_instance: Trade = super(TradeSerializerAdmin, self).update(instance, validated_data)
-        if "trade_status" in validated_data.keys() and\
-                updated_instance.trade_status == TradeStates.Completed and\
-                instance.trade_status != TradeStates.Completed:
+        if (
+            "trade_status" in validated_data.keys()
+            and updated_instance.trade_status == TradeStates.Completed
+            and instance.trade_status != TradeStates.Completed
+        ):
             updated_instance.check_updates()
             updated_instance.refresh_from_db()
         return updated_instance

@@ -1,4 +1,5 @@
 import datetime
+import logging
 from collections import defaultdict
 
 from django.db.models import signals
@@ -23,7 +24,10 @@ from src.models.models import (
     Car,
     Wallet,
 )
+from src.notifications.channels.firebase import FirebaseChannel
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
+
+logger = logging.getLogger(__name__)
 
 
 class DisableSignals(object):
@@ -67,19 +71,11 @@ class DisableSignals(object):
 
 def complete_user_registeration(sender, **kwargs):
     user: User = kwargs.get("instance")
-    if kwargs.get("created"):
-        if user.user_type == UserTypes.CarMerchant:
-            # otp = RandomNumberTokenGenerator(min_number=100000, max_number=999999).generate_token()
-            expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
-            ot = Otp.objects.create(otp="123456", expiry=expiry, user=user)
-            context = dict(username=user.username, otp=ot.otp)
-            notify(
-                USER_PHONE_VERIFICATION,
-                context=context,
-                email_to=[
-                    user.email,
-                ],
-            )
+    if kwargs.get("created") and user.user_type == UserTypes.CarMerchant:
+        expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
+        ot = Otp.objects.create(otp="123456", expiry=expiry, user=user)
+        context = dict(username=user.username, otp=ot.otp)
+        notify(USER_PHONE_VERIFICATION, context=context, email_to=[user.email])
 
 
 from django.urls import reverse
@@ -95,7 +91,7 @@ def password_reset_token_created(sender, instance, reset_password_token: ResetPa
     # reset_password_token.save(update_fields=["key"])
     # reset_password_token.refresh_from_db()
     reset_password_path = reverse('password_reset:reset-password-confirm')
-    ResetPasswordToken.objects.filter(key="123456").delete()  # TOdo remember to remove this coder abeg.
+    ResetPasswordToken.objects.filter(key="123456").delete()  # TOdo remember to remove this code abeg.
     # reset_password_token.key = "123456"  # TOdo remember to remove this coder abeg.
     # reset_password_token.save(update_fields=["key"])
     ResetPasswordToken.objects.create(  # TOdo remember to remove this coder abeg.
@@ -247,3 +243,25 @@ def wallet_created(sender, instance: Wallet, created, **kwargs):
             merchant=instance.merchant,
             description=f"Activity Type: New user, Description: {instance.merchant.user.username} just joined carpadi",
         )
+
+
+def notifications(sender, instance: Notifications, created, **kwargs):
+    if created and instance.user:
+        #  TODO add more specific context based on the notification,
+        #   i.e disbursement will render a receipt, so data needs to be more than this
+        context = dict(
+            notice_type=instance.notice_type,
+            title=instance.title,
+            notice_id=str(instance.id),
+            entity=str(instance.entity_id),
+            message=instance.message,
+            user=str(instance.user.id),
+        )
+        if instance.notice_type == NotificationTypes.TradeUnit:
+            notify('TRADE_UNIT_PURCHASE', **context)
+        elif instance.notice_type == NotificationTypes.NewTrade:
+            notify('NEW_TRADE', **context)
+        elif instance.notice_type == NotificationTypes.Disbursement:
+            notify('DISBURSEMENT', **context)
+        else:
+            logger.info("Notification type is not implemented yet")
