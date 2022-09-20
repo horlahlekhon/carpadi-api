@@ -206,7 +206,7 @@ class TokenObtainModSerializer(serializers.Serializer):
 
         self.fields[self.username_field] = serializers.CharField()
         self.fields['password'] = PasswordField()
-        self.fields['device_imei'] = serializers.CharField(required=False)
+        self.fields['device_imei'] = serializers.CharField(required=False, max_length=100)
         self.fields['skip_pin'] = serializers.BooleanField(required=False)
         self.fields["firebase_token"] = serializers.CharField(required=False)
         self.fields["device_type"] = serializers.CharField(required=False)

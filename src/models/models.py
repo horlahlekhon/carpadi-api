@@ -87,7 +87,7 @@ saved_file.connect(generate_aliases_global)
 
 
 class LoginSessions(Base):
-    device_imei = models.CharField(max_length=20, null=True, blank=True)
+    device_imei = models.CharField(max_length=100, null=True, blank=True)
     user = models.ForeignKey(get_user_model(), models.CASCADE)
 
 
