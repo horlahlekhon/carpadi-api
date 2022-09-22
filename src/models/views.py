@@ -1,6 +1,7 @@
 import logging
 import threading
 
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.db import transaction
 from django.db.models import Q
 from django.http.response import Http404
@@ -18,7 +19,8 @@ from rest_framework_simplejwt.views import TokenViewBase
 
 from src.common.seeder import PadiSeeder
 from src.models.filters import NotificationsFilter
-from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant, NotificationTypes
+from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant, \
+    NotificationTypes
 from src.models.permissions import IsUserOrReadOnly
 from src.models.serializers import (
     CreateUserSerializer,
@@ -137,8 +139,10 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
                 user.save(update_fields=["password"])
                 return Response(status=status.HTTP_200_OK)
             else:
-                return Response(status=status.HTTP_400_BAD_REQUEST, data=dict(error="Invalid user cannot update password"))
-        return Response(status=status.HTTP_400_BAD_REQUEST, data=dict(error="old_password and new_password must be supplied"))
+                return Response(status=status.HTTP_400_BAD_REQUEST,
+                                data=dict(error="Invalid user cannot update password"))
+        return Response(status=status.HTTP_400_BAD_REQUEST,
+                        data=dict(error="old_password and new_password must be supplied"))
 
     @action(detail=False, methods=['post'], url_path='seed', url_name='seed')
     def seed(self, request, *args, **kwargs):
@@ -146,13 +150,13 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         Seed the database with some data
         """
         try:
-            seed_type = str(request.query_params.get('type', None)).lower()
-            seed_data = PadiSeeder(request=request)
-            # seed_data.seed()
-            seed_func = seed_data.seed if seed_type != "banks" else seed_data.seed_banks()
-            t = threading.Thread(target=seed_func)
-            t.setDaemon(True)
-            t.start()
+            # seed_type = str(request.query_params.get('type', None)).lower()
+            # seed_data = PadiSeeder(request=request)
+            # # seed_data.seed()
+            # seed_func = seed_data.seed if seed_type != "banks" else seed_data.seed_banks()
+            # t = threading.Thread(target=seed_func)
+            # t.setDaemon(True)
+            # t.start()
             # unit: TradeUnit = TradeUnit.objects.first()
             # notice = Notifications.objects.create(
             #     notice_type=NotificationTypes.NewTrade,
@@ -161,6 +165,28 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             #     is_read=False,
             #     entity_id=unit.id,
             # )
+            mm = """
+                <!DOCTYPE html>
+                    <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <title>Title</title>
+                        </head>
+                        <body>
+                        just a test
+                        </body>
+                    </html>
+                """
+            s = send_mail( "just a test", mm,  "horlahlekhon@gmail.com", ("adebari.olalekan.oluwaseun@gmail.com",))
+            # msg = EmailMultiAlternatives(
+            #     "just a test",
+            #     mm,
+            #     "horlahlekhon@gmail.com",
+            #     ("adebari.olalekan.oluwaseun@gmail.com",),
+            #     alternatives=((mm, 'text/html'),),
+            # )
+            # respo = msg.send()
+            print(s)
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

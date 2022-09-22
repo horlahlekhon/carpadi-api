@@ -5,6 +5,7 @@ from collections import defaultdict
 from django.db.models import signals
 from django_rest_passwordreset.models import ResetPasswordToken
 
+from src.carpadi_api.serializers import TransactionSerializer, TradeUnitSerializer
 from src.common.helpers import build_absolute_uri
 from src.config.common import OTP_EXPIRY
 from src.models.models import (
@@ -122,23 +123,22 @@ def complete_transaction(sender, **kwargs):
             print("transaction successful")
 
             # notify(ACTIVITY_MERCHANT_PAYMENT_SUCCESS, context=context, email_to=[tx.wallet.merchant.user.email])
-
-    if tx.transaction_status in (
-        TransactionStatus.Success,
-        TransactionStatus.Failed,
-    ):
-        activity = Activity.objects.create(
-            activity_type=ActivityTypes.Transaction,
-            activity=tx,
-            description=f"Activity Type: Transaction, Status: {tx.transaction_status}, Description: {tx.transaction_kind} of {tx.amount} naira.",
-            merchant=tx.wallet.merchant,
-        )
-        Notifications.objects.create(
-            notice_type=NotificationTypes.TradeUnit,
-            user=tx.wallet.merchant.user,
-            message=f"Transaction {tx.transaction_kind} of {tx.amount} naira has {tx.transaction_status}.",
-            is_read=False,
-        )
+    # if tx.transaction_status in (
+    #     TransactionStatus.Success,
+    #     TransactionStatus.Failed,
+    # ):
+    #     activity = Activity.objects.create(
+    #         activity_type=ActivityTypes.Transaction,
+    #         activity=tx,
+    #         description=f"Activity Type: Transaction, Status: {tx.transaction_status}, Description: {tx.transaction_kind} of {tx.amount} naira.",
+    #         merchant=tx.wallet.merchant,
+    #     )
+    #     Notifications.objects.create(
+    #         notice_type=NotificationTypes.TradeUnit,
+    #         user=tx.wallet.merchant.user,
+    #         message=f"Transaction {tx.transaction_kind} of {tx.amount} naira has {tx.transaction_status}.",
+    #         is_read=False,
+    #     )
 
 
 def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
@@ -258,10 +258,25 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             user=str(instance.user.id),
         )
         if instance.notice_type == NotificationTypes.TradeUnit:
+            unit = TradeUnit.objects.get(id=instance.entity_id)
+            context["unit"] = TradeUnitSerializer(instance=unit).data
             notify('TRADE_UNIT_PURCHASE', **context)
         elif instance.notice_type == NotificationTypes.NewTrade:
             notify('NEW_TRADE', **context)
         elif instance.notice_type == NotificationTypes.Disbursement:
+            disburse = Disbursement.objects.get(id=instance.entity_id)
+
             notify('DISBURSEMENT', **context)
+        elif instance.notice_type == NotificationTypes.TransactionCompleted:
+            transaction = Transaction.objects.get(id=instance.entity_id)
+            context["transaction_amount"] = transaction.amount
+            context["transaction_status"] = transaction.transaction_status
+            context["transaction_kind"] = transaction.transaction_kind
+            context["transaction_type"] = transaction.transaction_type
+            context["transaction_description"] = transaction.transaction_description
+            context["transaction_fees"] = transaction.transaction_fees
+            notify('TRANSACTION_COMPLETED', **context)
+        elif instance.notice_type == NotificationTypes.TransactionFailed:
+            notify('TRANSACTION_FAILED', **context)
         else:
             logger.info("Notification type is not implemented yet")

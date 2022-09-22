@@ -51,12 +51,29 @@ NOTIFICATIONS = {
             'email_subject': 'ROT disbursement',
             'email_html_template': 'emails/disbursement.html',
         },
+    },
+    'TRANSACTION_COMPLETED': {
+        "notice_type": "transaction",
+        "in_app": {'message': 'Your Transaction have been completed', "title": "Transaction completed"},
+        "email": {
+            'email_subject': 'Transaction completed',
+            'email_html_template': 'emails/transactions.html',
+        },
+    },
+    'TRANSACTION_FAILED': {
+        "notice_type": "transaction",
+        "in_app": {'message': 'Your Transaction have failed', "title": "Transaction failure"},
+        "email": {
+            'email_subject': 'Transaction completed',
+            'email_html_template': 'emails/transactions.html',
+        },
     }
     # PASSWORD_RESET_TOKEN
 }
 
 
-def _send_email(email_notification_config, context, to):
+def _send_email(email_notification_config, context):
+    to = User.objects.get(id=context.get("user")).email
     email_html_template = email_notification_config.get('email_html_template')
     email_subject = email_notification_config.get('email_subject')
     EmailChannel.send(context=context, html_template=email_html_template, subject=email_subject, to=to)
@@ -70,11 +87,10 @@ def notify(verb, **kwargs):
     notification_config = NOTIFICATIONS.get(verb)
     if "email" in notification_config.keys():
         email_notification_config = notification_config.get('email')
-        context = kwargs.get('context', {})
-        email_to = kwargs.get('email_to', [])
+        email_to = kwargs.get('user', [])
         if not email_to:
             logger.debug('Please provide list of emails (email_to argument).')
-        _send_email(email_notification_config, context, email_to)
+        _send_email(email_notification_config, kwargs)
     if "in_app" in notification_config.keys():
         _send_firebase(notification_config, kwargs)
 
