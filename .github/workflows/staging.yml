@@ -80,7 +80,7 @@ jobs:
           scp -i private_key -o StrictHostKeyChecking=no version ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}:~/version
           echo "${{ secrets.APP_ENVS }}" > .env
           ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}
-          export NEXT_VERSION=$(cat ~/version) 
+          export NEXT_VERSION=$(cat ./artifacts/.VERSION) 
           sudo docker run -p 8000:8000 --env-file .env -d olalekanadebari:$NEXT_VERSION
           exit
         
