@@ -76,9 +76,9 @@ jobs:
         run: |
           echo "$(cat ./artifacts/.VERSION)"
           echo ${NEXT_VERSION} > version
+          echo "${{ secrets.SSH_PEM }}" > private_key && chmod 600 private_key
           scp -i private_key -o StrictHostKeyChecking=no version ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}:~/version
           echo "${{ secrets.APP_ENVS }}" > .env
-          echo "${{ secrets.SSH_PEM }}" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}
           export NEXT_VERSION=$(cat ~/version) 
           sudo docker run -p 8000:8000 --env-file .env -d olalekanadebari:$NEXT_VERSION
