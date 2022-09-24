@@ -1,6 +1,9 @@
 FROM python:3.8-slim-buster
 
+RUN mkdir /app
 WORKDIR /app
+
+ENV APP_HOME=/app
 EXPOSE 80
 ENV PYTHONUNBUFFERED 1
 
@@ -17,7 +20,7 @@ RUN set -x && \
 COPY ./requirements/ ./requirements
 RUN pip install -r ./requirements/dev.txt
 
-COPY . ./
+COPY . $APP_HOME
 
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
