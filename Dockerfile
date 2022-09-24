@@ -24,6 +24,9 @@ COPY . $APP_HOME
 
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
-ENTRYPOINT ["/bin/bash", "/app/run.sh"]
 
+ADD supervisord.conf /etc/
 
+RUN chmod 777 ./run.sh
+
+ENTRYPOINT ["supervisord", "--nodaemon", "--configuration", "/etc/supervisord.conf"]
