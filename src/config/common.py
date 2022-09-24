@@ -78,21 +78,15 @@ ALLOWED_HOSTS = ["*"]
 ROOT_URLCONF = 'src.urls'
 WSGI_APPLICATION = 'src.wsgi.application'
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "in-v3.mailjet.com"
-EMAIL_PORT = 587
-EMAIL_FROM = "horlahlekhon@gmail.com"
-EMAIL_HOST_USER = "effd16db611dab2e8a9d7515e6caf7d9"
-EMAIL_HOST_PASSWORD = "462488cdc685193b657ed4dafbf5633e"
 # Email
 
 EMAIL_USE_TLS = True
-# EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-# EMAIL_HOST = os.getenv('EMAIL_HOST', '')
-# EMAIL_PORT = os.getenv('EMAIL_PORT', 587)
-# EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
-# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+EMAIL_PORT = os.getenv('EMAIL_PORT', 587)
+EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 # Celery
 BROKER_URL = os.getenv('BROKER_URL', 'redis://localhost:6379')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379')

@@ -74,7 +74,7 @@ jobs:
 
       - name: Deploy container
         run: |
-          export NEXT_VERSION=${NEXT_VERSION}
+          export NEXT_VERSION=$(cat ./artifacts/.VERSION)
           echo "${{ secrets.APP_ENVS }}" > .env
           echo "${{ secrets.SSH_PEM }}" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }} '
