@@ -16,10 +16,9 @@ class CarProductFilter(filters.FilterSet):
     car_type = filters.ChoiceFilter(field_name="car__car_type", lookup_expr="iexact", choices=CarTypes.choices)
 
     def search_field(self, queryset, name, value):
-        resp = queryset.filter(
+        return queryset.filter(
             Q(car__make__icontains=value) | Q(car__model__icontains=value) | Q(car__manufacturer__icontains=value)
         )
-        return resp
 
     class Meta:
         model = CarProduct

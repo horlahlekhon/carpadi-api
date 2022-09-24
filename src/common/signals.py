@@ -259,13 +259,16 @@ def notifications(sender, instance: Notifications, created, **kwargs):
         )
         if instance.notice_type == NotificationTypes.TradeUnit:
             unit = TradeUnit.objects.get(id=instance.entity_id)
-            context["unit"] = TradeUnitSerializer(instance=unit).data
+            context["slot_quantity"] = unit.slots_quantity
+            context["car"] = unit.trade.car.name
+            context["total"] = unit.unit_value
             notify('TRADE_UNIT_PURCHASE', **context)
         elif instance.notice_type == NotificationTypes.NewTrade:
             notify('NEW_TRADE', **context)
         elif instance.notice_type == NotificationTypes.Disbursement:
             disburse = Disbursement.objects.get(id=instance.entity_id)
-
+            context["slot_quantity"] = disburse.trade_unit.slots_quantity
+            # context["rot"] = disburse
             notify('DISBURSEMENT', **context)
         elif instance.notice_type == NotificationTypes.TransactionCompleted:
             transaction = Transaction.objects.get(id=instance.entity_id)

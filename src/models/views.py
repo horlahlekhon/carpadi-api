@@ -19,8 +19,7 @@ from rest_framework_simplejwt.views import TokenViewBase
 
 from src.common.seeder import PadiSeeder
 from src.models.filters import NotificationsFilter
-from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant, \
-    NotificationTypes
+from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant, NotificationTypes
 from src.models.permissions import IsUserOrReadOnly
 from src.models.serializers import (
     CreateUserSerializer,
@@ -139,10 +138,8 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
                 user.save(update_fields=["password"])
                 return Response(status=status.HTTP_200_OK)
             else:
-                return Response(status=status.HTTP_400_BAD_REQUEST,
-                                data=dict(error="Invalid user cannot update password"))
-        return Response(status=status.HTTP_400_BAD_REQUEST,
-                        data=dict(error="old_password and new_password must be supplied"))
+                return Response(status=status.HTTP_400_BAD_REQUEST, data=dict(error="Invalid user cannot update password"))
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=dict(error="old_password and new_password must be supplied"))
 
     @action(detail=False, methods=['post'], url_path='seed', url_name='seed')
     def seed(self, request, *args, **kwargs):
@@ -177,7 +174,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
                         </body>
                     </html>
                 """
-            s = send_mail( "just a test", mm,  "horlahlekhon@gmail.com", ("adebari.olalekan.oluwaseun@gmail.com",))
+            s = send_mail("just a test", mm, "horlahlekhon@gmail.com", ("adebari.olalekan.oluwaseun@gmail.com",))
             # msg = EmailMultiAlternatives(
             #     "just a test",
             #     mm,

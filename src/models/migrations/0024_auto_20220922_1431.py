@@ -15,7 +15,18 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='notifications',
             name='notice_type',
-            field=models.CharField(choices=[('transaction_completed', 'Transaction completed'), ('transaction_failed', 'Transaction failed'), ('new_trade', 'New Trade'), ('password_reset', 'Password Reset'), ('profile_update', 'Profile Update'), ('disbursement', 'Disbursement'), ('trade_unit', 'Trade Unit')], max_length=50),
+            field=models.CharField(
+                choices=[
+                    ('transaction_completed', 'Transaction completed'),
+                    ('transaction_failed', 'Transaction failed'),
+                    ('new_trade', 'New Trade'),
+                    ('password_reset', 'Password Reset'),
+                    ('profile_update', 'Profile Update'),
+                    ('disbursement', 'Disbursement'),
+                    ('trade_unit', 'Trade Unit'),
+                ],
+                max_length=50,
+            ),
         ),
         migrations.AlterField(
             model_name='otp',
