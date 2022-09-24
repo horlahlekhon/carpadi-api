@@ -15,8 +15,6 @@ RUN set -x && \
 	rm -rf /var/lib/apt/lists/*
 
 
-# COPY ./docker/ /
-
 COPY ./requirements/ ./requirements
 RUN pip install -r ./requirements/dev.txt
 

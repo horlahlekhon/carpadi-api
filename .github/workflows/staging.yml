@@ -66,11 +66,7 @@ jobs:
             cat ./artifacts/.VERSION
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-#    - name: Download version file
-#      uses: actions/download-artifact@v2
-#      with:
-#        name: .VERSION
-#        path: ./artifacts
+
 
       - name: Deploy container
         run: |
