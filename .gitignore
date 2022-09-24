@@ -118,3 +118,4 @@ dump.rdb
 .env.dist
 .env-compose
 .idea/misc.xml
+node_modules

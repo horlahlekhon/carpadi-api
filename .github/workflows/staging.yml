@@ -2,7 +2,7 @@ on:
   push:
     branches:
       - master
-
+name: Deploy to staging
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -74,7 +74,7 @@ jobs:
 #        name: .VERSION
 #        path: ./artifacts
 
-      - name: ssh to ec2
+      - name: Deploy container
         run: |
           export NEXT_VERSION=${NEXT_VERSION}
           echo "${{ secrets.APP_ENVS }}" > .env
