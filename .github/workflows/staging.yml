@@ -81,6 +81,8 @@ jobs:
           echo "${{ secrets.APP_ENVS }}" > .env
           ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}
           export NEXT_VERSION=$(cat ./artifacts/.VERSION) 
+          echo $NEXT_VERSION
+          cat ~/version
           sudo docker run -p 8000:8000 --env-file .env -d olalekanadebari:$NEXT_VERSION
           exit
         
