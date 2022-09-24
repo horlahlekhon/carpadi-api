@@ -80,4 +80,5 @@ jobs:
           echo "${{ secrets.APP_ENVS }}" > .env
           scp -i private_key -o StrictHostKeyChecking=no version ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}:~/version
           scp -i private_key -o StrictHostKeyChecking=no .env ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}:~/.env
+          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }} 'docker rm -f carpadi-api'
           ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }} 'docker run --name carpadi-api -p 8000:8000 -v /home/ubuntu/:/app --env-file ~/.env -d olalekanadebari/carpadi-api:$(cat ~/version)'
