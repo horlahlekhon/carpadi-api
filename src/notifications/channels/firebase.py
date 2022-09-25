@@ -22,12 +22,8 @@ class FirebaseChannel:
         msg = Message(notification=no, data=body)
         resp: FirebaseResponseDict = devices.send_message(
             message=msg,
-            dry_run=APP_ENV
-            not in [
-                "test",
-            ],
         )
-        print(f"Notification sent {resp}")
+        print(f"Notification sent success: {resp.response.success_count}, failure: {resp.response.failure_count}")
 
     @staticmethod
     def send_all(context):

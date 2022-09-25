@@ -204,6 +204,7 @@ class TestTrade(BaseTest):
         assert trade.return_on_trade_calc() == trade.return_on_trade_per_slot * trade.slots_available
         trade.trade_status = TradeStates.Completed
         trade.save(update_fields=["trade_status"])
+        trade.check_updates()
         trade.refresh_from_db()
         for unit in trade.units.all():
             assert unit.disbursement is not None
@@ -288,6 +289,8 @@ class TestTrade(BaseTest):
         trade.trade_status = TradeStates.Completed
         trade.save(update_fields=["trade_status"])
         # unit = trade.units.first()
+        trade.check_updates()
+        trade.refresh_from_db()
         for unit in trade.units.all():
             assert unit.merchant.wallet.unsettled_cash == unit.disbursement.amount
             assert unit.disbursement.transaction.transaction_status == TransactionStatus.Unsettled
@@ -327,6 +330,7 @@ class TestTrade(BaseTest):
         assert trade.units.count() == len(units)
         trade.trade_status = TradeStates.Completed
         trade.save(update_fields=["trade_status"])
+        trade.check_updates()
         trade.refresh_from_db()
         for unit in trade.units.all():
             assert unit.disbursement is not None

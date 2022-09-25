@@ -154,36 +154,15 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             # t = threading.Thread(target=seed_func)
             # t.setDaemon(True)
             # t.start()
-            # unit: TradeUnit = TradeUnit.objects.first()
-            # notice = Notifications.objects.create(
-            #     notice_type=NotificationTypes.NewTrade,
-            #     user=unit.merchant.user,
-            #     message="This is a dummy message dont take shit serious abeg",
-            #     is_read=False,
-            #     entity_id=unit.id,
-            # )
-            mm = """
-                <!DOCTYPE html>
-                    <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <title>Title</title>
-                        </head>
-                        <body>
-                        just a test
-                        </body>
-                    </html>
-                """
-            s = send_mail("just a test", mm, "horlahlekhon@gmail.com", ("adebari.olalekan.oluwaseun@gmail.com",))
-            # msg = EmailMultiAlternatives(
-            #     "just a test",
-            #     mm,
-            #     "horlahlekhon@gmail.com",
-            #     ("adebari.olalekan.oluwaseun@gmail.com",),
-            #     alternatives=((mm, 'text/html'),),
-            # )
-            # respo = msg.send()
-            print(s)
+            unit: TradeUnit = TradeUnit.objects.filter(merchant__user_id="c9eee4be-eea2-4672-88b5-705ac5990827").first()
+            notice = Notifications.objects.create(
+                notice_type=NotificationTypes.NewTrade,
+                user=unit.merchant.user,
+                message="This is a dummy message dont take shit serious abeg",
+                is_read=False,
+                entity_id=unit.id,
+            )
+
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

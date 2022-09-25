@@ -75,8 +75,8 @@ def complete_user_registeration(sender, **kwargs):
     if kwargs.get("created") and user.user_type == UserTypes.CarMerchant:
         expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
         ot = Otp.objects.create(otp="123456", expiry=expiry, user=user)
-        context = dict(username=user.username, otp=ot.otp)
-        notify(USER_PHONE_VERIFICATION, context=context, email_to=[user.email])
+        context = dict(username=user.username, otp=ot.otp, user=user.id)
+        notify(USER_PHONE_VERIFICATION, **context)
 
 
 from django.urls import reverse
@@ -106,6 +106,7 @@ def password_reset_token_created(sender, instance, reset_password_token: ResetPa
         'email': reset_password_token.user.email,
         'reset_password_url': build_absolute_uri(f'{reset_password_path}?token={reset_password_token.key}'),
         'token': "123456",  # reset_password_token.key,
+        'user': reset_password_token.user.id,
     }
 
     notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
@@ -167,6 +168,7 @@ def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
             f" {instance.trade.car.information.brand.model}"
             f" VIN: {instance.trade.car.vin} valued at {instance.unit_value} naira only.",
             is_read=False,
+            entity_id=instance.id,
         )
         trade: Trade = instance.trade
         if trade.slots_available == trade.slots_purchased():
