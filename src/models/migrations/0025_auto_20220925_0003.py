@@ -15,7 +15,22 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='cardocuments',
             name='document_type',
-            field=models.CharField(choices=[('proof_of_ownership', 'Proof of ownership document'), ('allocation_of_licence_plate', 'Allocation of plate number'), ('vehicle_license', 'Vehicle license'), ('custom_papers_or_purchase_receipt', 'Customs paper if car was imported or Receipt of purchase documents if the car was bought brand new from an accredited dealer'), ('police_CMR', 'Police CMR'), ('insurance', 'Insurance papers'), ('road_worthiness', 'Road worthiness permit')], default='', max_length=40),
+            field=models.CharField(
+                choices=[
+                    ('proof_of_ownership', 'Proof of ownership document'),
+                    ('allocation_of_licence_plate', 'Allocation of plate number'),
+                    ('vehicle_license', 'Vehicle license'),
+                    (
+                        'custom_papers_or_purchase_receipt',
+                        'Customs paper if car was imported or Receipt of purchase documents if the car was bought brand new from an accredited dealer',
+                    ),
+                    ('police_CMR', 'Police CMR'),
+                    ('insurance', 'Insurance papers'),
+                    ('road_worthiness', 'Road worthiness permit'),
+                ],
+                default='',
+                max_length=40,
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(

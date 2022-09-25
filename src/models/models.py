@@ -23,8 +23,7 @@ from rest_framework import exceptions
 from rest_framework.exceptions import APIException
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from src.carpadi_admin.utils import validate_inspector, checkout_transaction_validator, \
-    disbursement_trade_unit_validator
+from src.carpadi_admin.utils import validate_inspector, checkout_transaction_validator, disbursement_trade_unit_validator
 from src.config.common import OTP_EXPIRY
 import logging
 from src.models.validators import PhoneNumberValidator, LicensePlateValidator
@@ -186,8 +185,7 @@ class Wallet(Base):
         return unsettled
 
     def get_trading_cash(self):
-        trading = self.merchant.units.filter(
-            trade__trade_status__in=(TradeStates.Purchased, TradeStates.Ongoing)).aggregate(
+        trading = self.merchant.units.filter(trade__trade_status__in=(TradeStates.Purchased, TradeStates.Ongoing)).aggregate(
             total=Sum("unit_value")
         ).get("total") or Decimal(0.00)
         return trading
@@ -226,8 +224,7 @@ class Wallet(Base):
                 updated_fields_wallet = updated_fields_wallet + ["unsettled_cash", "trading_cash"]
                 tx.transaction_status = TransactionStatus.Unsettled
             elif db.disbursement_status == DisbursementStates.Settled:
-                balance_after_deduction = Decimal(
-                    0.0) if self.unsettled_cash - tx.amount < 0 else self.unsettled_cash - tx.amount
+                balance_after_deduction = Decimal(0.0) if self.unsettled_cash - tx.amount < 0 else self.unsettled_cash - tx.amount
                 self.withdrawable_cash += tx.amount
                 self.unsettled_cash = balance_after_deduction
                 updated_fields_wallet = updated_fields_wallet + ["withdrawable_cash", "unsettled_cash"]
@@ -273,18 +270,14 @@ class TransactionStatus(models.TextChoices):
 class Transaction(Base):
     amount = models.DecimalField(max_digits=30, decimal_places=10)
     wallet = models.ForeignKey(
-        Wallet, on_delete=models.CASCADE, related_name="merchant_transactions",
-        help_text="transactions carried out by merchant"
+        Wallet, on_delete=models.CASCADE, related_name="merchant_transactions", help_text="transactions carried out by merchant"
     )
     transaction_type = models.CharField(max_length=10, choices=TransactionTypes.choices)
     transaction_reference = models.CharField(max_length=50, null=False, blank=False)
     transaction_description = models.CharField(max_length=50, null=True, blank=True)
-    transaction_status = models.CharField(max_length=10, choices=TransactionStatus.choices,
-                                          default=TransactionStatus.Pending)
-    transaction_response = models.JSONField(null=True, blank=True,
-                                            help_text="Transaction response from payment gateway")
-    transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices,
-                                        default=TransactionKinds.Deposit)
+    transaction_status = models.CharField(max_length=10, choices=TransactionStatus.choices, default=TransactionStatus.Pending)
+    transaction_response = models.JSONField(null=True, blank=True, help_text="Transaction response from payment gateway")
+    transaction_kind = models.CharField(max_length=50, choices=TransactionKinds.choices, default=TransactionKinds.Deposit)
     transaction_payment_link = models.URLField(max_length=200, null=True, blank=True)
     transaction_fees = models.DecimalField(
         max_digits=10, decimal_places=4, default=0.0, help_text="Transaction fees for withdrawal transactions"
@@ -315,7 +308,7 @@ class Transaction(Base):
             activity_type=ActivityTypes.Transaction,
             activity=transaction,
             description=f"Activity Type: Transaction, Status: {transaction.transaction_status},"
-                        f" Description: {transaction.transaction_kind} of {transaction.amount} naira.",
+            f" Description: {transaction.transaction_kind} of {transaction.amount} naira.",
             merchant=transaction.wallet.merchant,
         )
         Notifications.objects.create(
@@ -352,8 +345,7 @@ class BankAccount(Base):
     bank = models.ForeignKey(Banks, on_delete=models.CASCADE, related_name="bank_accounts")
     account_number = models.CharField(max_length=50, null=False, blank=False)
     merchant = models.ForeignKey(
-        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts",
-        help_text="Bank account to remit merchant money to"
+        CarMerchant, on_delete=models.CASCADE, related_name="bank_accounts", help_text="Bank account to remit merchant money to"
     )
     is_default = models.BooleanField(default=False)
 
@@ -474,7 +466,7 @@ class Car(Base):
         max_length=10,
         null=True,
         help_text="potential cost of  purchasing the car offered by the seller. "
-                  "this should be changed to reflect the actual cost of the car when it is bought",
+        "this should be changed to reflect the actual cost of the car when it is bought",
         validators=[MinValueValidator(Decimal(0.00))],
         default=Decimal(0.00),
     )
@@ -639,7 +631,7 @@ class Trade(Base):
         max_digits=10,
         default=Decimal(0.00),
         help_text="min price at which the car can be sold, given the expenses we already made. "
-                  "this should be determined by calculating how much maintanance is done + total disbursement at the end of trade",
+        "this should be determined by calculating how much maintanance is done + total disbursement at the end of trade",
     )
     estimated_sales_duration = models.PositiveIntegerField(help_text="estimated sales duration in days", default=30)
     bts_time = models.IntegerField(default=0, help_text="time taken to buy to sale in days", null=True, blank=True)
@@ -753,8 +745,7 @@ class Trade(Base):
                 i. No commission
         2. if the trade is not yet sold
         """
-        if self.trade_status in (
-        TradeStates.Completed, TradeStates.Closed) and self.car.bought_price and self.resale_price:
+        if self.trade_status in (TradeStates.Completed, TradeStates.Closed) and self.car.bought_price and self.resale_price:
             settings: Settings = Settings.objects.first()
             if self.margin_calc() > self.return_on_trade_calc():
                 excess = self.carpadi_bonus_calc()
@@ -836,8 +827,7 @@ class Trade(Base):
             self.return_on_trade = self.return_on_trade_calc()
             self.run_disbursement()
             self.complete_trade()
-            update_fields = ["date_of_sale", "traders_bonus_per_slot", "carpadi_commission", "carpadi_bonus",
-                             "total_carpadi_rot"]
+            update_fields = ["date_of_sale", "traders_bonus_per_slot", "carpadi_commission", "carpadi_bonus", "total_carpadi_rot"]
             self.save(update_fields=update_fields)
 
     def complete_trade(self):
@@ -845,8 +835,7 @@ class Trade(Base):
         Completes the trade by setting the trade status to completed and updating the car status.
         we also try to do some validation to make sure trade and its corresponding objects are valid
         """
-        successful_disbursements = self.units.filter(
-            disbursement__disbursement_status=DisbursementStates.Unsettled).count()
+        successful_disbursements = self.units.filter(disbursement__disbursement_status=DisbursementStates.Unsettled).count()
         query = self.units.annotate(total_disbursed=Sum('disbursement__amount'))
         total_disbursed = query.aggregate(sum=Sum('total_disbursed')).get('sum') or Decimal(0)
         if successful_disbursements != self.units.count() or total_disbursed != self.total_payout():
@@ -965,9 +954,9 @@ class TradeUnit(Base):
         if self.trade.deficit_balance() > Decimal(0):
             deficit = (self.trade.deficit_balance() / self.trade.slots_available) * self.slots_quantity
         base_payout = (
-                (self.trade.return_on_trade_per_slot * self.slots_quantity)
-                + self.unit_value
-                + (self.trade.traders_bonus_per_slot * self.slots_quantity)
+            (self.trade.return_on_trade_per_slot * self.slots_quantity)
+            + self.unit_value
+            + (self.trade.traders_bonus_per_slot * self.slots_quantity)
         )
         return base_payout - deficit
 
@@ -996,8 +985,7 @@ class Disbursement(Base):
         help_text="the trade unit that this disbursement is for",
     )
     amount = models.DecimalField(decimal_places=10, editable=False, max_digits=30)
-    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, related_name="disbursement", null=True,
-                                       blank=True)
+    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, related_name="disbursement", null=True, blank=True)
     disbursement_status = models.CharField(
         choices=DisbursementStates.choices, max_length=20, default=DisbursementStates.Unsettled
     )
@@ -1082,8 +1070,7 @@ class Assets(Base):
     @classmethod
     def create_many(cls, images: List[str], feature, entity_type: AssetEntityType):
         if isinstance(images, list) and images:
-            ims = [Assets(id=uuid.uuid4(), content_object=feature, asset=image, entity_type=entity_type) for image in
-                   images]
+            ims = [Assets(id=uuid.uuid4(), content_object=feature, asset=image, entity_type=entity_type) for image in images]
             return Assets.objects.bulk_create(objs=ims)
 
     def __str__(self):
@@ -1109,8 +1096,7 @@ class CarProductStatus(models.TextChoices):
         "Car is still in the market",
     )
     Sold = "sold", _("Car has been sold")
-    Inactive = "inactive", _(
-        "Car has been recalled due to" " fault or other issues, or just added and not made active yet")
+    Inactive = "inactive", _("Car has been recalled due to" " fault or other issues, or just added and not made active yet")
 
 
 class CarProduct(Base):
@@ -1203,7 +1189,7 @@ class Inspections(Base):
         max_length=15,
         default=InspectionVerdict.NA,
         help_text="Verdict of the inspection after taking into account all"
-                  " the stages and their scores. should be calculated by the system",
+        " the stages and their scores. should be calculated by the system",
     )
     inspector = models.ForeignKey(
         User,
@@ -1265,8 +1251,8 @@ class Settings(Base):
         max_digits=25,
         default=Decimal(5.00),
         help_text="The percentage of the car value that will be the return on trade."
-                  " this is used to calculate the rot when buying slots,"
-                  " like `car_value * merchant_trade_rot_percentage / slot_to_buy`",
+        " this is used to calculate the rot when buying slots,"
+        " like `car_value * merchant_trade_rot_percentage / slot_to_buy`",
     )
     transfer_fee = models.DecimalField(decimal_places=2, max_digits=25, default=Decimal(0.00))
     close_trade_fee = models.DecimalField(decimal_places=2, max_digits=25, default=Decimal(0.00))
@@ -1277,8 +1263,7 @@ class Settings(Base):
         help_text="The amount of commission to deduct from rot of the trader after trade maturation",
     )
     bonus_percentage = models.DecimalField(
-        decimal_places=2, max_digits=25, default=Decimal(50.00),
-        help_text="Percentage of the bonus that will go to the traders"
+        decimal_places=2, max_digits=25, default=Decimal(50.00), help_text="Percentage of the bonus that will go to the traders"
     )
 
     def save(self, *args, **kwargs):
@@ -1299,13 +1284,22 @@ class File(models.Model):
 
 class RequiredCarDocuments(models.TextChoices):
     ProofOfOwnership = "proof_of_ownership", _("Proof of ownership document")
-    AllocationOfLicensePlate = "allocation_of_licence_plate", _("Allocation of plate number", )
-    VehicleLicense = "vehicle_license", _("Vehicle license", )
+    AllocationOfLicensePlate = "allocation_of_licence_plate", _(
+        "Allocation of plate number",
+    )
+    VehicleLicense = "vehicle_license", _(
+        "Vehicle license",
+    )
     CustomPapersOrPurchaseReceipt = "custom_papers_or_purchase_receipt", _(
         "Customs paper if car was imported or Receipt of purchase documents"
-        " if the car was bought brand new from an accredited dealer", )
-    PoliceCMR = "police_CMR", _("Police CMR", )
-    Insurance = "insurance", _("Insurance papers", )
+        " if the car was bought brand new from an accredited dealer",
+    )
+    PoliceCMR = "police_CMR", _(
+        "Police CMR",
+    )
+    Insurance = "insurance", _(
+        "Insurance papers",
+    )
     RoadWorthiness = "road_worthiness", _("Road worthiness permit")
 
 
@@ -1319,10 +1313,5 @@ class CarDocuments(Base):
 
     @classmethod
     def documentation_completed(cls, car: str) -> bool:
-        docs = CarDocuments.objects\
-            .filter(car__id=car, is_verified=True)\
-            .distinct("document_type")\
-            .count()
+        docs = CarDocuments.objects.filter(car__id=car, is_verified=True).distinct("document_type").count()
         return len(RequiredCarDocuments.choices) == docs
-
-

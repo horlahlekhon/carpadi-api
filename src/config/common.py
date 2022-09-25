@@ -269,8 +269,7 @@ AUTHENTICATION_BACKENDS = (
     'src.models.backends.EmailOrUsernameOrPhoneModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
-for key in ['GOOGLE_OAUTH2_KEY', 'GOOGLE_OAUTH2_SECRET', 'FACEBOOK_KEY', 'FACEBOOK_SECRET', 'TWITTER_KEY',
-            'TWITTER_SECRET']:
+for key in ['GOOGLE_OAUTH2_KEY', 'GOOGLE_OAUTH2_SECRET', 'FACEBOOK_KEY', 'FACEBOOK_SECRET', 'TWITTER_KEY', 'TWITTER_SECRET']:
     exec("SOCIAL_AUTH_{key} = os.environ.get('{key}', '')".format(key=key))
 
 # FB

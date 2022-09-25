@@ -40,7 +40,8 @@ from src.models.models import (
     Trade,
     TradeUnit,
     Activity,
-    Banks, TransactionStatus,
+    Banks,
+    TransactionStatus,
 )
 from src.models.permissions import IsCarMerchantAndAuthed
 from src.models.serializers import (
