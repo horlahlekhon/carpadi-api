@@ -1,3 +1,11 @@
+## [1.0.19](https://github.com/horlahlekhon/carpadi-api/compare/v1.0.18...v1.0.19) (2022-09-25)
+
+
+### Bug Fixes
+
+* ci ([dfee493](https://github.com/horlahlekhon/carpadi-api/commit/dfee4934a715b893dac32f8ca6631f2733ab5623))
+* ci ([3b886e6](https://github.com/horlahlekhon/carpadi-api/commit/3b886e62f621f041110d0dbb78a2edfe295af249))
+
 ## [1.0.18](https://github.com/horlahlekhon/carpadi-api/compare/v1.0.17...v1.0.18) (2022-09-24)
 
 
