@@ -40,7 +40,7 @@ from src.models.models import (
     Trade,
     TradeUnit,
     Activity,
-    Banks,
+    Banks, TransactionStatus,
 )
 from src.models.permissions import IsCarMerchantAndAuthed
 from src.models.serializers import (
@@ -155,6 +155,8 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
             tx_ref = data.get("transfer").get("reference")
             transaction_id = data.get("transfer").get("id")
             tx: Transaction = get_object_or_404(self.queryset, transaction_reference=tx_ref)
+            if tx.transaction_status != TransactionStatus.Pending:
+                return Response({"error": "Invalid request"}, status=status.HTTP_400_BAD_REQUEST)
             headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
             response = requests.get(url=common.FLW_GET_TRANSFER_URL(transaction_id), headers=headers)
             res, code = Transaction.verify_deposit(response, tx)
@@ -166,6 +168,8 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
             tx_status = request.query_params.get('status')
             transaction_id = request.query_params.get('transaction_id')
             tx = get_object_or_404(self.queryset, transaction_reference=tx_ref)
+            if tx.transaction_status != TransactionStatus.Pending:
+                return Response({"error": "Invalid request"}, status=status.HTTP_400_BAD_REQUEST)
             headers = dict(Authorization=f"Bearer {common.FLW_SECRET_KEY}")
             response = requests.get(url=common.FLW_PAYMENT_VERIFY_URL(transaction_id), headers=headers)
             res, code = Transaction.verify_deposit(response, tx)

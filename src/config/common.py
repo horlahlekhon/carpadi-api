@@ -80,13 +80,20 @@ WSGI_APPLICATION = 'src.wsgi.application'
 
 # Email
 
+EMAIL_HOST = "in-v3.mailjet.com"
+EMAIL_PORT = 587
+EMAIL_FROM = "horlahlekhon@gmail.com"
+EMAIL_HOST_USER = "effd16db611dab2e8a9d7515e6caf7d9"
+EMAIL_HOST_PASSWORD = "462488cdc685193b657ed4dafbf5633e"
+
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+# EMAIL_HOST = os.getenv('EMAIL_HOST', default="in-v3.mailjet.com")
+# EMAIL_PORT = os.getenv('EMAIL_PORT', default=587)
+# EMAIL_FROM = os.getenv('EMAIL_FROM', default="horlahlekhon@gmail.com")
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', default="effd16db611dab2e8a9d7515e6caf7d9")
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', default="462488cdc685193b657ed4dafbf5633e")
 EMAIL_USE_TLS = True
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', '')
-EMAIL_PORT = os.getenv('EMAIL_PORT', 587)
-EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+
 # Celery
 BROKER_URL = os.getenv('BROKER_URL', 'redis://localhost:6379')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379')
@@ -262,7 +269,8 @@ AUTHENTICATION_BACKENDS = (
     'src.models.backends.EmailOrUsernameOrPhoneModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
-for key in ['GOOGLE_OAUTH2_KEY', 'GOOGLE_OAUTH2_SECRET', 'FACEBOOK_KEY', 'FACEBOOK_SECRET', 'TWITTER_KEY', 'TWITTER_SECRET']:
+for key in ['GOOGLE_OAUTH2_KEY', 'GOOGLE_OAUTH2_SECRET', 'FACEBOOK_KEY', 'FACEBOOK_SECRET', 'TWITTER_KEY',
+            'TWITTER_SECRET']:
     exec("SOCIAL_AUTH_{key} = os.environ.get('{key}', '')".format(key=key))
 
 # FB
@@ -395,7 +403,7 @@ DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
 FLW_PUBLIC_KEY = os.getenv('FLUTTER_WAVE_PUBLIC_KEY', '')
 FLW_SECRET_KEY = os.getenv('FLUTTER_WAVE_SECRET_KEY', '')
 FLW_REDIRECT_URL = os.getenv(
-    'PAYMENT_REDIRECT_URL', 'http://2869-41-217-100-119.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
+    'PAYMENT_REDIRECT_URL', 'https://026d-154-118-25-206.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
 )
 FLW_PAYMENT_URL = os.getenv('PAYMENT_URL', "https://api.flutterwave.com/v3/payments")
 FLW_PAYMENT_VERIFY_URL = "https://api.flutterwave.com/v3/transactions/{}/verify".format

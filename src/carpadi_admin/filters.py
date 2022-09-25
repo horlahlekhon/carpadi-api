@@ -111,7 +111,6 @@ class SparePartsFilter(filters.FilterSet):
 
 
 class VehicleInfoFilter(filters.FilterSet):
-
     model = filters.CharFilter(field_name="brand__model", lookup_expr="iexact")
     make = filters.CharFilter(field_name="brand__make", lookup_expr="iexact")
     year = filters.CharFilter(field_name="brand__year", lookup_expr="iexact")
@@ -141,6 +140,19 @@ class CarMerchantFilter(filters.FilterSet):
 class CarFilter(filters.FilterSet):
     manufacturer = filters.CharFilter(field_name="information__brand__name", lookup_expr="iexact")
     available_for_sale = filters.BooleanFilter(method="available_for_sales_filter")
+    search = filters.CharFilter(method="search_car")
+
+    def search_car(self, queryset, name, value):
+        return queryset.filter(Q(information__brand__model__icontains=value) |
+                               Q(information__brand__name__icontains=value) |
+                               Q(information__brand__year__iexact=value) |
+                               Q(information__manufacturer__icontains=value) |
+                               Q(information__transmission__icontains=value) |
+                               Q(information__fuel_type__icontains=value) |
+                               Q(information__car_type__icontains=value) |
+                               Q(vin__icontains=value) | Q(name__icontains=value) |
+                               Q(licence_plate__icontains=value)
+                               )
 
     def available_for_sales_filter(self, queryset, name, value):
         if value:
