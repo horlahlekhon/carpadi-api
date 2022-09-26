@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.0.20...v1.1.0) (2022-09-26)
+
+
+### Features
+
+* added more tests ([23922c2](https://github.com/horlahlekhon/carpadi-api/commit/23922c2e3491a316a444a99b96a0bf954320d16f))
+
 ## [1.0.20](https://github.com/horlahlekhon/carpadi-api/compare/v1.0.19...v1.0.20) (2022-09-25)
 
 
