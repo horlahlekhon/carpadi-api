@@ -1,13 +1,26 @@
 # Create your tests here.
 import uuid
+from decimal import Decimal
 
 from django.test import TestCase
 from nose.tools import ok_, eq_
 from rest_framework.exceptions import NotAcceptable, ErrorDetail
 
-from src.carpadi_api.serializers import TransactionPinSerializers
-from src.models.models import UserTypes, User, TransactionPin, TransactionPinStatus
+from src.carpadi_admin.tests import BaseTest
+from src.carpadi_admin.tests.factories import InspectionFactory, SparePartFactory
+from src.carpadi_api.serializers import TransactionPinSerializers, TradeSerializer
+from src.models.models import (
+    UserTypes,
+    User,
+    TransactionPin,
+    TransactionPinStatus,
+    InspectionVerdict,
+    InspectionStatus,
+    Settings,
+    CarMaintenance,
+)
 from src.models.serializers import CreateUserSerializer
+from src.models.test.factories import UserFactory, WalletFactory
 
 
 class TestTransactionPinSerializers(TestCase):

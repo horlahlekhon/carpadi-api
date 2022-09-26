@@ -196,63 +196,92 @@ class Wallet(Base):
     def get_total_cash(self):
         return self.get_trading_cash() + self.get_withdrawable_cash() + self.get_unsettled_cash()
 
+    @atomic()
     def update_balance(self, tx: "Transaction"):
-        updated_fields_tx = []
-        updated_fields_wallet = []
-        if tx.transaction_kind == TransactionKinds.Deposit and tx.transaction_type == TransactionTypes.Credit:
-            self.withdrawable_cash += tx.amount
-            updated_fields_wallet.append("withdrawable_cash")
-        #     FIXME we cant really determine the status of the transaction of withdrawal
-        #      from here since there is third party integration. so we allow the caller to set it.
-        elif tx.transaction_kind == TransactionKinds.Withdrawal and tx.transaction_type == TransactionTypes.Debit:
-            balance_after_deduction = (
-                Decimal(0.0) if self.withdrawable_cash - tx.amount < 0 else self.withdrawable_cash - tx.amount
-            )
-            self.withdrawable_cash = balance_after_deduction
-            updated_fields_wallet.append("withdrawable_cash")
-            tx.transaction_status = TransactionStatus.Pending
-        elif tx.transaction_kind == TransactionKinds.Disbursement and tx.transaction_type == TransactionTypes.Credit:
-            db: "Disbursement" = tx.disbursement
-            if db.disbursement_status == DisbursementStates.Unsettled:
-                balance_after_deduction = (
-                    Decimal(0.0)
-                    if self.trading_cash - db.trade_unit.unit_value < 0
-                    else self.trading_cash - db.trade_unit.unit_value
-                )
-                self.unsettled_cash += tx.amount
-                self.trading_cash = balance_after_deduction
-                updated_fields_wallet = updated_fields_wallet + ["unsettled_cash", "trading_cash"]
-                tx.transaction_status = TransactionStatus.Unsettled
-            elif db.disbursement_status == DisbursementStates.Settled:
-                balance_after_deduction = Decimal(0.0) if self.unsettled_cash - tx.amount < 0 else self.unsettled_cash - tx.amount
-                self.withdrawable_cash += tx.amount
-                self.unsettled_cash = balance_after_deduction
-                updated_fields_wallet = updated_fields_wallet + ["withdrawable_cash", "unsettled_cash"]
-                tx.transaction_status = TransactionStatus.Success
-            elif db.disbursement_status == DisbursementStates.RolledBack:
-                self.trading_cash = db.trade_unit.unit_value
-                self.unsettled_cash = self.unsettled_cash - db.amount
-                tx.transaction_status = TransactionStatus.RolledBack
-                updated_fields_wallet = updated_fields_wallet + ["unsettled_cash", "trading_cash"]
-            else:
-                raise ValidationError("Invalid disbursement status")
-        elif tx.transaction_kind == TransactionKinds.TradeUnitPurchases and tx.transaction_type == TransactionTypes.Debit:
-            self.withdrawable_cash = (
-                Decimal(0.0) if self.withdrawable_cash - tx.amount < 0 else self.withdrawable_cash - tx.amount
-            )
-            self.trading_cash += tx.amount
-            updated_fields_wallet.extend(["withdrawable_cash", "trading_cash"])
-            tx.transaction_status = TransactionStatus.Success
+        update = WalletBalanceUpdate(tx, self)
+        return update.resolve()
+
+
+class WalletBalanceUpdate:
+    def __init__(self, transaction: "Transaction", wallet: "Wallet"):
+
+        self.tx = transaction
+        self.wallet = wallet
+        self._updated_fields_wallet = []
+
+    def resolve(self):
+        if (
+            self.tx.transaction_kind == TransactionKinds.Deposit
+            and self.tx.transaction_type == TransactionTypes.Credit
+            and self.tx.transaction_status == TransactionStatus.Success
+        ):
+            self.wallet.withdrawable_cash += self.tx.amount
+            self._updated_fields_wallet.append("withdrawable_cash")
+        elif self.tx.transaction_kind == TransactionKinds.Withdrawal and self.tx.transaction_type == TransactionTypes.Debit:
+            self.handle_withdrawals()
+        elif self.tx.transaction_kind == TransactionKinds.Disbursement and self.tx.transaction_type == TransactionTypes.Credit:
+            self.handle_disbursement()
+        elif (
+            self.tx.transaction_kind == TransactionKinds.TradeUnitPurchases and self.tx.transaction_type == TransactionTypes.Debit
+        ):
+            self.handle_unit_purchase()
         else:
             raise ValidationError("Invalid transaction type and kind combination")
-        tx.save(
-            update_fields=[
-                "transaction_status",
-            ]
+        self.tx.save(update_fields=["transaction_status"])
+        self.wallet.save(update_fields=self._updated_fields_wallet)
+        self.wallet.refresh_from_db()
+        return self.wallet
+
+    def handle_withdrawals(self):
+        assert self.tx.transaction_status == TransactionStatus.Success, "Balance cannot be updated on unsuccessful transaction"
+        balance_after_deduction = (
+            Decimal(0.0) if self.wallet.withdrawable_cash - self.tx.amount < 0 else self.wallet.withdrawable_cash - self.tx.amount
         )
-        self.save(update_fields=updated_fields_wallet)
-        self.refresh_from_db()
-        return self.save()
+        self.wallet.withdrawable_cash = balance_after_deduction
+        self._updated_fields_wallet.append("withdrawable_cash")
+        self.tx.transaction_status = TransactionStatus.Pending
+
+    def handle_unit_purchase(self):
+        assert self.tx.transaction_status == TransactionStatus.Success, "Balance cannot be updated on unsuccessful transaction"
+        self.wallet.withdrawable_cash = (
+            Decimal(0.0) if self.wallet.withdrawable_cash - self.tx.amount < 0 else self.wallet.withdrawable_cash - self.tx.amount
+        )
+        self.wallet.trading_cash += self.tx.amount
+        self._updated_fields_wallet.extend(["withdrawable_cash", "trading_cash"])
+        self.tx.transaction_status = TransactionStatus.Success
+
+    def handle_disbursement(self):
+        assert self.tx.transaction_status in (
+            TransactionStatus.Success,
+            TransactionStatus.RolledBack,
+            TransactionStatus.Unsettled,
+        ), "Balance cannot be updated on unsuccessful transaction"
+        db: "Disbursement" = self.tx.disbursement
+        if db.disbursement_status == DisbursementStates.Unsettled:
+            balance_after_deduction = (
+                Decimal(0.0)
+                if self.wallet.trading_cash - db.trade_unit.unit_value < 0
+                else self.wallet.trading_cash - db.trade_unit.unit_value
+            )
+            self.wallet.unsettled_cash += self.tx.amount
+            self.wallet.trading_cash = balance_after_deduction
+            self._updated_fields_wallet += ["unsettled_cash", "trading_cash"]
+            self.tx.transaction_status = TransactionStatus.Unsettled
+        elif db.disbursement_status == DisbursementStates.Settled:
+            balance_after_deduction = (
+                Decimal(0.0) if self.wallet.unsettled_cash - self.tx.amount < 0 else self.wallet.unsettled_cash - self.tx.amount
+            )
+            self.wallet.withdrawable_cash += self.tx.amount
+            self.wallet.unsettled_cash = balance_after_deduction
+            self._updated_fields_wallet += ["withdrawable_cash", "unsettled_cash"]
+            self.tx.transaction_status = TransactionStatus.Success
+        elif db.disbursement_status == DisbursementStates.RolledBack:
+            self.wallet.trading_cash = db.trade_unit.unit_value
+            self.wallet.unsettled_cash = self.wallet.unsettled_cash - db.amount
+            self.tx.transaction_status = TransactionStatus.RolledBack
+            self._updated_fields_wallet += ["unsettled_cash", "trading_cash"]
+        else:
+            raise ValidationError("Invalid disbursement status")
 
 
 class TransactionStatus(models.TextChoices):

@@ -262,6 +262,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     # carpadi_rot = serializers.SerializerMethodField()
     trade_margin = serializers.SerializerMethodField()
     estimated_carpadi_rot = serializers.SerializerMethodField()
+    slots_available = serializers.IntegerField(required=True)
 
     class Meta:
         model = Trade

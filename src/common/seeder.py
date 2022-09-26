@@ -193,9 +193,9 @@ class PadiSeeder:
 
     @classmethod
     def get_asset(cls, count=1):
-        resp = requests.get(f'https://picsum.photos/v2/list?page=100&limit={count}')
-        data = resp.json()
-        return [d['download_url'] for d in data]
+        # resp = requests.get(f'https://picsum.photos/v2/list?page=100&limit={count}')
+        # data = resp.json()
+        return ['https://random.imagecdn.app/500/150' for _ in range(count)]
 
     def seed_trade(self, car, status: TradeStates):
         assert status not in (

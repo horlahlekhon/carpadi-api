@@ -5,10 +5,31 @@ from django.test import TestCase
 from nose.tools import *
 from rest_framework.exceptions import ValidationError
 
-from src.carpadi_admin.serializers import CarSerializer, CarMaintenanceSerializerAdmin
-from src.carpadi_admin.tests.factories import VehicleFactory, InspectionFactory
-from src.models.models import UserTypes, User, VehicleInfo, Car, CarStates, CarMaintenance
+from src.carpadi_admin.serializers import (
+    CarSerializer,
+    CarMaintenanceSerializerAdmin,
+    TradeSerializerAdmin,
+    CarDocumentsSerializer,
+)
+from src.carpadi_admin.tests import BaseTest
+from src.carpadi_admin.tests.factories import VehicleFactory, InspectionFactory, SparePartFactory, CarDocumentsFactory
+from src.models.models import (
+    UserTypes,
+    User,
+    VehicleInfo,
+    Car,
+    CarStates,
+    CarMaintenance,
+    InspectionStatus,
+    InspectionVerdict,
+    Settings,
+    RequiredCarDocuments,
+    Assets,
+    AssetEntityType,
+    CarDocuments,
+)
 from src.models.serializers import CreateUserSerializer
+from src.models.test.factories import WalletFactory
 
 
 class TestCarSerializer(TestCase):
@@ -224,3 +245,47 @@ class CarMaintenanceSerializerTest(TestCase):
         eq_(is_valid, True)
         maint = car_maintenance_ser.save()
         ok_(maint)
+
+
+class TestTradeSerializer(BaseTest):
+    @classmethod
+    def setUpTestData(cls):
+        cls.set = Settings.objects.create(
+            merchant_trade_rot_percentage=Decimal(5.00), carpadi_commision=Decimal(50.00), bonus_percentage=Decimal(50.00)
+        )
+
+    def setUp(self) -> None:
+        super(TestTradeSerializer, self).setUp()
+        self.wallets = WalletFactory.create_batch(size=5)
+        self.inspection = InspectionFactory(
+            inspector=self.admin,
+            inspection_assignor=self.admin,
+            inspection_verdict=InspectionVerdict.Good,
+            status=InspectionStatus.Completed,
+        )
+        self.spare_part = SparePartFactory()
+        self.car = self.inspection.car
+
+    def prepare_car(self, bought=Decimal(0.0), resale=Decimal(0.0)):
+        self.car.bought_price = Decimal(bought or 100000)
+        self.car.resale_price = Decimal(resale or 150000)
+        self.car.save()
+        self.car.update_on_inspection_changes(self.inspection)
+        self.maintenance = CarMaintenance.objects.create(maintenance=self.spare_part, car=self.car)
+        for i in RequiredCarDocuments.choices:
+            data = dict(
+                car=self.car.id, is_verified=True, document_type=i[0], name=i[0], asset="https://picsum.photos/id/116/3504/2336"
+            )
+            ser = CarDocumentsSerializer(data=data)
+            ser.is_valid(raise_exception=True)
+            ser.save()
+
+    def test_trade_created_successfully(self):
+        self.prepare_car(resale=Decimal(0.0))
+        data = dict(car=self.car.id, slots_available=5)
+        ser = TradeSerializerAdmin(data=data)
+        valid = ser.is_valid()
+        assert valid
+        trade = ser.save()
+        read_ser = TradeSerializerAdmin(instance=trade).data
+        assert read_ser["remaining_slots"] == data["slots_available"]

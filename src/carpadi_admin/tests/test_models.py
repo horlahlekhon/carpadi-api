@@ -246,6 +246,7 @@ class TestTrade(BaseTest):
         assert trade.units.count() == len(units)
         trade.trade_status = TradeStates.Completed
         trade.save(update_fields=["trade_status"])
+        trade.check_updates()
         for unit in trade.units.all():
             assert unit.merchant.wallet.unsettled_cash == unit.disbursement.amount
             assert unit.disbursement.transaction.transaction_status == TransactionStatus.Unsettled

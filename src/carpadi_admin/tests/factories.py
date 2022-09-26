@@ -23,6 +23,8 @@ from src.models.models import (
     Transaction,
     Trade,
     TradeStates,
+    CarDocuments,
+    Assets,
 )
 
 # faker: Faker =
@@ -137,3 +139,20 @@ class TradeUnitFactory(factory.django.DjangoModelFactory):
 #
 #     class Meta:
 #         model = CarMaintenance
+
+
+class AssetFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Assets
+
+
+class CarDocumentsFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = CarDocuments
+
+    car = None
+    is_verified = True
+    name = factory.Faker('name')
+    asset = "https://www.google.com"
+    description = owners_review = factory.Faker('word')
+    document_type = None

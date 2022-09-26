@@ -268,28 +268,25 @@ class TransactionSerializer(serializers.ModelSerializer):
             tx = None
             response: requests.Response = requests.post(url=common.FLW_WITHDRAW_URL, json=payload, headers=headers)
             data = response.json()
-            if response.status_code == 200:
-                if data["status"] == "success":
-                    tx = Transaction.objects.create(
-                        transaction_reference=ref,
-                        transaction_kind=TransactionKinds.Withdrawal,
-                        transaction_status=TransactionStatus.Pending,
-                        transaction_description=validated_data.get("transaction_description"),
-                        # TODO write custom message
-                        transaction_type=TransactionTypes.Debit,
-                        amount=validated_data["amount"],
-                        wallet=wallet,
-                        transaction_payment_link=None,
-                        transaction_fees=data["data"]["fee"],
-                        transaction_response=data["data"],
-                    )
-                else:
-                    raise serializers.ValidationError(data["message"])
+            if response.status_code == 200 and data["status"] == "success":
+                tx = Transaction.objects.create(
+                    transaction_reference=ref,
+                    transaction_kind=TransactionKinds.Withdrawal,
+                    transaction_status=TransactionStatus.Pending,
+                    transaction_description=validated_data.get("transaction_description"),
+                    # TODO write custom message
+                    transaction_type=TransactionTypes.Debit,
+                    amount=validated_data["amount"],
+                    wallet=wallet,
+                    transaction_payment_link=None,
+                    transaction_fees=data["data"]["fee"],
+                    transaction_response=data["data"],
+                )
             else:
                 raise serializers.ValidationError(data["message"])
             return tx
         except Exception as e:
-            raise exceptions.APIException(f"Error while making transaction {e}")
+            raise exceptions.APIException(f"Error while making transaction {e}") from e
 
     def validate_destination_account(self, value: BankAccount):
         merchant = self.context["request"].user.merchant
