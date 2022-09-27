@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.1.0...v1.1.1) (2022-09-27)
+
+
+### Bug Fixes
+
+* moved deploy server to linode ([f2a5aee](https://github.com/horlahlekhon/carpadi-api/commit/f2a5aeeb39e00b536f675e2ddc6fc32b11eb192c))
+
 # [1.1.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.0.20...v1.1.0) (2022-09-26)
 
 
