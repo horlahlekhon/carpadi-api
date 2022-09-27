@@ -68,13 +68,33 @@ jobs:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 
-      - name: Deploy container
-        run: |
-          echo "$(cat ./artifacts/.VERSION)"
-          echo ${NEXT_VERSION} > version
-          echo "${{ secrets.SSH_PEM }}" > private_key && chmod 600 private_key
-          echo "${{ secrets.APP_ENVS }}" > .env
-          scp -i private_key -o StrictHostKeyChecking=no version ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}:~/version
-          scp -i private_key -o StrictHostKeyChecking=no .env ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}:~/.env
-          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }} 'docker rm -f carpadi-api'
-          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }} 'docker run --name carpadi-api -p 8000:8000 -v /app/static:/app/src/staticfiles --env-file ~/.env -d olalekanadebari/carpadi-api:$(cat ~/version)'
+#      - name: Deploy container
+#        run: |
+#          echo "$(cat ./artifacts/.VERSION)"
+#          echo ${NEXT_VERSION} > version
+#          echo "${{ secrets.SSH_PEM }}" > private_key && chmod 600 private_key
+#          echo "${{ secrets.APP_ENVS }}" > .env
+#          scp -i private_key -o StrictHostKeyChecking=no version ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}:~/version
+#          scp -i private_key -o StrictHostKeyChecking=no .env ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}:~/.env
+#          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }} 'docker rm -f carpadi-api'
+#          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }} 'docker run --name carpadi-api -p 8000:8000 -v /app/static:/app/src/staticfiles --env-file ~/.env -d olalekanadebari/carpadi-api:$(cat ~/version)'
+
+
+      - name: Deploy image to server
+        uses: appleboy/ssh-action@master
+        env:
+          IMAGE_NAME: "olalekanadebari/carpadi-api"
+          IMAGE_TAG: ${NEXT_VERSION}
+          CONTAINER_NAME: "carpadi-api"
+        with:
+          host: ${{ secrets.SSH_STAGING_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PASS }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: IMAGE_NAME,IMAGE_TAG,CONTAINER_NAME
+          script: |
+            docker container stop $CONTAINER_NAME
+            docker container rm $CONTAINER_NAME
+            docker pull $IMAGE_NAME:$IMAGE_TAG
+            docker run -d -p 8000:8000 --name $CONTAINER_NAME -v /app/static:/app/src/staticfiles --env-file ~/.env $IMAGE_NAME:$IMAGE_TAG
+            docker image prune -a --force
