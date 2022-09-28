@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.5.0...v1.6.0) (2022-09-28)
+
+
+### Features
+
+* notification ([1e0c153](https://github.com/horlahlekhon/carpadi-api/commit/1e0c15319705f34dd9633685c11bca11ab391227))
+
 # [1.5.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.4.0...v1.5.0) (2022-09-28)
 
 
