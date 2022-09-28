@@ -44,6 +44,7 @@ def send_push_notification_task(context, to: str):
         pprint(body)
         no = Notification(title=context.get('title'), body=context.get('title'))
         msg = Message(notification=no, data=body)
+        pprint(f"sending: \n {str(msg)}")
         resp: FirebaseResponseDict = devices.send_message(
             message=msg,
         )
@@ -60,6 +61,7 @@ def send_push_notification_taskp(context, to: str):
         pprint(body)
         no = Notification(title=context.get('title'), body=context.get('title'))
         msg = Message(notification=no, data=body)
+        pprint(f"sending: \n {str(msg)}")
         resp: FirebaseResponseDict = devices.send_message(
             message=msg,
         )
