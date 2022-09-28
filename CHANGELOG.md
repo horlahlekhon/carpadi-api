@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.3.0...v1.4.0) (2022-09-28)
+
+
+### Features
+
+* moved notifications to delayed jobs ([2d64ff7](https://github.com/horlahlekhon/carpadi-api/commit/2d64ff741b769bc98ec07e279f9d889798d0cec1))
+
 # [1.3.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.2.0...v1.3.0) (2022-09-28)
 
 
