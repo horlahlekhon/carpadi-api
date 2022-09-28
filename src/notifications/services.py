@@ -77,15 +77,16 @@ def _send_email(email_notification_config, context):
     to = User.objects.get(id=context.get("user")).email
     email_html_template = email_notification_config.get('email_html_template')
     email_subject = email_notification_config.get('email_subject')
-    from src.common.tasks import send_email_notification_task
+    from src.common.tasks import send_email_notification_task, send_email_notification_taskp
 
     send_email_notification_task.delay(context, email_html_template, email_subject, to)
-
+    # send_email_notification_taskp(context, email_html_template, email_subject, to)
 
 def _send_firebase(notification_config, context):
-    from src.common.tasks import send_push_notification_task
+    from src.common.tasks import send_push_notification_task, send_push_notification_taskp
 
     send_push_notification_task.delay(context, context.get("user"))
+    # send_push_notification_taskp(context, context.get("user"))
 
 
 def notify(verb, **kwargs):
