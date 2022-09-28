@@ -239,7 +239,6 @@ class WalletBalanceUpdate:
         )
         self.wallet.withdrawable_cash = balance_after_deduction
         self._updated_fields_wallet.append("withdrawable_cash")
-        self.tx.transaction_status = TransactionStatus.Pending
 
     def handle_unit_purchase(self):
         assert self.tx.transaction_status == TransactionStatus.Success, "Balance cannot be updated on unsuccessful transaction"

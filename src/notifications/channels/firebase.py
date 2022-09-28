@@ -15,15 +15,12 @@ logger = logging.getLogger(__name__)
 class FirebaseChannel:
     @staticmethod
     def send(context, to: str):
-        devices: FCMDeviceQuerySet = FCMDevice.objects.filter(user_id=to)
-        body = json.loads(json.dumps(context, cls=CustomJsonEncoder))
-        pprint(body)
-        no = Notification(title=context.get('title'), body=None)
-        msg = Message(notification=no, data=body)
-        resp: FirebaseResponseDict = devices.send_message(
-            message=msg,
-        )
-        print(f"Notification sent success: {resp.response.success_count}, failure: {resp.response.failure_count}")
+        # def send_notice():
+        #
+        # from src.common.tasks import send_notification_task
+        # send_notification_task.delay(send_notice)
+        # return
+        pass
 
     @staticmethod
     def send_all(context):

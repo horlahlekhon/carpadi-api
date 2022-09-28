@@ -221,6 +221,12 @@ class TransactionSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Amount is greater than withdrawable cash available")
         return value
 
+    def validate_destination_account(self, value: BankAccount):
+        merchant = self.context["request"].user.merchant
+        if value.merchant.id != merchant.id:
+            raise serializers.ValidationError("Bank account doesnt belong to this user")
+        return value
+
     def deposit(self, validated_data: dict, wallet: Wallet, reference: str):
         payload = dict(
             tx_ref=reference,
@@ -259,7 +265,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             "amount": validated_data["amount"],
             "narration": validated_data.get("transaction_description") or "withdrawal from carpadi",
             "currency": "NGN",
-            "reference": ref,
+            "reference": f"{ref}",
             "callback_url": common.FLW_REDIRECT_URL,
             "debit_currency": "NGN",
         }
@@ -273,12 +279,12 @@ class TransactionSerializer(serializers.ModelSerializer):
                     transaction_reference=ref,
                     transaction_kind=TransactionKinds.Withdrawal,
                     transaction_status=TransactionStatus.Pending,
-                    transaction_description=validated_data.get("transaction_description"),
+                    transaction_description=validated_data.get("transaction_description") or "",
                     # TODO write custom message
                     transaction_type=TransactionTypes.Debit,
                     amount=validated_data["amount"],
                     wallet=wallet,
-                    transaction_payment_link=None,
+                    transaction_payment_link="",
                     transaction_fees=data["data"]["fee"],
                     transaction_response=data["data"],
                 )
@@ -305,7 +311,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     #  pending transactions that are not more than 4hrs old and check their status. greater than 4hrs should just fail.
     def create(self, validated_data):
         # rave = Rave(common.FLW_PUBLIC_KEY, common.FLW_SECRET_KEY)
-        ref = f"CP-{uuid4()}"
+        ref = f"CP-{uuid4()}_PMCKDU_1"  # TODO this _PMCKDU_1 must be removed when moving to production apis
         wallet: Wallet = validated_data["merchant"].wallet
         if validated_data["transaction_kind"] == TransactionKinds.Deposit:
             return self.deposit(validated_data, wallet, ref)
