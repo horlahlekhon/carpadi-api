@@ -96,8 +96,9 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           envs: IMAGE_NAME,IMAGE_TAG,CONTAINER_NAME
           script: |
-            docker container stop $CONTAINER_NAME
-            docker container rm $CONTAINER_NAME
-            docker pull $IMAGE_NAME:$IMAGE_TAG
-            docker run -d -p 8000:8000 --name $CONTAINER_NAME -v /app/static:/app/src/staticfiles --env-file ~/.env olalekanadebari/carpadi-api:latest
+            docker container stop carpadi-api
+            docker container rm carpadi-api
+            docker image rm olalekanadebari/carpadi-api:latest -f
+            docker pull olalekanadebari/carpadi-api:latest
+            docker run -d -p 8000:8000 --name carpadi-api -v /app/static:/app/src/staticfiles --env-file ~/.env olalekanadebari/carpadi-api:latest
             docker image prune -a --force
