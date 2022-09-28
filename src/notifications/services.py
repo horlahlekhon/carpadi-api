@@ -82,6 +82,7 @@ def _send_email(email_notification_config, context):
     send_email_notification_task.delay(context, email_html_template, email_subject, to)
     # send_email_notification_taskp(context, email_html_template, email_subject, to)
 
+
 def _send_firebase(notification_config, context):
     from src.common.tasks import send_push_notification_task, send_push_notification_taskp
 

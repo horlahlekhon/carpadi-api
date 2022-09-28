@@ -92,4 +92,3 @@ def send_email_notification_taskp(context, html_template, subject, to):
 @task(name='CloseTradeTask')
 def close_trade(trade):
     ...
-
