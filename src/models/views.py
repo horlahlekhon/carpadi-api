@@ -147,21 +147,21 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         Seed the database with some data
         """
         try:
-            seed_type = str(request.query_params.get('type', None)).lower()
-            seed_data = PadiSeeder(request=request)
-            # seed_data.seed()
-            seed_func = seed_data.seed if seed_type != "banks" else seed_data.seed_banks()
-            t = threading.Thread(target=seed_func)
-            t.setDaemon(True)
-            t.start()
-            # unit: TradeUnit = TradeUnit.objects.filter(merchant__user_id="c9eee4be-eea2-4672-88b5-705ac5990827").first()
-            # notice = Notifications.objects.create(
-            #     notice_type=NotificationTypes.NewTrade,
-            #     user=unit.merchant.user,
-            #     message="This is a dummy message dont take shit serious abeg",
-            #     is_read=False,
-            #     entity_id=unit.id,
-            # )
+            # seed_type = str(request.query_params.get('type', None)).lower()
+            # seed_data = PadiSeeder(request=request)
+            # # seed_data.seed()
+            # seed_func = seed_data.seed if seed_type != "banks" else seed_data.seed_banks()
+            # t = threading.Thread(target=seed_func)
+            # t.setDaemon(True)
+            # t.start()
+            unit: TradeUnit = TradeUnit.objects.filter(merchant__user_id="c9eee4be-eea2-4672-88b5-705ac5990827").first()
+            notice = Notifications.objects.create(
+                notice_type=NotificationTypes.NewTrade,
+                user=unit.merchant.user,
+                message="This is a dummy message dont take shit serious abeg",
+                is_read=False,
+                entity_id=unit.id,
+            )
 
             return Response(status=status.HTTP_200_OK)
         except Exception as e:

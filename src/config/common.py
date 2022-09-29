@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'src.wsgi.application'
 
 EMAIL_HOST = "in-v3.mailjet.com"
 EMAIL_PORT = 587
-EMAIL_FROM = "horlahlekhon@gmail.com"
+EMAIL_FROM = "admin@carpadi.com"
 EMAIL_HOST_USER = "effd16db611dab2e8a9d7515e6caf7d9"
 EMAIL_HOST_PASSWORD = "462488cdc685193b657ed4dafbf5633e"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if TESTING else "django.core.mail.backends.smtp.EmailBackend"
