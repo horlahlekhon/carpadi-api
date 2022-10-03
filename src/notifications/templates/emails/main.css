@@ -1,0 +1,18 @@
+body {
+    margin: 0;
+}
+
+img {
+    border: 0;
+}
+
+ul {
+    list-style: none;
+}
+table {
+    border-spacing: 0;
+}
+
+td {
+    padding: 0;
+}
