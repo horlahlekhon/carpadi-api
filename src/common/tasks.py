@@ -1,23 +1,18 @@
-import json
 from decimal import Decimal
 from pprint import pprint
-from typing import Callable, Union
-from django.conf import settings
+from typing import Union
 
-import mailchimp_transactional as MailchimpTransactional
-from celery import task
+from celery import task, Celery, shared_task
+from celery.utils.log import get_task_logger
+from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from fcm_django.models import FCMDeviceQuerySet, FCMDevice, FirebaseResponseDict
+from fcm_django.models import FCMDeviceQuerySet, FCMDevice
 from firebase_admin.exceptions import FirebaseError
 from firebase_admin.messaging import Notification, Message, SendResponse, AndroidConfig, AndroidNotification
-from mailchimp_transactional.api_client import ApiClientError
 
 # from django.core.mail import EmailMultiAlternatives
-from src.common.utils import CustomJsonEncoder
-from src.models.models import Transaction, Car, CarStates, CarDocuments
-
-from celery.utils.log import get_task_logger
+from src.models.models import Car, CarStates, CarDocuments
 
 logger = get_task_logger(__name__)
 
@@ -47,7 +42,7 @@ def send_push_notification_task(context, to: str):
     try:
         devices: FCMDeviceQuerySet = FCMDevice.objects.filter(user_id=to).distinct("registration_id")
         context["sender"] = "Emeka from Carpadi"
-        body = json.dumps(context, cls=CustomJsonEncoder)
+        body = {k: str(v) for k, v in context.items()}
         no = AndroidNotification(
             click_action="FLUTTER_NOTIFICATION_CLICK",
         )
@@ -58,7 +53,7 @@ def send_push_notification_task(context, to: str):
         success = 0
         failed = 0
         for device in devices:
-            msg = Message(token=device.registration_id, android=android, notification=notice, data=context)
+            msg = Message(token=device.registration_id, android=android, notification=notice, data=body)
             logger.info(f"sending: \n {str(msg)}")
             resp: Union[SendResponse, None, FirebaseError] = device.send_message(
                 message=msg,
@@ -66,7 +61,7 @@ def send_push_notification_task(context, to: str):
             if isinstance(resp, FirebaseError):
                 logger.info(f"Notification sending failed : {resp}")
                 failed += 1
-            elif isinstance(resp, SendResponse) and resp.success:
+            if isinstance(resp, SendResponse) and resp.success:
                 logger.info(f"Notification sent success: {resp.success}")
                 success += 1
             else:
@@ -138,7 +133,7 @@ def close_trade(trade):
     ...
 
 
-@task
+@shared_task
 def check_cars_with_completed_documentations():
     cars = Car.objects.filter(status__in=(CarStates.Inspected,))
     updated = 0
@@ -150,3 +145,13 @@ def check_cars_with_completed_documentations():
             updated += 1
     logger.info(f"Updated {updated} cars to available for trade....")
     return updated
+
+
+# app = Celery()
+#
+#
+# @app.on_after_configure.connect
+# def setup_periodic_tasks(sender, **kwargs):
+#     # Calls test('hello') every 10 seconds.
+#     # Calls test('world') every 30 seconds
+#     sender.add_periodic_task(30.0, check_cars_with_completed_documentations.s(), expires=10)

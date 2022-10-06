@@ -5,6 +5,7 @@ import os
 from celery import Celery
 from django.conf import settings
 
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "src.config.local")
 
 app = Celery('src.config')

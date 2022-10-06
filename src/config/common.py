@@ -445,3 +445,13 @@ FCM_DJANGO_SETTINGS = {
     # "Update of device with duplicate registration ID" for more details.
     "UPDATE_ON_DUPLICATE_REG_ID": True,
 }
+
+from celery.schedules import crontab
+# from src.common.tasks import check_cars_with_completed_documentations
+
+CELERY_BEAT_SCHEDULE = {
+    "sample_task": {
+        "task": "src.common.tasks.check_cars_with_completed_documentations",
+        "schedule": crontab(minute="*/1"),
+    },
+}

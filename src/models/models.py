@@ -43,6 +43,7 @@ class Base(UUIDModel, TimeStampedModel):
 
     class Meta:
         abstract = True
+        ordering = ('-created',)
 
 
 class UserTypes(models.TextChoices):
