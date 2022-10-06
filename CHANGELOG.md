@@ -1,3 +1,10 @@
+## [1.10.2](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.1...v1.10.2) (2022-10-06)
+
+
+### Bug Fixes
+
+* implement firebase ([ee3a124](https://github.com/horlahlekhon/carpadi-api/commit/ee3a124e503dc5867e7252f1b5edfd3d71ab669c))
+
 ## [1.10.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.0...v1.10.1) (2022-09-29)
 
 
