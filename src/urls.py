@@ -42,7 +42,7 @@ urlpatterns = [
     # admin panel
     path('admin/', admin.site.urls),
     url(r'^jet/', include('jet.urls', 'jet')),  # Django JET URLS
-    path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
+    # path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
     # summernote editor
     path('summernote/', include('django_summernote.urls')),
     # api
