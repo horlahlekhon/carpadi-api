@@ -1,3 +1,10 @@
+## [1.10.3](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.2...v1.10.3) (2022-10-06)
+
+
+### Bug Fixes
+
+* technician registeration failing with limiter_type keyerror ([27f605e](https://github.com/horlahlekhon/carpadi-api/commit/27f605e6db6dd947dfd8f2eb3788dcea831fd483))
+
 ## [1.10.2](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.1...v1.10.2) (2022-10-06)
 
 
