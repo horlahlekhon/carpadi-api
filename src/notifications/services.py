@@ -92,14 +92,16 @@ def _send_firebase(notification_config, context):
 
 def notify(verb, **kwargs):
     notification_config = NOTIFICATIONS.get(verb)
-    if "email" in notification_config.keys():
-        email_notification_config = notification_config.get('email')
-        email_to = kwargs.get('user', [])
-        if not email_to:
-            logger.debug('Please provide list of emails (email_to argument).')
-        _send_email(email_notification_config, kwargs)
-    if "in_app" in notification_config.keys():
-        _send_firebase(notification_config, kwargs)
+    if not settings.TESTING:
+        if "email" in notification_config.keys():
+            email_notification_config = notification_config.get('email')
+            email_to = kwargs.get('user', [])
+            if not email_to:
+                logger.debug('Please provide list of emails (email_to argument).')
+            _send_email(email_notification_config, kwargs)
+        if "in_app" in notification_config.keys():
+            _send_firebase(notification_config, kwargs)
+    return None
 
 
 # Use only with actstream activated

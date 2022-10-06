@@ -203,6 +203,17 @@ class CarSerializer(serializers.ModelSerializer):
         if validated_data.get("status") == CarStates.Available:
             validated_data["total_cost"] = instance.total_cost_calc()
             validated_data["maintenance_cost"] = instance.maintenance_cost_calc()
+        if (
+            validated_data.get("bought_price")
+            and validated_data.get("bought_price") > Decimal(0.00)
+            and instance.inspections.status == InspectionStatus.Completed
+            and CarDocuments.documentation_completed(instance.id)
+        ):
+            validated_data[
+                "status"
+            ] = (
+                CarStates.Available
+            )  # TODO add cron to periodically check for cars that have all requirement for available for tade and set status to available noqa
         return super().update(instance, validated_data)
 
 
@@ -344,7 +355,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             raise serializers.ValidationError("Inspection is not completed yet, trade cannot be created")
         if not CarDocuments.documentation_completed(car.id):
             raise serializers.ValidationError(
-                "Some documents have either not " "being uploaded or not yet verified, please contact admin"
+                "Some documents have either not being uploaded or not yet verified, please contact admin"
             )
         if car.status != CarStates.Available:
             raise serializers.ValidationError("Car is not available for trade")

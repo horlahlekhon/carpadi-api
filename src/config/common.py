@@ -6,8 +6,8 @@ import dotenv
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-APP_ENV = os.getenv("APP_ENV", default="dev")
-TESTING = True if APP_ENV.lower() == "test" else False
+APP_ENV = os.getenv("APP_ENV", default="test")
+TESTING = APP_ENV.lower() == "test"
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # if not TESTING:
@@ -23,6 +23,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'jet.dashboard',
     'jet',
     'django.contrib.admin',
     # Third party apps
@@ -84,7 +85,7 @@ EMAIL_HOST = "in-v3.mailjet.com"
 EMAIL_PORT = 587
 EMAIL_FROM = "admin@carpadi.com"
 EMAIL_HOST_USER = "effd16db611dab2e8a9d7515e6caf7d9"
-EMAIL_HOST_PASSWORD = "462488cdc685193b657ed4dafbf5633e"
+EMAIL_HOST_PASSWORD = "44c3b9a23917b98d50913d884c940782"  # 44c3b9a23917b98d50913d884c940782
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if TESTING else "django.core.mail.backends.smtp.EmailBackend"
 
 # EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')

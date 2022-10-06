@@ -154,11 +154,11 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             # t = threading.Thread(target=seed_func)
             # t.setDaemon(True)
             # t.start()
-            unit: TradeUnit = TradeUnit.objects.filter(merchant__user_id="c9eee4be-eea2-4672-88b5-705ac5990827").first()
+            unit: TradeUnit = TradeUnit.objects.filter(merchant__user_id="176c67aa-fa6b-4e21-b3eb-55839127a3b9").first()
             notice = Notifications.objects.create(
-                notice_type=NotificationTypes.NewTrade,
+                notice_type=NotificationTypes.TradeUnit,
                 user=unit.merchant.user,
-                message="This is a dummy message dont take shit serious abeg",
+                message="Ok, Just take a chill, you will eventually come!!",
                 is_read=False,
                 entity_id=unit.id,
             )

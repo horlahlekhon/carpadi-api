@@ -66,16 +66,16 @@ class TransactionPinSerializers(serializers.ModelSerializer):
         pin = validated_data["pin"]
         active_pins = user.transaction_pins.filter(status=TransactionPinStatus.Active)
         if len(active_pins) >= 3:
-            raise exceptions.NotAcceptable(
-                "User is already logged in on 3 devices," " please delete one of the logged in sessions."
-            )
-        if len(active_pins.filter(device_serial_number=device)) > 0:
-            # user have a pin on this device but tries to create with same device
-            raise serializers.ValidationError(
-                {"error": "You have a pin configured for this device already," " only one pin can be used on one device"}
-            )
+            raise exceptions.NotAcceptable("User is already logged in on 3 devices, please delete one of the logged in sessions.")
+        if device_exists := TransactionPin.objects.filter(device_serial_number=device).first():
+            device_exists.pin = pin
+            device_exists.user_id = user.id
+            device_exists.status = TransactionPinStatus.Active
+            device_exists.save(update_fields=["pin", "user_id", "status"])
+            device_exists.refresh_from_db()
+            return device_exists
         if len(active_pins.filter(pin=pin)) > 0:
-            raise serializers.ValidationError({"error": "Pin already belong to one of your devices, please use " "another one"})
+            raise serializers.ValidationError({"error": "Pin already belong to one of your devices, please use another one"})
         validated_data["pin"] = pin
         validated_data["status"] = TransactionPinStatus.Active
         return TransactionPin.objects.create(**validated_data)

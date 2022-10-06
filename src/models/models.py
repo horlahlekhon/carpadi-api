@@ -12,7 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -1310,7 +1310,7 @@ class File(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
-class RequiredCarDocuments(models.TextChoices):
+class CarDocumentsTypes(models.TextChoices):
     ProofOfOwnership = "proof_of_ownership", _("Proof of ownership document")
     AllocationOfLicensePlate = "allocation_of_licence_plate", _(
         "Allocation of plate number",
@@ -1329,6 +1329,7 @@ class RequiredCarDocuments(models.TextChoices):
         "Insurance papers",
     )
     RoadWorthiness = "road_worthiness", _("Road worthiness permit")
+    Others = "others", _("Other custom documents that are not required")
 
 
 class CarDocuments(Base):
@@ -1337,9 +1338,14 @@ class CarDocuments(Base):
     name = models.CharField(max_length=50)
     asset = models.OneToOneField(Assets, on_delete=models.SET_NULL, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    document_type = models.CharField(max_length=40, choices=RequiredCarDocuments.choices)
+    document_type = models.CharField(max_length=40, choices=CarDocumentsTypes.choices)
 
     @classmethod
     def documentation_completed(cls, car: str) -> bool:
-        docs = CarDocuments.objects.filter(car__id=car, is_verified=True).distinct("document_type").count()
-        return len(RequiredCarDocuments.choices) == docs
+        docs = (
+            CarDocuments.objects.filter(car__id=car, is_verified=True)
+            .filter(~Q(document_type=CarDocumentsTypes.Others))
+            .distinct("document_type")
+            .count()
+        )
+        return len(CarDocumentsTypes.choices) == docs
