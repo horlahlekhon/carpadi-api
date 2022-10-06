@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.0...v1.10.1) (2022-09-29)
+
+
+### Bug Fixes
+
+* linting ([ce43088](https://github.com/horlahlekhon/carpadi-api/commit/ce430885fa0f2a98d3d26660ac05d95fa8a950ff))
+
 # [1.10.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.9.0...v1.10.0) (2022-09-28)
 
 
