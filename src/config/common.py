@@ -447,6 +447,7 @@ FCM_DJANGO_SETTINGS = {
 }
 
 from celery.schedules import crontab
+
 # from src.common.tasks import check_cars_with_completed_documentations
 
 CELERY_BEAT_SCHEDULE = {
