@@ -60,7 +60,7 @@ def check_cars_with_completed_documentations():
     cars = Car.objects.filter(status__in=(CarStates.Inspected,))
     updated = 0
     for car in cars:
-        docs = CarDocuments.documentation_completed(car)
+        docs = CarDocuments.documentation_completed(car.id)
         if docs and car.bought_price > Decimal(0.00):
             car.status = CarStates.Available
             car.save(update_fields=["status"])
