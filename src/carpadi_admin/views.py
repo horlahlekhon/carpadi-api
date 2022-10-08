@@ -288,8 +288,7 @@ class CarDocumentsViewset(viewsets.ModelViewSet):
     filter_class = CarDocumentsFilter
 
     def get_serializer(self, *args, **kwargs):
-        """ if an array is passed, set serializer to many """
+        """if an array is passed, set serializer to many"""
         if isinstance(self.request.data, list):
             kwargs['many'] = True
         return super(CarDocumentsViewset, self).get_serializer(*args, **kwargs)
-
