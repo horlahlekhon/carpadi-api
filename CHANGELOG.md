@@ -1,3 +1,10 @@
+## [1.10.9](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.8...v1.10.9) (2022-10-08)
+
+
+### Bug Fixes
+
+* fix notification not sending push ([d24852b](https://github.com/horlahlekhon/carpadi-api/commit/d24852bdfc1e0221332cf302046a9f26377fb8a1))
+
 ## [1.10.8](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.7...v1.10.8) (2022-10-08)
 
 
