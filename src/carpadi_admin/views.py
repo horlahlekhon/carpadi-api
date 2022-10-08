@@ -287,5 +287,9 @@ class CarDocumentsViewset(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = CarDocumentsFilter
 
-    def perform_create(self, serializer):
-        ...
+    def get_serializer(self, *args, **kwargs):
+        """ if an array is passed, set serializer to many """
+        if isinstance(self.request.data, list):
+            kwargs['many'] = True
+        return super(CarDocumentsViewset, self).get_serializer(*args, **kwargs)
+
