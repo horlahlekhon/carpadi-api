@@ -1,3 +1,10 @@
+## [1.10.8](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.7...v1.10.8) (2022-10-08)
+
+
+### Bug Fixes
+
+* bugs and added search features to list endpoints, also implemented email verification and merchant approval for admin ([f46cead](https://github.com/horlahlekhon/carpadi-api/commit/f46ceadaf62f178e8ac37cabf1a8ad6d81acd4d1))
+
 ## [1.10.7](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.6...v1.10.7) (2022-10-06)
 
 
