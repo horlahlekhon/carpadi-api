@@ -31,9 +31,17 @@ from src.models.models import (
     Transaction,
     TradeUnit,
     Notifications,
+    logger,
 )
 
 User = get_user_model()
+
+
+def is_valid_phone(phone):
+    if re.search(r'\+?[\d]{3}[\d]{10}', phone):
+        return phone
+    else:
+        raise serializers.ValidationError("Invalid phone number, phone number should match format: +234 000 000 0000")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -60,7 +68,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.URLField(required=False)
     # tokens = serializers.SerializerMethodField()
     phone = serializers.CharField(max_length=15, required=True)
-    email = serializers.EmailField(required=True)
+    email = serializers.EmailField(required=True, max_length=255)
     birth_date = serializers.DateField(required=False)
     username = serializers.CharField(required=False)
     user_type = serializers.ChoiceField(required=True, choices=UserTypes.choices)
@@ -90,7 +98,17 @@ class CreateUserSerializer(serializers.ModelSerializer):
             else:
                 raise exceptions.ValidationError("Invalid user type")
         except IntegrityError as reason:
-            raise exceptions.ValidationError("phone or email or username already exists", 400) from reason
+            logger.error(f"An error occur : {reason}")
+            unique_violator = None
+            if "username" in reason.args[0]:
+                unique_violator = "username"
+            elif "email" in reason.args[0]:
+                unique_violator = "email"
+            elif "phone" in reason.args[0]:
+                unique_violator = "phone"
+            else:
+                raise exceptions.APIException("A fatal error occur, this will be reported, please try again later.") from reason
+            raise exceptions.ValidationError(f"{unique_violator} already exists", 400) from reason
         return user
 
     # def update(self, instance, validated_data):
@@ -116,13 +134,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 
-def is_valid_phone(phone):
-    if is_valid := re.search(r'\+?[\d]{3}[\d]{10}', phone):
-        return phone
-    else:
-        raise serializers.ValidationError("Invalid phone number, phone number should match format: +234 000 000 0000")
-
-
 class PhoneVerificationSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=6, required=True)
     phone = serializers.CharField(validators=(is_valid_phone,), max_length=15)
@@ -132,8 +143,10 @@ class PhoneVerificationSerializer(serializers.Serializer):
         return user.get_tokens(self.validated_data["device_imei"])
 
     def validate(self, attrs):
-        if not (user := User.objects.filter(phone=attrs["phone"]).first()):
+        user = User.objects.filter(phone=attrs["phone"]).first()
+        if not user:
             raise serializers.ValidationError(f"User with the phone {attrs['phone']} does not exist")
+        attrs["user"] = user
         otp = user.otps.latest()
         if otp.expiry > now() and otp.otp == attrs["token"]:
             pass
@@ -145,26 +158,50 @@ class PhoneVerificationSerializer(serializers.Serializer):
 
     @transaction.atomic()
     def create(self, validated_data):
-        user: User = User.objects.get(phone=validated_data["phone"])
-        user_wallet = Wallet.objects.filter(merchant=user.merchant)
-        if not user.is_active or len(user_wallet) <= 0:
-            user.is_active = True
-            if user.user_type == UserTypes.CarMerchant and len(user_wallet) < 1:
-                # we have validated user, lets create the wallet
-                Wallet.objects.create(
-                    merchant=user.merchant,
-                    balance=Decimal(0),
-                    trading_cash=Decimal(0),
-                    withdrawable_cash=Decimal(0),
-                    unsettled_cash=Decimal(0),
-                    total_cash=Decimal(0),
-                )
-            user.save(update_fields=["is_active"])
-            user.refresh_from_db()
+        user: User = validated_data["user"]
+        merchant: CarMerchant = user.merchant
+        user_wallet = Wallet.objects.filter(merchant=merchant).first()
+        if not user_wallet and user.user_type == UserTypes.CarMerchant:
+            Wallet.objects.get_or_create(
+                merchant=user.merchant,
+                balance=Decimal(0),
+                trading_cash=Decimal(0),
+                withdrawable_cash=Decimal(0),
+                unsettled_cash=Decimal(0),
+                total_cash=Decimal(0),
+            )
+        merchant.phone_verified = True
+        merchant.save(update_fields=["phone_verified"])
+        user.is_active = True
+        user.save(update_fields=["is_active"])
         return user
 
     class Meta:
         fields = ('token', "device_imei")
+
+
+class EmailVerificationSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True, min_length=6, max_length=6)
+
+    def validate(self, attrs):
+        user: User = self.context.get("user")
+        if user:
+            otp = user.otps.latest()
+            if otp.expiry > now() and otp.otp == attrs["token"]:
+                attrs["merchant"] = user.merchant
+                return attrs
+            elif otp.expiry < now() and otp.otp == attrs["token"]:
+                raise serializers.ValidationError("Otp has expired", 400)
+            else:
+                raise serializers.ValidationError("Invalid OTP", 400)
+        logger.error(f"user not found, serializer context: {self.context}")
+        raise exceptions.APIException("Unable to verify the token, please try again later")
+
+    def create(self, validated_data):
+        merchant: CarMerchant = validated_data.get("merchant")
+        merchant.email_verified = True
+        merchant.save(update_fields=["email_verified"])
+        return merchant
 
 
 class CarMerchantSerializer(serializers.ModelSerializer):

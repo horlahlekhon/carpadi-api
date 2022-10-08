@@ -3,6 +3,7 @@ import logging
 from actstream import action
 from django.conf import settings
 
+from src.common.tasks import send_email_notification_taskp, send_push_notification_taskp
 from src.models.models import User
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,13 @@ NOTIFICATIONS = {
         "notice_type": "new_user",
         'email': {
             'email_subject': 'Verify phone',
+            'email_html_template': 'emails/verify_phone.html',
+        },
+    },
+    "USER_EMAIL_VERIFICATION": {
+        "notice_type": "email_verification",
+        'email': {
+            'email_subject': 'Verify email',
             'email_html_template': 'emails/verify_phone.html',
         },
     },

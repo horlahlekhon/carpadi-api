@@ -702,6 +702,7 @@ class MerchantDashboardSerializer(serializers.Serializer):
     total_users = serializers.SerializerMethodField()
     active_users = serializers.SerializerMethodField()
     inactive_users = serializers.SerializerMethodField()
+    unapproved_users = serializers.SerializerMethodField()
 
     def get_total_users(self, value):
         """The total amount of users in the system"""
@@ -710,6 +711,9 @@ class MerchantDashboardSerializer(serializers.Serializer):
     def get_active_users(self, value):
         """The total amount of active users in the system"""
         return TradeUnit.objects.filter(merchant__user__is_active=True).values('merchant').distinct().count()
+
+    def get_unapproved_users(self, value):
+        return CarMerchant.objects.filter(is_approved=False).count()
 
     def get_inactive_users(self, value):
         """The total amount of inactive users in the system"""

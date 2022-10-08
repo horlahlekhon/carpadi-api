@@ -85,7 +85,7 @@ EMAIL_HOST = "in-v3.mailjet.com"
 EMAIL_PORT = 587
 EMAIL_FROM = "admin@carpadi.com"
 EMAIL_HOST_USER = "effd16db611dab2e8a9d7515e6caf7d9"
-EMAIL_HOST_PASSWORD = "44c3b9a23917b98d50913d884c940782"  # 44c3b9a23917b98d50913d884c940782
+EMAIL_HOST_PASSWORD = "1324403edf626ee9e5d9e0949d01d037"  # 44c3b9a23917b98d50913d884c940782
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if TESTING else "django.core.mail.backends.smtp.EmailBackend"
 
 # EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
@@ -404,7 +404,7 @@ DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
 FLW_PUBLIC_KEY = os.getenv('FLUTTER_WAVE_PUBLIC_KEY', '')
 FLW_SECRET_KEY = os.getenv('FLUTTER_WAVE_SECRET_KEY', '')
 FLW_REDIRECT_URL = os.getenv(
-    'PAYMENT_REDIRECT_URL', 'https://026d-154-118-25-206.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
+    'PAYMENT_REDIRECT_URL', 'https://fd2f-197-242-99-139.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
 )
 FLW_PAYMENT_URL = os.getenv('PAYMENT_URL', "https://api.flutterwave.com/v3/payments")
 FLW_PAYMENT_VERIFY_URL = "https://api.flutterwave.com/v3/transactions/{}/verify".format
@@ -456,3 +456,6 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute="*/1"),
     },
 }
+
+BULK_SMS_API_KEY = "fwFidxGn1ATSvjvUoaEO85DYk1rKIpTQARfebvG4GNi7QvJyicRupmF6A44a"
+BULK_SMS_API_BASE_URL = "https://www.bulksmsnigeria.com/api/v1/sms/create"

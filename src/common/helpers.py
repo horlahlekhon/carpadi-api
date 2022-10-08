@@ -14,5 +14,5 @@ def check_vin(vin: str):
     js = response.json()
     if response.status_code == 200 and js["message"]["message"] == "ok":
         return js["data"]
-    logger.debug(f"Try to check vin for vin {vin}. resp: {js}")
+    logger.debug(f"Try to check vehicle details for vin {vin}. resp: {js}")
     return None

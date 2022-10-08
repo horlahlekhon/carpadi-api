@@ -76,7 +76,7 @@ class TransactionsViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     filter_class = TransactionsFilterAdmin
 
 
-class CarMerchantsViewSetAdmin(viewsets.ReadOnlyModelViewSet):
+class CarMerchantsViewSetAdmin(viewsets.ReadOnlyModelViewSet, mixins.UpdateModelMixin):
     permission_classes = (IsAdminUser,)
     serializer_class = CarMerchantAdminSerializer
     queryset = CarMerchant.objects.all()
@@ -286,3 +286,6 @@ class CarDocumentsViewset(viewsets.ModelViewSet):
     permission_classes = (IsAdminUser,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = CarDocumentsFilter
+
+    def perform_create(self, serializer):
+        ...

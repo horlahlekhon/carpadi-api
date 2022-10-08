@@ -96,6 +96,21 @@ class TradeFilterAdmin(filters.FilterSet):
     updated_date_range = filters.DateTimeFromToRangeFilter(field_name="modified")
 
     trade_status = filters.ChoiceFilter(field_name="trade_status", lookup_expr='iexact', choices=TradeStates.choices)
+    search = filters.CharFilter(field_name="car", method="search_trade")
+
+    def search_trade(self, queryset, name, value):
+        return queryset.filter(
+            Q(car__information__brand__model__icontains=value)
+            | Q(car__information__brand__name__icontains=value)
+            | Q(car__information__brand__year__iexact=value)
+            | Q(car__information__manufacturer__icontains=value)
+            | Q(car__information__transmission__icontains=value)
+            | Q(car__information__fuel_type__icontains=value)
+            | Q(car__information__car_type__icontains=value)
+            | Q(car__vin__icontains=value)
+            | Q(car__name__icontains=value)
+            | Q(car__licence_plate__icontains=value)
+        )
 
     class Meta:
         model = Trade
@@ -122,6 +137,17 @@ class VehicleInfoFilter(filters.FilterSet):
 
 class CarMerchantFilter(filters.FilterSet):
     trading_status = filters.ChoiceFilter(method="trading_status_filter", choices=UserStatusFilterChoices.choices)
+    search = filters.CharFilter(field_name="search", method="search_field")
+
+    def search_field(self, queryset, name, value):
+        return queryset.filter(
+            Q(user__first_name__icontains=value)
+            | Q(user__last_name__icontains=value)
+            | Q(user__username__icontains=value)
+            | Q(user__email__icontains=value)
+            | Q(user__phone__icontains=value)
+            | Q(user__username__icontains=value)
+        )
 
     def trading_status_filter(self, queryset, name, value):
         merchants: QuerySet = (

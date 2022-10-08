@@ -17,7 +17,13 @@ class CarProductFilter(filters.FilterSet):
 
     def search_field(self, queryset, name, value):
         return queryset.filter(
-            Q(car__make__icontains=value) | Q(car__model__icontains=value) | Q(car__manufacturer__icontains=value)
+            Q(car__information__brand__model__icontains=value)
+            | Q(car__information__manufacturer__icontains=value)
+            | Q(car__information__fuel_type__icontains=value)
+            | Q(car__information__car_type__icontains=value)
+            | Q(car__vin__icontains=value)
+            | Q(car__name__icontains=value)
+            | Q(car__licence_plate__icontains=value)
         )
 
     class Meta:

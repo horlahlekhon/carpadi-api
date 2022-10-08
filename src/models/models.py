@@ -55,8 +55,23 @@ class User(AbstractUser, Base):
     username_validator = UnicodeUsernameValidator()
     profile_picture = models.OneToOneField("Assets", on_delete=models.SET_NULL, null=True, blank=True)
     user_type = models.CharField(choices=UserTypes.choices, max_length=20)
-    phone = models.CharField(max_length=15, unique=True, help_text="International format phone number")
+    phone = models.CharField(
+        max_length=15,
+        unique=True,
+        help_text="International format phone number",
+        error_messages={
+            'unique': _("A user with that phone number already exists."),
+        },
+    )
     username = models.CharField(max_length=50, validators=[username_validator], unique=True, null=True)
+    email = models.EmailField(
+        _('email address'),
+        blank=False,
+        unique=True,
+        error_messages={
+            'unique': _("A user with that email already exists."),
+        },
+    )
 
     def get_tokens(self, imei):
         #  the token here doesnt container IMEI
@@ -140,6 +155,9 @@ class UserStatusFilterChoices(models.TextChoices):
 class CarMerchant(Base):
     user: User = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
     bvn = models.CharField(max_length=14, null=True, blank=False, default=None)
+    phone_verified = models.BooleanField(default=False, null=False, blank=False)
+    email_verified = models.BooleanField(default=False, null=False, blank=False)
+    is_approved = models.BooleanField(default=False, null=False, blank=False)
 
     # class Meta:
 
@@ -1330,6 +1348,7 @@ class CarDocumentsTypes(models.TextChoices):
         "Insurance papers",
     )
     RoadWorthiness = "road_worthiness", _("Road worthiness permit")
+    CarOwnerIdentification = "owner_identification", _("Car Owner's document of identity")
     Others = "others", _("Other custom documents that are not required")
 
 
@@ -1344,9 +1363,6 @@ class CarDocuments(Base):
     @classmethod
     def documentation_completed(cls, car: str) -> bool:
         docs = (
-            CarDocuments.objects.filter(car__id=car, is_verified=True)
-            .filter(~Q(document_type=CarDocumentsTypes.Others))
-            .distinct("document_type")
-            .count()
+            CarDocuments.objects.filter(car__id=car, is_verified=True).filter(~Q(document_type=CarDocumentsTypes.Others)).count()
         )
-        return len(CarDocumentsTypes.choices) == docs
+        return len(CarDocumentsTypes.choices) - 1 == docs
