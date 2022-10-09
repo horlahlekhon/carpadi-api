@@ -288,7 +288,13 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             "price_per_slot",
             "min_sale_price",
         )
-        extra_kwargs = {"car": {"error_messages": {"required": "Car to trade on is required", "unique": "Car already " "traded"}}}
+        extra_kwargs = {
+            "car": {
+                "error_messages": {
+                    "required": "Car to trade on is required", "unique": "Car already " "traded"
+                }
+            }
+        }
 
     def get_estimated_carpadi_rot(self, trade: Trade):
         return trade.estimated_carpadi_rot()
@@ -378,11 +384,12 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     @atomic()
     def update(self, instance: Trade, validated_data):
         self.validate_trade_update(instance, validated_data)
+        initial_status = instance.trade_status
         updated_instance: Trade = super(TradeSerializerAdmin, self).update(instance, validated_data)
         if (
             "trade_status" in validated_data.keys()
             and updated_instance.trade_status == TradeStates.Completed
-            and instance.trade_status != TradeStates.Completed
+            and initial_status != TradeStates.Completed
         ):
             updated_instance.check_updates()
             updated_instance.refresh_from_db()

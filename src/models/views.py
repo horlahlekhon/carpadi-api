@@ -173,21 +173,21 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         Seed the database with some data
         """
         try:
-            # seed_type = str(request.query_params.get('type', None)).lower()
-            # seed_data = PadiSeeder(request=request)
-            # # seed_data.seed()
-            # seed_func = seed_data.seed if seed_type != "banks" else seed_data.seed_banks()
-            # t = threading.Thread(target=seed_func)
-            # t.setDaemon(True)
-            # t.start()
-            unit: TradeUnit = TradeUnit.objects.filter(merchant__user_id="176c67aa-fa6b-4e21-b3eb-55839127a3b9").first()
-            notice = Notifications.objects.create(
-                notice_type=NotificationTypes.TradeUnit,
-                user=unit.merchant.user,
-                message="Ok, Just take a chill, you will eventually come!!",
-                is_read=False,
-                entity_id=unit.id,
-            )
+            seed_type = str(request.query_params.get('type', None)).lower()
+            seed_data = PadiSeeder(request=request)
+            # seed_data.seed()
+            seed_func = seed_data.seed if seed_type != "banks" else seed_data.seed_banks()
+            t = threading.Thread(target=seed_func)
+            t.setDaemon(True)
+            t.start()
+            # unit: TradeUnit = TradeUnit.objects.filter(merchant__user_id="176c67aa-fa6b-4e21-b3eb-55839127a3b9").first()
+            # notice = Notifications.objects.create(
+            #     notice_type=NotificationTypes.TradeUnit,
+            #     user=unit.merchant.user,
+            #     message="Ok, Just take a chill, you will eventually come!!",
+            #     is_read=False,
+            #     entity_id=unit.id,
+            # )
 
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
