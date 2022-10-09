@@ -288,13 +288,7 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             "price_per_slot",
             "min_sale_price",
         )
-        extra_kwargs = {
-            "car": {
-                "error_messages": {
-                    "required": "Car to trade on is required", "unique": "Car already " "traded"
-                }
-            }
-        }
+        extra_kwargs = {"car": {"error_messages": {"required": "Car to trade on is required", "unique": "Car already " "traded"}}}
 
     def get_estimated_carpadi_rot(self, trade: Trade):
         return trade.estimated_carpadi_rot()

@@ -874,8 +874,7 @@ class Trade(Base):
             self.return_on_trade = self.return_on_trade_calc()
             self.run_disbursement()
             self.complete_trade()
-            update_fields = ["date_of_sale", "traders_bonus_per_slot",
-                             "carpadi_commission", "carpadi_bonus", "total_carpadi_rot"]
+            update_fields = ["date_of_sale", "traders_bonus_per_slot", "carpadi_commission", "carpadi_bonus", "total_carpadi_rot"]
             self.save(update_fields=update_fields)
 
     def complete_trade(self):
@@ -889,8 +888,7 @@ class Trade(Base):
         if successful_disbursements != self.units.count() or total_disbursed != self.total_payout():
             # TODO send notification for this, seems fatal
             raise exceptions.APIException(
-                detail="Error, cannot complete trade, because calculated "
-                       "payout seems to be unbalanced with the disbursements"
+                detail="Error, cannot complete trade, because calculated " "payout seems to be unbalanced with the disbursements"
             )
         car: Car = self.car
         car.update_on_sold()

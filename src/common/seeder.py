@@ -33,7 +33,8 @@ from src.models.models import (
     Inspections,
     InspectionStatus,
     Settings,
-    CarProduct, CarDocumentsTypes,
+    CarProduct,
+    CarDocumentsTypes,
 )
 
 PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00PVbKK4Nu2YLpiK3OliA="
@@ -76,8 +77,7 @@ class PadiSeeder:
             self.seeder.add_entity(
                 CarMerchant,
                 1,
-                {'user': lambda x: User.objects.get(pk=idx),
-                 'bvn': lambda x: f"{self.seeder.faker.random_number(digits=10)}"},
+                {'user': lambda x: User.objects.get(pk=idx), 'bvn': lambda x: f"{self.seeder.faker.random_number(digits=10)}"},
             )
 
             id1 = self.seeder.execute()[CarMerchant][0]
@@ -99,8 +99,7 @@ class PadiSeeder:
         return merch_ids
 
     def seed_admin(self):
-        if admin := User.objects.filter(user_type=UserTypes.Admin, is_active=True, is_staff=True,
-                                        username='lekan').first():
+        if admin := User.objects.filter(user_type=UserTypes.Admin, is_active=True, is_staff=True, username='lekan').first():
             self.admin = admin
             return [admin.id]
         else:
@@ -181,10 +180,14 @@ class PadiSeeder:
     def seed_car_documents(self, car):
         data = [
             dict(
-                car=str(car), name=str(name)[:50], document_type=value,
-                asset="https://d16encqm9nbktq.cloudfront.net/bmw.jpg", is_verified=True
+                car=str(car),
+                name=str(name)[:50],
+                document_type=value,
+                asset="https://d16encqm9nbktq.cloudfront.net/bmw.jpg",
+                is_verified=True,
             )
-            for value, name in CarDocumentsTypes.choices]
+            for value, name in CarDocumentsTypes.choices
+        ]
         doc_ser = CarDocumentsSerializer(data=data, many=True)
         doc_ser.is_valid(raise_exception=True)
         doc_ser.save()
@@ -252,8 +255,7 @@ class PadiSeeder:
         car.resale_price = car.bought_price + car.maintenance_cost_calc() + Decimal(5000)
         car.save(update_fields=["resale_price"])
         trade.refresh_from_db()
-        trade_serializer = TradeSerializerAdmin(
-            data=dict(trade_status=TradeStates.Completed.value), instance=trade, partial=True)
+        trade_serializer = TradeSerializerAdmin(data=dict(trade_status=TradeStates.Completed.value), instance=trade, partial=True)
         trade_serializer.is_valid(raise_exception=True)
         trade = trade_serializer.save()
         if should_close:
@@ -337,8 +339,7 @@ class PadiSeeder:
 
     def seed_settings(self):
         Settings.objects.create(
-            merchant_trade_rot_percentage=Decimal(5.00), carpadi_commision=Decimal(50.00),
-            bonus_percentage=Decimal(50.00)
+            merchant_trade_rot_percentage=Decimal(5.00), carpadi_commision=Decimal(50.00), bonus_percentage=Decimal(50.00)
         )
 
     def get_pictures(self, count):
