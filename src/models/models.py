@@ -1100,7 +1100,7 @@ class AssetEntityType(models.TextChoices):
     Car = "car", _("car picture")
     Merchant = "merchant", _("user profile picture")
     Trade = "trade", _("Trade pictures of a car")
-    Inspection = "car_inspection", _("Car inspection pictures")
+    InspectionStage = "car_inspection_stage", _("Picture taken for a particular stage during inspection")
     Features = "feature", _("Picture of a feature of a car")
     InspectionReport = "inspection_report", _("Pdf report of an inspected vehicle")
     CarSparePart = "spare_part", _("Images of spare parts")

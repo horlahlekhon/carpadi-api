@@ -29,6 +29,7 @@ from src.models.models import (
     Assets,
     AssetEntityType,
     CarDocuments,
+    TradeStates,
 )
 from src.models.serializers import CreateUserSerializer
 from src.models.test.factories import WalletFactory
@@ -313,7 +314,38 @@ class TestTradeSerializer(BaseTest):
             ser.save()
         except Exception as reason:
             assert type(reason) == ValidationError
-            assert (
-                reason.args[0]
-                == "Some documents have either not being uploaded or not yet verified, please contact admin', code='invalid'"
-            )
+            assert reason.args[0] == "Some documents have either not being uploaded or not yet verified, please contact admin"
+
+    def test_trade_creation_rejected_if_bought_price_is_not_set(self):
+        self.prepare_car(resale=Decimal(0.0), inspection=True, docs=True)
+        data = dict(car=self.car.id, slots_available=5)
+        ser = TradeSerializerAdmin(data=data)
+        valid = ser.is_valid()
+        try:
+            ser.save()
+        except Exception as reason:
+            assert type(reason) == ValidationError
+            assert reason.args[0] == "Please set the amount the car was bought for before creating a trade"
+
+    def test_trade_creation_rejected_if_slot_count_is_invalid(self):
+        self.prepare_car(resale=Decimal(0.0), inspection=True, docs=True, bought=Decimal(100000))
+        data = dict(car=self.car.id, slots_available=1)
+        ser = TradeSerializerAdmin(data=data)
+        valid = ser.is_valid()
+        try:
+            assert valid
+            ser.save()
+        except Exception as reason:
+            assert type(reason) == ValidationError
+            assert reason.args[0] == "The minimum amount of slot is four."
+
+    # def test_update_trade_successfully(self):
+    #     self.prepare_car(resale=Decimal(0.0), inspection=True, docs=True, bought=Decimal(100000))
+    #     data = dict(car=self.car.id, slots_available=1)
+    #     ser = TradeSerializerAdmin(data=data)
+    #     valid = ser.is_valid()
+    #     ser.save()
+    #     update = dict(trade_status=TradeStates.Closed)
+
+
+# class TestDashboard(Serializ)

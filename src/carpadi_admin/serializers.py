@@ -849,11 +849,14 @@ class HomeDashboardSerializer(serializers.Serializer):
         """
 
         cash = (
-            TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date)
+            TradeUnit.objects.filter(
+                created__date__gte=self.start_date,
+                created__date__lte=self.end_date,
+                trade__trade_status__in=(TradeStates.Purchased, TradeStates.Ongoing, TradeStates.Completed),
+            )
             .aggregate(value=Avg("unit_value"))
             .get("value")
         )
-
         return cash or Decimal(0.00)
 
     def get_total_available_shares(self, value):

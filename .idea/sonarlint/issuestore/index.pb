@@ -17,8 +17,6 @@ Q
 !src/notifications/channels/sms.py,2/8/28f272be6852948d66056ce33c520a0b2a464cb8
 S
 #src/notifications/channels/email.py,b/6/b69ddeff434029e492447907a01b2d01bca99183
-V
-&src/notifications/channels/firebase.py,3/1/314b689554bfdf68ea0abb9887a4928bb93be868
 E
 src/common/helpers.py,a/b/abd8679d374b6b70e0fd0152915a852a2a853b13
 I
@@ -29,10 +27,6 @@ I
 -src/models/templates/emails/email_verify.html,7/f/7f992c18880dd4497a895717bcc13aba428ced3d
 M
 src/carpadi_market/filters.py,1/1/11bc6cb7a1147bfd69c05499a58bbb6e1fcacd79
-M
-src/notifications/services.py,9/2/92df78e017b57344d6e7b2b23c1b6e8ac09b316b
-C
-src/common/tasks.py,2/7/272629e4b57a4541aa290ce42f62685f7b99b0cf
 D
 src/config/common.py,6/8/68899bfb818d703ad5db33ba3e4053b69597d2d0
 @
