@@ -1,3 +1,10 @@
+## [1.10.12](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.11...v1.10.12) (2022-10-16)
+
+
+### Bug Fixes
+
+* add filters to notifications ([91efde4](https://github.com/horlahlekhon/carpadi-api/commit/91efde4898ca5d9846059fd32ddf128953dacd01))
+
 ## [1.10.11](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.10...v1.10.11) (2022-10-09)
 
 
