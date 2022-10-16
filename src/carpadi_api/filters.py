@@ -13,6 +13,7 @@ from src.models.models import (
     TradeUnit,
     TradeStates,
     TransactionPin,
+    Notifications,
 )
 
 

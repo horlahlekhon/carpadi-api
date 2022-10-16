@@ -9,8 +9,4 @@ class NotificationsFilter(filters.FilterSet):
 
     class Meta:
         model = Notifications
-        # fields = ['trade', ]
-        fields = [
-            'user',
-            'read',
-        ]
+        fields = ('is_read', 'is_active', 'notice_type', 'title')
