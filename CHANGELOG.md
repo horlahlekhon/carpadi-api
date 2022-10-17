@@ -1,3 +1,10 @@
+## [1.10.13](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.12...v1.10.13) (2022-10-16)
+
+
+### Bug Fixes
+
+* add assets for inspection ([8ea0501](https://github.com/horlahlekhon/carpadi-api/commit/8ea0501e20ed36dd76aa2deda7b42371b92a101d))
+
 ## [1.10.12](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.11...v1.10.12) (2022-10-16)
 
 
