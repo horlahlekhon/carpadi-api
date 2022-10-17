@@ -6,7 +6,7 @@ from src.models.serializers import AssetsSerializer
 
 
 class InspectionStageSerializer(serializers.ModelSerializer):
-    pictures = serializers.ListField(child=serializers.URLField, required=False, default=[], write_only=True)
+    pictures = serializers.ListField(child=serializers.URLField(), required=False, default=[], write_only=True)
     images = serializers.SerializerMethodField()
 
     class Meta:

@@ -31,9 +31,5 @@ D
 src/config/common.py,6/8/68899bfb818d703ad5db33ba3e4053b69597d2d0
 @
 supervisord.conf,8/8/883306a7b009d117f95b2b178b5a8538cca68ea1
-L
-.github/workflows/deploy.yml,f/1/f130ad0d1d16d0d70ec30d355f736ae3784b05cf
-M
-.github/workflows/staging.yml,b/a/bab4ab334918c0184ab96fefdcc131c729cba0aa
 J
 src/carpadi_admin/views.py,8/b/8b799b33bfbeb42f1fe123efc02d32b0d0a97f49
