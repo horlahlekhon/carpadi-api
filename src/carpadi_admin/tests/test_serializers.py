@@ -196,7 +196,18 @@ class CarMaintenanceSerializerTest(TestCase):
         cls.admin: User = User.objects.create_superuser("admin", email="admin@localhost", password="passersby")
 
         cls.vehicle: VehicleInfo = VehicleFactory()
-        payload = dict(vin=cls.vehicle.vin, colour="pink", bought_price=Decimal("100000"))
+        payload = dict(
+            vin=cls.vehicle.vin,
+            colour="pink",
+            bought_price=Decimal("100000"),
+            car_pictures=[
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+            ],
+        )
         ser = CarSerializer(data=payload)
         is_valid = ser.is_valid()
         eq_(is_valid, True)
@@ -268,6 +279,18 @@ class TestTradeSerializer(BaseTest):
         )
         self.spare_part = SparePartFactory()
         self.car = self.inspection.car
+        payload = dict(
+            car_pictures=[
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+            ]
+        )
+        ser = CarSerializer(data=payload, partial=True, instance=self.car)
+        is_valid = ser.is_valid(raise_exception=True)
+        ser.save()
 
     def prepare_car(self, bought=Decimal(0.0), resale=Decimal(0.0), inspection=True, docs=True):
         self.car.bought_price = Decimal(bought or 100000)
@@ -337,7 +360,7 @@ class TestTradeSerializer(BaseTest):
             ser.save()
         except Exception as reason:
             assert type(reason) == ValidationError
-            assert reason.args[0] == "The minimum amount of slot is four."
+            assert reason.args[0] == "The minimum amount of slot is 4."
 
     # def test_update_trade_successfully(self):
     #     self.prepare_car(resale=Decimal(0.0), inspection=True, docs=True, bought=Decimal(100000))

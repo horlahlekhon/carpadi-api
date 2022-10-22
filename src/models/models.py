@@ -769,6 +769,10 @@ class Trade(Base):
         settings: Settings = Settings.objects.first()
         return self.return_on_trade_calc() * settings.carpadi_commision / 100
 
+    def carpadi_commission_per_slot(self):
+        settings: Settings = Settings.objects.first()
+        return self.return_on_trade_per_slot * settings.carpadi_commision / 100
+
     def carpadi_bonus_calc(self):
         return self.bonus_calc() - self.traders_bonus()
 
@@ -1000,10 +1004,13 @@ class TradeUnit(Base):
         deficit = Decimal(0)
         if self.trade.deficit_balance() > Decimal(0):
             deficit = (self.trade.deficit_balance() / self.trade.slots_available) * self.slots_quantity
+        base_rot_minus_carpadi_commission = self.trade.return_on_trade_per_slot * self.slots_quantity - (
+            self.trade.carpadi_commission_per_slot() * self.slots_quantity
+        )  # noqa
         base_payout = (
-            (self.trade.return_on_trade_per_slot * self.slots_quantity)
+            base_rot_minus_carpadi_commission
             + self.unit_value
-            + (self.trade.traders_bonus_per_slot * self.slots_quantity)
+            + (self.trade.traders_bonus_per_slot * self.slots_quantity)  # noqa
         )
         return base_payout - deficit
 

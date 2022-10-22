@@ -404,7 +404,7 @@ DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
 FLW_PUBLIC_KEY = os.getenv('FLUTTER_WAVE_PUBLIC_KEY', '')
 FLW_SECRET_KEY = os.getenv('FLUTTER_WAVE_SECRET_KEY', '')
 FLW_REDIRECT_URL = os.getenv(
-    'PAYMENT_REDIRECT_URL', 'https://fd2f-197-242-99-139.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
+    'PAYMENT_REDIRECT_URL', 'https://a670-41-217-100-193.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
 )
 FLW_PAYMENT_URL = os.getenv('PAYMENT_URL', "https://api.flutterwave.com/v3/payments")
 FLW_PAYMENT_VERIFY_URL = "https://api.flutterwave.com/v3/transactions/{}/verify".format

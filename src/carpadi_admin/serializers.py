@@ -215,6 +215,8 @@ class CarSerializer(serializers.ModelSerializer):
             ] = (
                 CarStates.Available
             )  # TODO add cron to periodically check for cars that have all requirement for available for tade and set status to available noqa
+        images = validated_data.get("car_pictures") or []
+        Assets.create_many(images=images, feature=instance, entity_type=AssetEntityType.Car)
         return super().update(instance, validated_data)
 
 

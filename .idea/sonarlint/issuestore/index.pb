@@ -23,5 +23,3 @@ E
 -src/models/templates/emails/email_verify.html,7/f/7f992c18880dd4497a895717bcc13aba428ced3d
 M
 src/carpadi_market/filters.py,1/1/11bc6cb7a1147bfd69c05499a58bbb6e1fcacd79
-@
-supervisord.conf,8/8/883306a7b009d117f95b2b178b5a8538cca68ea1
