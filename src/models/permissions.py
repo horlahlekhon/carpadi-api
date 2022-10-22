@@ -25,7 +25,7 @@ class IsApprovedMerchant(permissions.BasePermission):
         dd = request.user.is_merchant() and request.user.is_authenticated
         return dd and request.user.merchant.is_approved
 
-class IsAdmin(permissions.BasePermission):
 
+class IsAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_superuser

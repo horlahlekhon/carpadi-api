@@ -52,7 +52,10 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         'verify_phone': (AllowAny,),
         'seed': (AllowAny,),
         'verify_email': (IsAuthenticated,),
-        'get_inspectors': (IsAuthenticated, IsAdmin,),
+        'get_inspectors': (
+            IsAuthenticated,
+            IsAdmin,
+        ),
     }
 
     def get_serializer_class(self):

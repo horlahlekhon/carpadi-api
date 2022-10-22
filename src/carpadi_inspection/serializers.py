@@ -35,7 +35,6 @@ class InspectionStageSerializer(serializers.ModelSerializer):
 
 
 class InspectorSerializerField(serializers.RelatedField):
-
     def to_representation(self, value: User):
         return dict(username=value.username, id=value.id, phone=value.phone, email=value.email)
 
@@ -47,8 +46,7 @@ class InspectorSerializerField(serializers.RelatedField):
 
 
 class InspectionSerializer(serializers.ModelSerializer):
-    inspector = InspectorSerializerField(
-        required=True, queryset=User.objects.filter(is_staff=True, is_active=True))
+    inspector = InspectorSerializerField(required=True, queryset=User.objects.filter(is_staff=True, is_active=True))
 
     class Meta:
         model = Inspections

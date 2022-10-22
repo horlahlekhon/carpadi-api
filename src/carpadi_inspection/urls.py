@@ -6,4 +6,3 @@ router = DefaultRouter()
 router.register(r'inspections', InspectionsViewSet)
 router.register(r'stages', InspectionStagesViewSet)
 router.register(r'inspectors', InspectorsViewset)
-

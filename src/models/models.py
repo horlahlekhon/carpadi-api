@@ -1363,8 +1363,6 @@ class CarDocuments(Base):
     @classmethod
     def documentation_completed(cls, car: str) -> bool:
         docs = (
-            CarDocuments.objects.filter(
-                car__id=car, is_verified=True).filter(~Q(document_type=CarDocumentsTypes.Others)
-                                                      ).count()
+            CarDocuments.objects.filter(car__id=car, is_verified=True).filter(~Q(document_type=CarDocumentsTypes.Others)).count()
         )
         return len(CarDocumentsTypes.choices) - 1 == docs

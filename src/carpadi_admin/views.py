@@ -58,7 +58,8 @@ from src.models.models import (
     CarProduct,
     VehicleInfo,
     Settings,
-    CarDocuments, User,
+    CarDocuments,
+    User,
 )
 from src.models.serializers import CarBrandSerializer, ActivitySerializer, UserSerializer
 
@@ -292,6 +293,3 @@ class CarDocumentsViewset(viewsets.ModelViewSet):
         if isinstance(self.request.data, list):
             kwargs['many'] = True
         return super(CarDocumentsViewset, self).get_serializer(*args, **kwargs)
-
-
-
