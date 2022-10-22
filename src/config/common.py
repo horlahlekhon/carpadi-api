@@ -459,3 +459,5 @@ CELERY_BEAT_SCHEDULE = {
 
 BULK_SMS_API_KEY = "fwFidxGn1ATSvjvUoaEO85DYk1rKIpTQARfebvG4GNi7QvJyicRupmF6A44a"
 BULK_SMS_API_BASE_URL = "https://www.bulksmsnigeria.com/api/v1/sms/create"
+MIN_SLOT_ALLOWED = 4
+MIN_CAR_PICTURES_FOR_TRADE = 5

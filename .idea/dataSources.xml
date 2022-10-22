@@ -8,7 +8,7 @@
       <jdbc-url>jdbc:postgresql://localhost:5432/postgres</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="carpad-dev@rds" uuid="b1d432b4-975f-413f-a013-3ea8c5aa5a52">
+    <data-source source="LOCAL" name="carpadi-dev@rds" uuid="a2a50ff8-f06b-4579-96a3-5960ddf5982f">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>

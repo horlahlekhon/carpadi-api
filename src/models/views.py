@@ -22,7 +22,7 @@ from src.common.seeder import PadiSeeder
 from src.config.common import OTP_EXPIRY
 from src.models.filters import NotificationsFilter
 from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant, NotificationTypes
-from src.models.permissions import IsUserOrReadOnly
+from src.models.permissions import IsUserOrReadOnly, IsAdmin
 from src.models.serializers import (
     CreateUserSerializer,
     UserSerializer,
@@ -52,6 +52,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         'verify_phone': (AllowAny,),
         'seed': (AllowAny,),
         'verify_email': (IsAuthenticated,),
+        'get_inspectors': (IsAuthenticated, IsAdmin,),
     }
 
     def get_serializer_class(self):

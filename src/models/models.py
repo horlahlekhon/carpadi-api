@@ -1228,7 +1228,7 @@ class Inspections(Base):
             PhoneNumberValidator,
         ],
     )
-    owners_review = models.CharField(max_length=50, null=True, blank=True)
+    owners_review = models.TextField()
     address = models.TextField()
     status = models.CharField(choices=InspectionStatus.choices, max_length=20, default=InspectionStatus.Pending)
     inspection_verdict = models.CharField(
@@ -1363,6 +1363,8 @@ class CarDocuments(Base):
     @classmethod
     def documentation_completed(cls, car: str) -> bool:
         docs = (
-            CarDocuments.objects.filter(car__id=car, is_verified=True).filter(~Q(document_type=CarDocumentsTypes.Others)).count()
+            CarDocuments.objects.filter(
+                car__id=car, is_verified=True).filter(~Q(document_type=CarDocumentsTypes.Others)
+                                                      ).count()
         )
         return len(CarDocumentsTypes.choices) - 1 == docs

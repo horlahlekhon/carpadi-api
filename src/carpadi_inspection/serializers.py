@@ -1,4 +1,7 @@
+import datetime
+
 from django.db.transaction import atomic
+from django.utils import timezone
 from rest_framework import serializers
 
 from src.models.models import InspectionStage, Inspections, User, CarStates, Assets, AssetEntityType
@@ -31,15 +34,31 @@ class InspectionStageSerializer(serializers.ModelSerializer):
         return stage
 
 
+class InspectorSerializerField(serializers.RelatedField):
+
+    def to_representation(self, value: User):
+        return dict(username=value.username, id=value.id, phone=value.phone, email=value.email)
+
+    def to_internal_value(self, data):
+        try:
+            return self.queryset.get(pk=data)
+        except User.DoesNotExist as e:
+            raise serializers.ValidationError(f"Inspector with id {data} does not exist") from e
+
+
 class InspectionSerializer(serializers.ModelSerializer):
+    inspector = InspectorSerializerField(
+        required=True, queryset=User.objects.filter(is_staff=True, is_active=True))
+
     class Meta:
         model = Inspections
         fields = "__all__"
 
-    def validate_inspector(self, attr: User):
-        if attr.is_staff:
-            return attr
-        raise serializers.ValidationError("inspector must be an admin user")
+    def validate_inspection_date(self, attr: datetime.datetime):
+        now = timezone.now()
+        if attr < now:
+            raise serializers.ValidationError("Inspection date must be in the future")
+        return attr
 
     @atomic
     def create(self, validated_data):
