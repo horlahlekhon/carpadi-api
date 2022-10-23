@@ -1,3 +1,10 @@
+## [1.10.17](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.16...v1.10.17) (2022-10-23)
+
+
+### Bug Fixes
+
+* add -m flag to memray ([c3e45c3](https://github.com/horlahlekhon/carpadi-api/commit/c3e45c3332a5648abf65ca25ae2c3e02cfe1ccda))
+
 ## [1.10.16](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.15...v1.10.16) (2022-10-22)
 
 
