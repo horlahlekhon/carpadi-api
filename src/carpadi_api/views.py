@@ -42,6 +42,7 @@ from src.models.models import (
     Activity,
     Banks,
     TransactionStatus,
+    ActivityTypes,
 )
 from src.models.permissions import IsCarMerchantAndAuthed, IsApprovedMerchant
 from src.models.serializers import (
@@ -358,7 +359,7 @@ class TradeUnitViewSet(viewsets.ModelViewSet):
 
 class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ActivitySerializer
-    queryset = Activity.objects.all()
+    queryset = Activity.objects.filter(activity_type__in=(ActivityTypes.Transaction, ActivityTypes.TradeUnit))
     permission_classes = (IsCarMerchantAndAuthed,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ActivityFilter
