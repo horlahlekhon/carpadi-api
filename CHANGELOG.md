@@ -1,3 +1,10 @@
+## [1.10.16](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.15...v1.10.16) (2022-10-22)
+
+
+### Bug Fixes
+
+* fix error not making carpadi commissions deducted from rot remitance ([9c504c9](https://github.com/horlahlekhon/carpadi-api/commit/9c504c995a6e16f199cb89677ce5013873ccf661))
+
 ## [1.10.15](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.14...v1.10.15) (2022-10-22)
 
 
