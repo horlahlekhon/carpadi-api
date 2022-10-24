@@ -6,3 +6,4 @@ if [ $PASS == 0 ]; then
   else
     echo "Migration or collect static operation failed"
 fi
+#.............
