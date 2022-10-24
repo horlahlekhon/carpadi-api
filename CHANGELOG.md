@@ -1,3 +1,10 @@
+## [1.10.18](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.17...v1.10.18) (2022-10-24)
+
+
+### Bug Fixes
+
+* add search filter to trade and trade unit on api ([dcccaf5](https://github.com/horlahlekhon/carpadi-api/commit/dcccaf5453f2598109702a4919715b5547d78f0b))
+
 ## [1.10.17](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.16...v1.10.17) (2022-10-23)
 
 
