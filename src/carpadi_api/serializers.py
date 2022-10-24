@@ -354,6 +354,7 @@ class TradeSerializer(serializers.ModelSerializer):
             "color": car.colour,
             "name": car.name,
             "car_pictures": car.pictures.values_list("asset", flat=True),
+            "description": car.description
             # "image": c,
         }
 
