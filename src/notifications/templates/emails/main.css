@@ -11,9 +11,6 @@ body {
     position: relative;
     padding: 2rem;
     gap: 32px;
-
-
-
 }
 
 img {
@@ -25,7 +22,7 @@ ul {
 }
 table {
     border-spacing: 0;
-    border: 1px white;
+    /*border: 1px white;*/
 }
 
 td {
@@ -155,15 +152,15 @@ a:hover {
      box-sizing: border-box;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
-    border: 1px solid #000000;
 
     margin: 0 auto;
     width: 100%;
     max-width: 600px;
     border-spacing: 0;
     /*border: 1px white;*/
+    border: 1px solid #000000;
     font-family: Roboto, Serif;
-    color: black;
+    color: #333333;
 
     padding: 3rem 4rem;
 }
@@ -177,18 +174,15 @@ a:hover {
 }
 .message{
     margin-bottom: 5rem;
+    padding-bottom: 2rem;
 }
 .more {
     -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
     -moz-box-sizing: border-box;    /* Firefox, other Gecko */
     box-sizing: border-box;
 
-    width: 100px;
-    height: 42px;
     padding: 10px 40px;
     background: #020072;
-    margin-top: 30rem;
-    margin-bottom: 30rem;
     border: 1px solid;
     border-color: #020072;
     border-radius: 50px;
