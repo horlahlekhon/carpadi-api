@@ -1,12 +1,10 @@
 import logging
-from abc import ABC
 
 from actstream import action
-from fcm_django.models import FCMDevice
+from django.conf import settings
 
+from src.common.tasks import send_email_notification_taskp, send_push_notification_taskp
 from src.models.models import User
-from src.notifications.channels.email import EmailChannel
-from src.notifications.channels.firebase import FirebaseChannel
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +23,13 @@ NOTIFICATIONS = {
         "notice_type": "new_user",
         'email': {
             'email_subject': 'Verify phone',
+            'email_html_template': 'emails/verify_phone.html',
+        },
+    },
+    "USER_EMAIL_VERIFICATION": {
+        "notice_type": "email_verification",
+        'email': {
+            'email_subject': 'Verify email',
             'email_html_template': 'emails/verify_phone.html',
         },
     },
@@ -76,23 +81,31 @@ def _send_email(email_notification_config, context):
     to = User.objects.get(id=context.get("user")).email
     email_html_template = email_notification_config.get('email_html_template')
     email_subject = email_notification_config.get('email_subject')
-    EmailChannel.send(context=context, html_template=email_html_template, subject=email_subject, to=to)
+    from src.common.tasks import send_email_notification_task
+
+    send_email_notification_task.delay(context, email_html_template, email_subject, to)
+    # send_email_notification_taskp(context, email_html_template, email_subject, to)
 
 
 def _send_firebase(notification_config, context):
-    FirebaseChannel.send(context, context.get("user"))
+    from src.common.tasks import send_push_notification_task
+
+    send_push_notification_task.delay(context, context.get("user"))
+    # send_push_notification_taskp(context, context.get("user"))
 
 
 def notify(verb, **kwargs):
     notification_config = NOTIFICATIONS.get(verb)
-    if "email" in notification_config.keys():
-        email_notification_config = notification_config.get('email')
-        email_to = kwargs.get('user', [])
-        if not email_to:
-            logger.debug('Please provide list of emails (email_to argument).')
-        _send_email(email_notification_config, kwargs)
-    if "in_app" in notification_config.keys():
-        _send_firebase(notification_config, kwargs)
+    if not settings.TESTING:
+        if "email" in notification_config.keys():
+            email_notification_config = notification_config.get('email')
+            email_to = kwargs.get('user', [])
+            if not email_to:
+                logger.debug('Please provide list of emails (email_to argument).')
+            _send_email(email_notification_config, kwargs)
+        if "in_app" in notification_config.keys():
+            _send_firebase(notification_config, kwargs)
+    return None
 
 
 # Use only with actstream activated

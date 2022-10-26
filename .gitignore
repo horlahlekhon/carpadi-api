@@ -119,3 +119,4 @@ dump.rdb
 .env-compose
 .idea/misc.xml
 node_modules
+.idea/sonarlint

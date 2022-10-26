@@ -12,7 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -43,6 +43,7 @@ class Base(UUIDModel, TimeStampedModel):
 
     class Meta:
         abstract = True
+        ordering = ('-created',)
 
 
 class UserTypes(models.TextChoices):
@@ -54,8 +55,23 @@ class User(AbstractUser, Base):
     username_validator = UnicodeUsernameValidator()
     profile_picture = models.OneToOneField("Assets", on_delete=models.SET_NULL, null=True, blank=True)
     user_type = models.CharField(choices=UserTypes.choices, max_length=20)
-    phone = models.CharField(max_length=15, unique=True, help_text="International format phone number")
+    phone = models.CharField(
+        max_length=15,
+        unique=True,
+        help_text="International format phone number",
+        error_messages={
+            'unique': _("A user with that phone number already exists."),
+        },
+    )
     username = models.CharField(max_length=50, validators=[username_validator], unique=True, null=True)
+    email = models.EmailField(
+        _('email address'),
+        blank=False,
+        unique=True,
+        error_messages={
+            'unique': _("A user with that email already exists."),
+        },
+    )
 
     def get_tokens(self, imei):
         #  the token here doesnt container IMEI
@@ -139,6 +155,9 @@ class UserStatusFilterChoices(models.TextChoices):
 class CarMerchant(Base):
     user: User = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
     bvn = models.CharField(max_length=14, null=True, blank=False, default=None)
+    phone_verified = models.BooleanField(default=False, null=False, blank=False)
+    email_verified = models.BooleanField(default=False, null=False, blank=False)
+    is_approved = models.BooleanField(default=False, null=False, blank=False)
 
     # class Meta:
 
@@ -239,7 +258,6 @@ class WalletBalanceUpdate:
         )
         self.wallet.withdrawable_cash = balance_after_deduction
         self._updated_fields_wallet.append("withdrawable_cash")
-        self.tx.transaction_status = TransactionStatus.Pending
 
     def handle_unit_purchase(self):
         assert self.tx.transaction_status == TransactionStatus.Success, "Balance cannot be updated on unsuccessful transaction"
@@ -751,6 +769,10 @@ class Trade(Base):
         settings: Settings = Settings.objects.first()
         return self.return_on_trade_calc() * settings.carpadi_commision / 100
 
+    def carpadi_commission_per_slot(self):
+        settings: Settings = Settings.objects.first()
+        return self.return_on_trade_per_slot * settings.carpadi_commision / 100
+
     def carpadi_bonus_calc(self):
         return self.bonus_calc() - self.traders_bonus()
 
@@ -982,10 +1004,13 @@ class TradeUnit(Base):
         deficit = Decimal(0)
         if self.trade.deficit_balance() > Decimal(0):
             deficit = (self.trade.deficit_balance() / self.trade.slots_available) * self.slots_quantity
+        base_rot_minus_carpadi_commission = self.trade.return_on_trade_per_slot * self.slots_quantity - (
+            self.trade.carpadi_commission_per_slot() * self.slots_quantity
+        )  # noqa
         base_payout = (
-            (self.trade.return_on_trade_per_slot * self.slots_quantity)
+            base_rot_minus_carpadi_commission
             + self.unit_value
-            + (self.trade.traders_bonus_per_slot * self.slots_quantity)
+            + (self.trade.traders_bonus_per_slot * self.slots_quantity)  # noqa
         )
         return base_payout - deficit
 
@@ -1082,7 +1107,7 @@ class AssetEntityType(models.TextChoices):
     Car = "car", _("car picture")
     Merchant = "merchant", _("user profile picture")
     Trade = "trade", _("Trade pictures of a car")
-    Inspection = "car_inspection", _("Car inspection pictures")
+    InspectionStage = "car_inspection_stage", _("Picture taken for a particular stage during inspection")
     Features = "feature", _("Picture of a feature of a car")
     InspectionReport = "inspection_report", _("Pdf report of an inspected vehicle")
     CarSparePart = "spare_part", _("Images of spare parts")
@@ -1210,7 +1235,7 @@ class Inspections(Base):
             PhoneNumberValidator,
         ],
     )
-    owners_review = models.CharField(max_length=50, null=True, blank=True)
+    owners_review = models.TextField()
     address = models.TextField()
     status = models.CharField(choices=InspectionStatus.choices, max_length=20, default=InspectionStatus.Pending)
     inspection_verdict = models.CharField(
@@ -1311,7 +1336,7 @@ class File(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
-class RequiredCarDocuments(models.TextChoices):
+class CarDocumentsTypes(models.TextChoices):
     ProofOfOwnership = "proof_of_ownership", _("Proof of ownership document")
     AllocationOfLicensePlate = "allocation_of_licence_plate", _(
         "Allocation of plate number",
@@ -1330,6 +1355,8 @@ class RequiredCarDocuments(models.TextChoices):
         "Insurance papers",
     )
     RoadWorthiness = "road_worthiness", _("Road worthiness permit")
+    CarOwnerIdentification = "owner_identification", _("Car Owner's document of identity")
+    Others = "others", _("Other custom documents that are not required")
 
 
 class CarDocuments(Base):
@@ -1338,9 +1365,11 @@ class CarDocuments(Base):
     name = models.CharField(max_length=50)
     asset = models.OneToOneField(Assets, on_delete=models.SET_NULL, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    document_type = models.CharField(max_length=40, choices=RequiredCarDocuments.choices)
+    document_type = models.CharField(max_length=40, choices=CarDocumentsTypes.choices)
 
     @classmethod
     def documentation_completed(cls, car: str) -> bool:
-        docs = CarDocuments.objects.filter(car__id=car, is_verified=True).distinct("document_type").count()
-        return len(RequiredCarDocuments.choices) == docs
+        docs = (
+            CarDocuments.objects.filter(car__id=car, is_verified=True).filter(~Q(document_type=CarDocumentsTypes.Others)).count()
+        )
+        return len(CarDocumentsTypes.choices) - 1 == docs

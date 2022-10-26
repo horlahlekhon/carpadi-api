@@ -1,3 +1,205 @@
+## [1.10.19](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.18...v1.10.19) (2022-10-24)
+
+
+### Bug Fixes
+
+* ci ([3aac1c5](https://github.com/horlahlekhon/carpadi-api/commit/3aac1c5d62a9d3ea879f715bbfcb23db58c82d1d))
+
+## [1.10.18](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.17...v1.10.18) (2022-10-24)
+
+
+### Bug Fixes
+
+* add search filter to trade and trade unit on api ([dcccaf5](https://github.com/horlahlekhon/carpadi-api/commit/dcccaf5453f2598109702a4919715b5547d78f0b))
+
+## [1.10.17](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.16...v1.10.17) (2022-10-23)
+
+
+### Bug Fixes
+
+* add -m flag to memray ([c3e45c3](https://github.com/horlahlekhon/carpadi-api/commit/c3e45c3332a5648abf65ca25ae2c3e02cfe1ccda))
+
+## [1.10.16](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.15...v1.10.16) (2022-10-22)
+
+
+### Bug Fixes
+
+* fix error not making carpadi commissions deducted from rot remitance ([9c504c9](https://github.com/horlahlekhon/carpadi-api/commit/9c504c995a6e16f199cb89677ce5013873ccf661))
+
+## [1.10.15](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.14...v1.10.15) (2022-10-22)
+
+
+### Bug Fixes
+
+* minor issues ([13ac437](https://github.com/horlahlekhon/carpadi-api/commit/13ac437b61cc4e3f2aad3d70cf8f677df842c5b7))
+* minor issues ([ae922dc](https://github.com/horlahlekhon/carpadi-api/commit/ae922dc80478609e5146b0757310fc4e419bc94d))
+
+## [1.10.14](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.13...v1.10.14) (2022-10-17)
+
+
+### Bug Fixes
+
+* add assets for inspection ([ffb44b9](https://github.com/horlahlekhon/carpadi-api/commit/ffb44b975a809c990a0ccee16a533bff4db66b00))
+
+## [1.10.13](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.12...v1.10.13) (2022-10-16)
+
+
+### Bug Fixes
+
+* add assets for inspection ([8ea0501](https://github.com/horlahlekhon/carpadi-api/commit/8ea0501e20ed36dd76aa2deda7b42371b92a101d))
+
+## [1.10.12](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.11...v1.10.12) (2022-10-16)
+
+
+### Bug Fixes
+
+* add filters to notifications ([91efde4](https://github.com/horlahlekhon/carpadi-api/commit/91efde4898ca5d9846059fd32ddf128953dacd01))
+
+## [1.10.11](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.10...v1.10.11) (2022-10-09)
+
+
+### Bug Fixes
+
+* fix notification not sending push ([9969b9b](https://github.com/horlahlekhon/carpadi-api/commit/9969b9bbe0632207ee6041a1b6858857e230a124))
+* fix notification not sending push ([294504e](https://github.com/horlahlekhon/carpadi-api/commit/294504ec63f920915705bf2e5deb1eca8fb4fcec))
+
+## [1.10.10](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.9...v1.10.10) (2022-10-08)
+
+
+### Bug Fixes
+
+* fix notification not sending push ([8d66ec3](https://github.com/horlahlekhon/carpadi-api/commit/8d66ec343866d4ce940cdbc90d85473914eab77d))
+* fix notification not sending push ([d9334a6](https://github.com/horlahlekhon/carpadi-api/commit/d9334a667c8368245289d32839d9cf6eba307916))
+
+## [1.10.9](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.8...v1.10.9) (2022-10-08)
+
+
+### Bug Fixes
+
+* fix notification not sending push ([d24852b](https://github.com/horlahlekhon/carpadi-api/commit/d24852bdfc1e0221332cf302046a9f26377fb8a1))
+
+## [1.10.8](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.7...v1.10.8) (2022-10-08)
+
+
+### Bug Fixes
+
+* bugs and added search features to list endpoints, also implemented email verification and merchant approval for admin ([f46cead](https://github.com/horlahlekhon/carpadi-api/commit/f46ceadaf62f178e8ac37cabf1a8ad6d81acd4d1))
+
+## [1.10.7](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.6...v1.10.7) (2022-10-06)
+
+
+### Bug Fixes
+
+* fix notification not sending push ([82e6298](https://github.com/horlahlekhon/carpadi-api/commit/82e62983048ad2b54a0764df0abf4fb29d2af6bd))
+
+## [1.10.6](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.5...v1.10.6) (2022-10-06)
+
+
+### Bug Fixes
+
+* fix notification not sending push ([306a691](https://github.com/horlahlekhon/carpadi-api/commit/306a691d2897219ea1709ada2d91894a33ceef74))
+
+## [1.10.5](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.4...v1.10.5) (2022-10-06)
+
+
+### Bug Fixes
+
+* fix notification not sending push ([00e52de](https://github.com/horlahlekhon/carpadi-api/commit/00e52de8282efe6e42959748a1d5470712355f84))
+* fix notification not sending push ([42463b9](https://github.com/horlahlekhon/carpadi-api/commit/42463b928b4b4d1be188040632cdd573eaa29a2d))
+
+## [1.10.4](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.3...v1.10.4) (2022-10-06)
+
+
+### Bug Fixes
+
+* fix notification not sending push ([fb4241c](https://github.com/horlahlekhon/carpadi-api/commit/fb4241c6bcd163e7935d49ec35b2021121d0e6cd))
+* fix notification not sending push ([22a7573](https://github.com/horlahlekhon/carpadi-api/commit/22a757334cd90c7124c1adfe295dffa1798de60c))
+
+## [1.10.3](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.2...v1.10.3) (2022-10-06)
+
+
+### Bug Fixes
+
+* technician registeration failing with limiter_type keyerror ([27f605e](https://github.com/horlahlekhon/carpadi-api/commit/27f605e6db6dd947dfd8f2eb3788dcea831fd483))
+
+## [1.10.2](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.1...v1.10.2) (2022-10-06)
+
+
+### Bug Fixes
+
+* implement firebase ([ee3a124](https://github.com/horlahlekhon/carpadi-api/commit/ee3a124e503dc5867e7252f1b5edfd3d71ab669c))
+
+## [1.10.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.0...v1.10.1) (2022-09-29)
+
+
+### Bug Fixes
+
+* linting ([ce43088](https://github.com/horlahlekhon/carpadi-api/commit/ce430885fa0f2a98d3d26660ac05d95fa8a950ff))
+
+# [1.10.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.9.0...v1.10.0) (2022-09-28)
+
+
+### Features
+
+* notification troubleshoot ([afb6086](https://github.com/horlahlekhon/carpadi-api/commit/afb60868287af5fb0febef28546c88f3d20c450e))
+
+# [1.9.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.8.0...v1.9.0) (2022-09-28)
+
+
+### Features
+
+* notification troubleshoot ([bda3ed2](https://github.com/horlahlekhon/carpadi-api/commit/bda3ed256f38fcbae8a511edb3c11835cd9dd820))
+* notification troubleshoot ([fd71ed8](https://github.com/horlahlekhon/carpadi-api/commit/fd71ed82a656d1284094fa730624a7ed52a1a443))
+
+# [1.8.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.7.0...v1.8.0) (2022-09-28)
+
+
+### Features
+
+* notification ([c9c70dd](https://github.com/horlahlekhon/carpadi-api/commit/c9c70dda28090ae3aedb5af48f7bf2f93f636c5c))
+
+# [1.7.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.6.0...v1.7.0) (2022-09-28)
+
+
+### Features
+
+* notification ([9f6a441](https://github.com/horlahlekhon/carpadi-api/commit/9f6a44163ef3aaecab8c05bb41299a618e22ee70))
+
+# [1.6.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.5.0...v1.6.0) (2022-09-28)
+
+
+### Features
+
+* notification ([1e0c153](https://github.com/horlahlekhon/carpadi-api/commit/1e0c15319705f34dd9633685c11bca11ab391227))
+
+# [1.5.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.4.0...v1.5.0) (2022-09-28)
+
+
+### Features
+
+* moved notifications to delayed jobs ([b9aa0f2](https://github.com/horlahlekhon/carpadi-api/commit/b9aa0f26a0238edc02ebc7c30afb28b8b7fca7b5))
+
+# [1.4.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.3.0...v1.4.0) (2022-09-28)
+
+
+### Features
+
+* moved notifications to delayed jobs ([2d64ff7](https://github.com/horlahlekhon/carpadi-api/commit/2d64ff741b769bc98ec07e279f9d889798d0cec1))
+
+# [1.3.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.2.0...v1.3.0) (2022-09-28)
+
+
+### Features
+
+* moved notifications to delayed jobs ([c9a1edd](https://github.com/horlahlekhon/carpadi-api/commit/c9a1edd0f73ebc7058904ea27e2f67203233b6e2))
+
+# [1.2.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.1.3...v1.2.0) (2022-09-28)
+
+
+### Features
+
+* moved notifications to delayed jobs ([56cccfa](https://github.com/horlahlekhon/carpadi-api/commit/56cccfabd768a79cda0d87f8dd29cec9d2891065))
+
 ## [1.1.3](https://github.com/horlahlekhon/carpadi-api/compare/v1.1.2...v1.1.3) (2022-09-27)
 
 

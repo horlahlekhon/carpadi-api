@@ -212,8 +212,9 @@ class TestTrade(BaseTest):
             assert unit.checkout_transaction is not None
             assert unit.checkout_transaction == unit.disbursement.transaction
             trade_bonus = (unit.trade.bonus_calc() * self.set.bonus_percentage / 100) / 5
-            base = unit.trade.return_on_trade_per_slot + unit.unit_value
-            assert unit.disbursement.transaction.amount == base + trade_bonus
+            base = (unit.trade.return_on_trade_per_slot * unit.slots_quantity) + unit.unit_value
+            commission = unit.trade.carpadi_commission_per_slot() * unit.slots_quantity
+            assert unit.disbursement.transaction.amount == (base + trade_bonus) - commission
             assert unit.trade_bonus == trade_bonus
         self.car.refresh_from_db()
         assert self.car.cost_of_repairs == Decimal(2000)
@@ -304,7 +305,8 @@ class TestTrade(BaseTest):
             ideal_return = (unit.unit_value + trade.return_on_trade_per_slot * unit.slots_quantity) - (
                 trade.deficit_balance() / 5
             ) * unit.slots_quantity
-            assert unit.merchant.wallet.withdrawable_cash == ideal_return
+            commission = unit.trade.carpadi_commission_per_slot() * unit.slots_quantity
+            assert unit.merchant.wallet.withdrawable_cash == ideal_return - commission
 
     def test_rollback_trade_completion(self):
         self.car.update_on_inspection_changes(self.inspection)
@@ -339,8 +341,9 @@ class TestTrade(BaseTest):
             assert unit.checkout_transaction is not None
             assert unit.checkout_transaction == unit.disbursement.transaction
             trade_bonus = (unit.trade.bonus_calc() * self.set.bonus_percentage / 100) / 5
-            base = unit.trade.return_on_trade_per_slot + unit.unit_value
-            assert unit.disbursement.transaction.amount == base + trade_bonus
+            base = (unit.trade.return_on_trade_per_slot * unit.slots_quantity) + unit.unit_value
+            commission = unit.trade.carpadi_commission_per_slot() * unit.slots_quantity
+            assert unit.disbursement.transaction.amount == (base + trade_bonus) - commission
             assert unit.trade_bonus == trade_bonus
         self.car.refresh_from_db()
         assert self.car.cost_of_repairs == Decimal(2000)

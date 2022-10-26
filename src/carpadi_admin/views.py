@@ -59,8 +59,9 @@ from src.models.models import (
     VehicleInfo,
     Settings,
     CarDocuments,
+    User,
 )
-from src.models.serializers import CarBrandSerializer, ActivitySerializer
+from src.models.serializers import CarBrandSerializer, ActivitySerializer, UserSerializer
 
 
 # Create your views here.
@@ -76,7 +77,7 @@ class TransactionsViewSetAdmin(viewsets.ReadOnlyModelViewSet):
     filter_class = TransactionsFilterAdmin
 
 
-class CarMerchantsViewSetAdmin(viewsets.ReadOnlyModelViewSet):
+class CarMerchantsViewSetAdmin(viewsets.ReadOnlyModelViewSet, mixins.UpdateModelMixin):
     permission_classes = (IsAdminUser,)
     serializer_class = CarMerchantAdminSerializer
     queryset = CarMerchant.objects.all()
@@ -286,3 +287,9 @@ class CarDocumentsViewset(viewsets.ModelViewSet):
     permission_classes = (IsAdminUser,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = CarDocumentsFilter
+
+    def get_serializer(self, *args, **kwargs):
+        """if an array is passed, set serializer to many"""
+        if isinstance(self.request.data, list):
+            kwargs['many'] = True
+        return super(CarDocumentsViewset, self).get_serializer(*args, **kwargs)

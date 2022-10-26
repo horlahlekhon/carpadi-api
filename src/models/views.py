@@ -1,3 +1,4 @@
+import datetime
 import logging
 import threading
 
@@ -18,9 +19,10 @@ from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.views import TokenViewBase
 
 from src.common.seeder import PadiSeeder
+from src.config.common import OTP_EXPIRY
 from src.models.filters import NotificationsFilter
 from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant, NotificationTypes
-from src.models.permissions import IsUserOrReadOnly
+from src.models.permissions import IsUserOrReadOnly, IsAdmin
 from src.models.serializers import (
     CreateUserSerializer,
     UserSerializer,
@@ -30,6 +32,7 @@ from src.models.serializers import (
     OtpSerializer,
     AssetsSerializer,
     NotificationsSerializer,
+    EmailVerificationSerializer,
 )
 from src.notifications.services import notify
 
@@ -48,6 +51,11 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         'create': (AllowAny,),
         'verify_phone': (AllowAny,),
         'seed': (AllowAny,),
+        'verify_email': (IsAuthenticated,),
+        'get_inspectors': (
+            IsAuthenticated,
+            IsAdmin,
+        ),
     }
 
     def get_serializer_class(self):
@@ -77,6 +85,28 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             ser.is_valid(raise_exception=True)
             user = ser.save()
             return Response(ser.get_tokens(user), status=status.HTTP_200_OK)
+        except ValidationError as reason:
+            return Response(reason.args[0], status=400)
+        except Exception as reason:
+            return Response({'error': str(reason)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post', 'get'], url_path='verify-email', url_name='verify_email')
+    def verify_email(self, request):
+        try:
+            if request.method == 'POST':
+                email_ver = EmailVerificationSerializer(data=request.data)
+                email_ver.context.update({"user": request.user})
+                email_ver.is_valid(raise_exception=True)
+                merchant = email_ver.save()
+                merchant_ser = CarMerchantSerializer(instance=merchant)
+                return Response(data=merchant_ser.data)
+            else:
+                user = request.user
+                expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
+                ot = Otp.objects.create(otp="123456", expiry=expiry, user=user)
+                context = dict(username=user.username, otp=ot.otp, user=user.id)
+                notify("USER_EMAIL_VERIFICATION", **context)
+                return Response(data=dict(message="A Verification otp has been sent to the provided email."))
         except ValidationError as reason:
             return Response(reason.args[0], status=400)
         except Exception as reason:
@@ -147,21 +177,21 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         Seed the database with some data
         """
         try:
-            # seed_type = str(request.query_params.get('type', None)).lower()
-            # seed_data = PadiSeeder(request=request)
-            # # seed_data.seed()
-            # seed_func = seed_data.seed if seed_type != "banks" else seed_data.seed_banks()
-            # t = threading.Thread(target=seed_func)
-            # t.setDaemon(True)
-            # t.start()
-            unit: TradeUnit = TradeUnit.objects.filter(merchant__user_id="c9eee4be-eea2-4672-88b5-705ac5990827").first()
-            notice = Notifications.objects.create(
-                notice_type=NotificationTypes.NewTrade,
-                user=unit.merchant.user,
-                message="This is a dummy message dont take shit serious abeg",
-                is_read=False,
-                entity_id=unit.id,
-            )
+            seed_type = str(request.query_params.get('type', None)).lower()
+            seed_data = PadiSeeder(request=request)
+            # seed_data.seed()
+            seed_func = seed_data.seed if seed_type != "banks" else seed_data.seed_banks()
+            t = threading.Thread(target=seed_func)
+            t.setDaemon(True)
+            t.start()
+            # unit: TradeUnit = TradeUnit.objects.filter(merchant__user_id="176c67aa-fa6b-4e21-b3eb-55839127a3b9").first()
+            # notice = Notifications.objects.create(
+            #     notice_type=NotificationTypes.TradeUnit,
+            #     user=unit.merchant.user,
+            #     message="Ok, Just take a chill, you will eventually come!!",
+            #     is_read=False,
+            #     entity_id=unit.id,
+            # )
 
             return Response(status=status.HTTP_200_OK)
         except Exception as e:

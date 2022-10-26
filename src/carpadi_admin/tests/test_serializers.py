@@ -1,8 +1,10 @@
 import uuid
 from decimal import Decimal
 
+from rest_framework.exceptions import ValidationError
 from django.test import TestCase
 from nose.tools import *
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from src.carpadi_admin.serializers import (
@@ -23,10 +25,11 @@ from src.models.models import (
     InspectionStatus,
     InspectionVerdict,
     Settings,
-    RequiredCarDocuments,
+    CarDocumentsTypes,
     Assets,
     AssetEntityType,
     CarDocuments,
+    TradeStates,
 )
 from src.models.serializers import CreateUserSerializer
 from src.models.test.factories import WalletFactory
@@ -193,7 +196,18 @@ class CarMaintenanceSerializerTest(TestCase):
         cls.admin: User = User.objects.create_superuser("admin", email="admin@localhost", password="passersby")
 
         cls.vehicle: VehicleInfo = VehicleFactory()
-        payload = dict(vin=cls.vehicle.vin, colour="pink", bought_price=Decimal("100000"))
+        payload = dict(
+            vin=cls.vehicle.vin,
+            colour="pink",
+            bought_price=Decimal("100000"),
+            car_pictures=[
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+            ],
+        )
         ser = CarSerializer(data=payload)
         is_valid = ser.is_valid()
         eq_(is_valid, True)
@@ -265,20 +279,38 @@ class TestTradeSerializer(BaseTest):
         )
         self.spare_part = SparePartFactory()
         self.car = self.inspection.car
+        payload = dict(
+            car_pictures=[
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+                "http://www.google.com",
+            ]
+        )
+        ser = CarSerializer(data=payload, partial=True, instance=self.car)
+        is_valid = ser.is_valid(raise_exception=True)
+        ser.save()
 
-    def prepare_car(self, bought=Decimal(0.0), resale=Decimal(0.0)):
+    def prepare_car(self, bought=Decimal(0.0), resale=Decimal(0.0), inspection=True, docs=True):
         self.car.bought_price = Decimal(bought or 100000)
         self.car.resale_price = Decimal(resale or 150000)
         self.car.save()
-        self.car.update_on_inspection_changes(self.inspection)
+        if inspection:
+            self.car.update_on_inspection_changes(self.inspection)
         self.maintenance = CarMaintenance.objects.create(maintenance=self.spare_part, car=self.car)
-        for i in RequiredCarDocuments.choices:
-            data = dict(
-                car=self.car.id, is_verified=True, document_type=i[0], name=i[0], asset="https://picsum.photos/id/116/3504/2336"
-            )
-            ser = CarDocumentsSerializer(data=data)
-            ser.is_valid(raise_exception=True)
-            ser.save()
+        if docs:
+            for i in CarDocumentsTypes.choices:
+                data = dict(
+                    car=self.car.id,
+                    is_verified=True,
+                    document_type=i[0],
+                    name=i[0],
+                    asset="https://picsum.photos/id/116/3504/2336",
+                )
+                ser = CarDocumentsSerializer(data=data)
+                ser.is_valid(raise_exception=True)
+                ser.save()
 
     def test_trade_created_successfully(self):
         self.prepare_car(resale=Decimal(0.0))
@@ -289,3 +321,54 @@ class TestTradeSerializer(BaseTest):
         trade = ser.save()
         read_ser = TradeSerializerAdmin(instance=trade).data
         assert read_ser["remaining_slots"] == data["slots_available"]
+        assert read_ser["car"]["bought_price"] == self.car.bought_price
+        assert read_ser["car"]["maintenance_cost"] == self.car.maintenance_cost_calc()
+        assert read_ser["return_on_trade_per_unit"] == trade.return_on_trade_per_slot
+        assert read_ser["trade_margin"] == trade.margin_calc()
+        assert read_ser["return_on_trade_percentage"] == trade.return_on_trade_calc_percent()
+        assert read_ser["sold_slots_price"] == trade.sold_slots_price()
+
+    def test_trade_creation_rejected_if_docs_not_complete(self):
+        self.prepare_car(resale=Decimal(0.0), inspection=True, docs=False)
+        data = dict(car=self.car.id, slots_available=5)
+        ser = TradeSerializerAdmin(data=data)
+        valid = ser.is_valid()
+        try:
+            ser.save()
+        except Exception as reason:
+            assert type(reason) == ValidationError
+            assert reason.args[0] == "Some documents have either not being uploaded or not yet verified, please contact admin"
+
+    def test_trade_creation_rejected_if_bought_price_is_not_set(self):
+        self.prepare_car(resale=Decimal(0.0), inspection=True, docs=True)
+        data = dict(car=self.car.id, slots_available=5)
+        ser = TradeSerializerAdmin(data=data)
+        valid = ser.is_valid()
+        try:
+            ser.save()
+        except Exception as reason:
+            assert type(reason) == ValidationError
+            assert reason.args[0] == "Please set the amount the car was bought for before creating a trade"
+
+    def test_trade_creation_rejected_if_slot_count_is_invalid(self):
+        self.prepare_car(resale=Decimal(0.0), inspection=True, docs=True, bought=Decimal(100000))
+        data = dict(car=self.car.id, slots_available=1)
+        ser = TradeSerializerAdmin(data=data)
+        valid = ser.is_valid()
+        try:
+            assert valid
+            ser.save()
+        except Exception as reason:
+            assert type(reason) == ValidationError
+            assert reason.args[0] == "The minimum amount of slot is 4."
+
+    # def test_update_trade_successfully(self):
+    #     self.prepare_car(resale=Decimal(0.0), inspection=True, docs=True, bought=Decimal(100000))
+    #     data = dict(car=self.car.id, slots_available=1)
+    #     ser = TradeSerializerAdmin(data=data)
+    #     valid = ser.is_valid()
+    #     ser.save()
+    #     update = dict(trade_status=TradeStates.Closed)
+
+
+# class TestDashboard(Serializ)

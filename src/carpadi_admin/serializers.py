@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional, Union
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import URLValidator
 from django.db import models
@@ -203,6 +204,19 @@ class CarSerializer(serializers.ModelSerializer):
         if validated_data.get("status") == CarStates.Available:
             validated_data["total_cost"] = instance.total_cost_calc()
             validated_data["maintenance_cost"] = instance.maintenance_cost_calc()
+        if (
+            validated_data.get("bought_price")
+            and validated_data.get("bought_price") > Decimal(0.00)
+            and instance.inspections.status == InspectionStatus.Completed
+            and CarDocuments.documentation_completed(instance.id)
+        ):
+            validated_data[
+                "status"
+            ] = (
+                CarStates.Available
+            )  # TODO add cron to periodically check for cars that have all requirement for available for tade and set status to available noqa
+        images = validated_data.get("car_pictures") or []
+        Assets.create_many(images=images, feature=instance, entity_type=AssetEntityType.Car)
         return super().update(instance, validated_data)
 
 
@@ -344,14 +358,18 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
             raise serializers.ValidationError("Inspection is not completed yet, trade cannot be created")
         if not CarDocuments.documentation_completed(car.id):
             raise serializers.ValidationError(
-                "Some documents have either not " "being uploaded or not yet verified, please contact admin"
+                "Some documents have either not being uploaded or not yet verified, please contact admin"
             )
         if car.status != CarStates.Available:
             raise serializers.ValidationError("Car is not available for trade")
         if not car.bought_price:
             raise serializers.ValidationError("Please set the amount the car was bought for before creating a trade")
-        if validated_data.get("slots_available") < 4:
-            raise serializers.ValidationError("The minimum amount of slot is four.")
+        if validated_data.get("slots_available") < settings.MIN_SLOT_ALLOWED:
+            raise serializers.ValidationError(f"The minimum amount of slot is {settings.MIN_SLOT_ALLOWED}.")
+        if car.pictures.count() < settings.MIN_CAR_PICTURES_FOR_TRADE:
+            raise serializers.ValidationError(
+                f"Please upload at least" f" {settings.MIN_CAR_PICTURES_FOR_TRADE} pictures before creating a trade."
+            )
 
     def validate_trade_update(self, instance: Trade, validated_data):
         if validated_data.get("trade_status") != TradeStates.Closed and instance.trade_status == TradeStates.Completed:
@@ -367,11 +385,12 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     @atomic()
     def update(self, instance: Trade, validated_data):
         self.validate_trade_update(instance, validated_data)
+        initial_status = instance.trade_status
         updated_instance: Trade = super(TradeSerializerAdmin, self).update(instance, validated_data)
         if (
             "trade_status" in validated_data.keys()
             and updated_instance.trade_status == TradeStates.Completed
-            and instance.trade_status != TradeStates.Completed
+            and initial_status != TradeStates.Completed
         ):
             updated_instance.check_updates()
             updated_instance.refresh_from_db()
@@ -691,6 +710,7 @@ class MerchantDashboardSerializer(serializers.Serializer):
     total_users = serializers.SerializerMethodField()
     active_users = serializers.SerializerMethodField()
     inactive_users = serializers.SerializerMethodField()
+    unapproved_users = serializers.SerializerMethodField()
 
     def get_total_users(self, value):
         """The total amount of users in the system"""
@@ -699,6 +719,9 @@ class MerchantDashboardSerializer(serializers.Serializer):
     def get_active_users(self, value):
         """The total amount of active users in the system"""
         return TradeUnit.objects.filter(merchant__user__is_active=True).values('merchant').distinct().count()
+
+    def get_unapproved_users(self, value):
+        return CarMerchant.objects.filter(is_approved=False).count()
 
     def get_inactive_users(self, value):
         """The total amount of inactive users in the system"""
@@ -833,11 +856,14 @@ class HomeDashboardSerializer(serializers.Serializer):
         """
 
         cash = (
-            TradeUnit.objects.filter(created__date__gte=self.start_date, created__date__lte=self.end_date)
+            TradeUnit.objects.filter(
+                created__date__gte=self.start_date,
+                created__date__lte=self.end_date,
+                trade__trade_status__in=(TradeStates.Purchased, TradeStates.Ongoing, TradeStates.Completed),
+            )
             .aggregate(value=Avg("unit_value"))
             .get("value")
         )
-
         return cash or Decimal(0.00)
 
     def get_total_available_shares(self, value):
@@ -846,12 +872,11 @@ class HomeDashboardSerializer(serializers.Serializer):
         within the current month or a specified date range.
         """
 
-        shares = (
-            Trade.objects.filter(
+        shares = sum(
+            i.remaining_slots()
+            for i in Trade.objects.filter(
                 trade_status=TradeStates.Ongoing, created__date__gte=self.start_date, created__date__lte=self.end_date
             )
-            .aggregate(value=Sum("slots_available"))
-            .get("value")
         )
 
         return shares or 0
@@ -865,11 +890,7 @@ class HomeDashboardSerializer(serializers.Serializer):
         trades = Trade.objects.filter(
             trade_status=TradeStates.Ongoing, created__date__gte=self.start_date, created__date__lte=self.end_date
         )
-        values = Decimal(0)
-        for i in trades:
-            value = i.remaining_slots() * i.price_per_slot
-            values = values + value
-        return values
+        return sum(i.remaining_slots() * i.price_per_slot for i in trades) or Decimal(0.00)
 
     def get_total_cars_with_shares(self, value):
         """

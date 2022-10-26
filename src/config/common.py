@@ -6,8 +6,8 @@ import dotenv
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-APP_ENV = os.getenv("APP_ENV", default="dev")
-TESTING = True if APP_ENV.lower() == "test" else False
+APP_ENV = os.getenv("APP_ENV", default="test")
+TESTING = APP_ENV.lower() == "test"
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # if not TESTING:
@@ -23,6 +23,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'jet.dashboard',
     'jet',
     'django.contrib.admin',
     # Third party apps
@@ -82,11 +83,12 @@ WSGI_APPLICATION = 'src.wsgi.application'
 
 EMAIL_HOST = "in-v3.mailjet.com"
 EMAIL_PORT = 587
-EMAIL_FROM = "horlahlekhon@gmail.com"
+EMAIL_FROM = "admin@carpadi.com"
 EMAIL_HOST_USER = "effd16db611dab2e8a9d7515e6caf7d9"
-EMAIL_HOST_PASSWORD = "462488cdc685193b657ed4dafbf5633e"
+EMAIL_HOST_PASSWORD = "1324403edf626ee9e5d9e0949d01d037"  # 44c3b9a23917b98d50913d884c940782
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if TESTING else "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+# EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 # EMAIL_HOST = os.getenv('EMAIL_HOST', default="in-v3.mailjet.com")
 # EMAIL_PORT = os.getenv('EMAIL_PORT', default=587)
 # EMAIL_FROM = os.getenv('EMAIL_FROM', default="horlahlekhon@gmail.com")
@@ -402,7 +404,7 @@ DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
 FLW_PUBLIC_KEY = os.getenv('FLUTTER_WAVE_PUBLIC_KEY', '')
 FLW_SECRET_KEY = os.getenv('FLUTTER_WAVE_SECRET_KEY', '')
 FLW_REDIRECT_URL = os.getenv(
-    'PAYMENT_REDIRECT_URL', 'https://026d-154-118-25-206.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
+    'PAYMENT_REDIRECT_URL', 'https://a670-41-217-100-193.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
 )
 FLW_PAYMENT_URL = os.getenv('PAYMENT_URL', "https://api.flutterwave.com/v3/payments")
 FLW_PAYMENT_VERIFY_URL = "https://api.flutterwave.com/v3/transactions/{}/verify".format
@@ -443,3 +445,19 @@ FCM_DJANGO_SETTINGS = {
     # "Update of device with duplicate registration ID" for more details.
     "UPDATE_ON_DUPLICATE_REG_ID": True,
 }
+
+from celery.schedules import crontab
+
+# from src.common.tasks import check_cars_with_completed_documentations
+
+CELERY_BEAT_SCHEDULE = {
+    "sample_task": {
+        "task": "src.common.tasks.check_cars_with_completed_documentations",
+        "schedule": crontab(minute="*/1"),
+    },
+}
+
+BULK_SMS_API_KEY = "fwFidxGn1ATSvjvUoaEO85DYk1rKIpTQARfebvG4GNi7QvJyicRupmF6A44a"
+BULK_SMS_API_BASE_URL = "https://www.bulksmsnigeria.com/api/v1/sms/create"
+MIN_SLOT_ALLOWED = 4
+MIN_CAR_PICTURES_FOR_TRADE = 5

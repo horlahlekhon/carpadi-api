@@ -42,8 +42,9 @@ from src.models.models import (
     Activity,
     Banks,
     TransactionStatus,
+    ActivityTypes,
 )
-from src.models.permissions import IsCarMerchantAndAuthed
+from src.models.permissions import IsCarMerchantAndAuthed, IsApprovedMerchant
 from src.models.serializers import (
     CarMerchantSerializer,
     CarBrandSerializer,
@@ -120,7 +121,7 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
     filter_class = TransactionsFilter
     # permission_classes = (IsCarMerchantAndAuthed,)
 
-    permissions = {'default': (IsCarMerchantAndAuthed,), "verify_transaction": ()}
+    permissions = {'default': (IsCarMerchantAndAuthed,), "verify_transaction": (), "create": (IsApprovedMerchant,)}
 
     def get_permissions(self):
         self.permission_classes = self.permissions.get(self.action, self.permissions['default'])
@@ -331,9 +332,13 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
 class TradeUnitViewSet(viewsets.ModelViewSet):
     serializer_class = TradeUnitSerializer
     queryset = TradeUnit.objects.all()
-    permission_classes = (IsCarMerchantAndAuthed,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = TradeUnitFilter
+    permissions = {"default": (IsCarMerchantAndAuthed,), "create": (IsApprovedMerchant,)}
+
+    def get_permissions(self):
+        self.permission_classes = self.permissions.get(self.action, self.permissions['default'])
+        return super().get_permissions()
 
     def get_serializer_context(self):
         ctx = super(TradeUnitViewSet, self).get_serializer_context()
@@ -354,7 +359,7 @@ class TradeUnitViewSet(viewsets.ModelViewSet):
 
 class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ActivitySerializer
-    queryset = Activity.objects.all()
+    queryset = Activity.objects.filter(activity_type__in=(ActivityTypes.Transaction, ActivityTypes.TradeUnit))
     permission_classes = (IsCarMerchantAndAuthed,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ActivityFilter

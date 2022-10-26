@@ -10,7 +10,7 @@ from django_seed import Seed
 from faker_vehicle import VehicleProvider
 from rest_framework import status
 
-from src.carpadi_admin.serializers import CarMaintenanceSerializerAdmin
+from src.carpadi_admin.serializers import CarMaintenanceSerializerAdmin, TradeSerializerAdmin, CarDocumentsSerializer
 from src.carpadi_api.serializers import TradeUnitSerializer
 from src.carpadi_market.serializers import CarProductSerializer
 from src.config import common
@@ -34,6 +34,7 @@ from src.models.models import (
     InspectionStatus,
     Settings,
     CarProduct,
+    CarDocumentsTypes,
 )
 
 PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00PVbKK4Nu2YLpiK3OliA="
@@ -136,16 +137,6 @@ class PadiSeeder:
         return Inspections.objects.get(id=ins)
 
     def seed_cars(self, count=1):
-        # cost = self.seeder.faker.random_number(digits=4)
-        # self.seeder.add_entity(
-        #     MiscellaneousExpenses,
-        #     1,
-        #     {
-        #         'estimated_price': cost,
-        #     },
-        # )
-        # exp = self.seeder.execute()[MiscellaneousExpenses][0]
-        # exp = MiscellaneousExpenses.objects.get(pk=exp)
         self.seeder.add_entity(
             Car,
             count,
@@ -182,10 +173,26 @@ class PadiSeeder:
                 ser.save()
             inspection.status = InspectionStatus.Completed
             inspection.save(update_fields=["status"])
-            self.seed_assets(car, AssetEntityType.Car)
+            self.seed_car_assets(car, AssetEntityType.Car)
+            self.seed_car_documents(car)
         return cars
 
-    def seed_assets(self, entity, ent_type, count=1):
+    def seed_car_documents(self, car):
+        data = [
+            dict(
+                car=str(car),
+                name=str(name)[:50],
+                document_type=value,
+                asset="https://d16encqm9nbktq.cloudfront.net/bmw.jpg",
+                is_verified=True,
+            )
+            for value, name in CarDocumentsTypes.choices
+        ]
+        doc_ser = CarDocumentsSerializer(data=data, many=True)
+        doc_ser.is_valid(raise_exception=True)
+        doc_ser.save()
+
+    def seed_car_assets(self, entity, ent_type, count=1):
         # https://picsum.photos/v2/list?page=100&limit=2
         urls = self.get_asset(1)
         car = Car.objects.get(pk=entity)
@@ -247,8 +254,10 @@ class PadiSeeder:
             return trade
         car.resale_price = car.bought_price + car.maintenance_cost_calc() + Decimal(5000)
         car.save(update_fields=["resale_price"])
-        trade.trade_status = TradeStates.Completed
-        trade.save(update_fields=['trade_status'])
+        trade.refresh_from_db()
+        trade_serializer = TradeSerializerAdmin(data=dict(trade_status=TradeStates.Completed.value), instance=trade, partial=True)
+        trade_serializer.is_valid(raise_exception=True)
+        trade = trade_serializer.save()
         if should_close:
             trade.close()
         return trade
@@ -334,9 +343,9 @@ class PadiSeeder:
         )
 
     def get_pictures(self, count):
-        resp = requests.get(f'https://picsum.photos/v2/list?page=100&limit={count}')
-        data = resp.json()
-        return [d['download_url'] for d in data]
+        # resp = requests.get(f'https://picsum.photos/v2/list?page=100&limit={count}')
+        # data = resp.json()
+        return ["https://d16encqm9nbktq.cloudfront.net/bmw.jpg" for _ in range(count)]
 
     def seed_car_product(self, cars):
         products = []

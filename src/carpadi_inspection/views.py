@@ -1,11 +1,12 @@
 # Create your views here.
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from src.carpadi_inspection.filters import InspectionsFilter, InspectionsStageFilter
 from src.carpadi_inspection.serializers import InspectionSerializer, InspectionStageSerializer
-from src.models.models import Inspections, InspectionStage
+from src.models.models import Inspections, InspectionStage, User
+from src.models.serializers import UserSerializer
 
 
 class InspectionsViewSet(viewsets.ModelViewSet):
@@ -22,3 +23,9 @@ class InspectionStagesViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminUser,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = InspectionsStageFilter
+
+
+class InspectorsViewset(viewsets.ReadOnlyModelViewSet):
+    queryset = User.objects.filter(is_staff=True, is_superuser=False)
+    serializer_class = UserSerializer
+    permission_classes = (IsAdminUser, IsAuthenticated)
