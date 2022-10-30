@@ -1,3 +1,11 @@
+# [1.11.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.19...v1.11.0) (2022-10-30)
+
+
+### Features
+
+* added mailchimp ([be8179f](https://github.com/horlahlekhon/carpadi-api/commit/be8179f9d5438ef9fa763e9577eafd823ff28702))
+* fix ci ([b8f3a44](https://github.com/horlahlekhon/carpadi-api/commit/b8f3a445eadb1ddc122fe8d541fcaaa416ca226d))
+
 ## [1.10.19](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.18...v1.10.19) (2022-10-24)
 
 
