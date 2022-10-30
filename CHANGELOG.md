@@ -1,3 +1,24 @@
+## [1.10.19](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.18...v1.10.19) (2022-10-24)
+
+
+### Bug Fixes
+
+* ci ([3aac1c5](https://github.com/horlahlekhon/carpadi-api/commit/3aac1c5d62a9d3ea879f715bbfcb23db58c82d1d))
+
+## [1.10.18](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.17...v1.10.18) (2022-10-24)
+
+
+### Bug Fixes
+
+* add search filter to trade and trade unit on api ([dcccaf5](https://github.com/horlahlekhon/carpadi-api/commit/dcccaf5453f2598109702a4919715b5547d78f0b))
+
+## [1.10.17](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.16...v1.10.17) (2022-10-23)
+
+
+### Bug Fixes
+
+* add -m flag to memray ([c3e45c3](https://github.com/horlahlekhon/carpadi-api/commit/c3e45c3332a5648abf65ca25ae2c3e02cfe1ccda))
+
 ## [1.10.16](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.15...v1.10.16) (2022-10-22)
 
 

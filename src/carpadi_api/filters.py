@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django_filters import rest_framework as filters
 
 from src.models.models import (
@@ -67,6 +68,22 @@ class ActivityFilter(filters.FilterSet):
 
 class TradeFilter(filters.FilterSet):
     make = filters.CharFilter(field_name="car__information__make", lookup_expr='iexact')
+    search = filters.CharFilter(field_name="car", method="search_trade")
+    trade_status = filters.ChoiceFilter(field_name="trade_status", lookup_expr='iexact', choices=TradeStates.choices)
+
+    def search_trade(self, queryset, name, value):
+        return queryset.filter(
+            Q(car__information__brand__model__icontains=value)
+            | Q(car__information__brand__name__icontains=value)
+            | Q(car__information__brand__year__iexact=value)
+            | Q(car__information__manufacturer__icontains=value)
+            | Q(car__information__transmission__icontains=value)
+            | Q(car__information__fuel_type__icontains=value)
+            | Q(car__information__car_type__icontains=value)
+            | Q(car__vin__icontains=value)
+            | Q(car__name__icontains=value)
+            | Q(car__licence_plate__icontains=value)
+        )
 
     class Meta:
         model = Trade
@@ -80,6 +97,21 @@ class TradeUnitFilter(filters.FilterSet):
     slots_quantity_gte = filters.NumberFilter(field_name="slots_quantity", lookup_expr='slots_quantity__gte')
     slots_quantity_lte = filters.NumberFilter(field_name="slots_quantity", lookup_expr='slots_quantity__lte')
     merchant = filters.CharFilter(field_name="merchant__id", lookup_expr="iexact")
+    search = filters.CharFilter(field_name="car", method="search_trade")
+
+    def search_trade(self, queryset, name, value):
+        return queryset.filter(
+            Q(trade__car__information__brand__model__icontains=value)
+            | Q(trade__car__information__brand__name__icontains=value)
+            | Q(trade__car__information__brand__year__iexact=value)
+            | Q(trade__car__information__manufacturer__icontains=value)
+            | Q(trade__car__information__transmission__icontains=value)
+            | Q(trade__car__information__fuel_type__icontains=value)
+            | Q(trade__car__information__car_type__icontains=value)
+            | Q(trade__car__vin__icontains=value)
+            | Q(trade__car__name__icontains=value)
+            | Q(trade__car__licence_plate__icontains=value)
+        )
 
     class Meta:
         model = TradeUnit
