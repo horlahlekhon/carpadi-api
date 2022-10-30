@@ -11,8 +11,6 @@ C
 src/common/utils.py,b/c/bcf9d50b516ebc52e35f663ebc6cabe3ad335f89
 Q
 !src/notifications/channels/sms.py,2/8/28f272be6852948d66056ce33c520a0b2a464cb8
-S
-#src/notifications/channels/email.py,b/6/b69ddeff434029e492447907a01b2d01bca99183
 E
 src/common/helpers.py,a/b/abd8679d374b6b70e0fd0152915a852a2a853b13
 ]
@@ -21,3 +19,13 @@ E
 -src/models/templates/emails/email_verify.html,7/f/7f992c18880dd4497a895717bcc13aba428ced3d
 M
 src/carpadi_market/filters.py,1/1/11bc6cb7a1147bfd69c05499a58bbb6e1fcacd79
+H
+src/carpadi_api/views.py,d/4/d45bad2bbf172865cc4fff083c0a2bbf56d17be9
+E
+requirements/prod.txt,3/b/3bdffe02694f5a4bc1ae5fcdcaef9111d65e4098
+D
+requirements/dev.txt,1/8/18a54bc76396d8520dedda512b306d4132cc48dd
+C
+src/models/views.py,a/9/a9f9f0ba8a451254ed5267b04516f5170edbd8e9
+I
+src/models/serializers.py,f/8/f893328be3321887148910b126b61adf2b97cd7b
