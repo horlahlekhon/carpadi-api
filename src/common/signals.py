@@ -78,7 +78,6 @@ def complete_user_registeration(sender, **kwargs):
         context = dict(username=user.username, otp=ot.otp, user=user.id)
         notify(USER_PHONE_VERIFICATION, **context)
 
-
 from django.urls import reverse
 
 

@@ -197,6 +197,13 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @action(detail=False, methods=['get'], url_path='welcome', url_name='welcome_user')
+    def welcome_user(self, request, *args, **kwargs):
+        user = User.objects.get(username="ridwanibrahim97@hotmail.com")
+        notify = Notifications()
+
+
+
 
 class TokenObtainPairViewMod(TokenViewBase):
     """

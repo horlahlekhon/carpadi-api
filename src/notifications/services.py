@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 ACTIVITY_USER_RESETS_PASS = 'started password reset process'
 USER_PHONE_VERIFICATION = "VERIFY PHONE"
+WELCOME_USER = "Welcome User"
 # PASSWORD_RESET_TOKEEN = "RESEET"
 NOTIFICATIONS = {
     ACTIVITY_USER_RESETS_PASS: {
@@ -30,8 +31,15 @@ NOTIFICATIONS = {
         "notice_type": "email_verification",
         'email': {
             'email_subject': 'Verify email',
-            'email_html_template': 'emails/verify_phone.html',
+            'email_html_template': 'emails/verify_email.html',
         },
+    },
+    WELCOME_USER: {
+            "notice_type": "new_user",
+            'email': {
+                'email_subject': 'Welcome To Carpadi',
+                'email_html_template': 'emails/welcome_user.html',
+            },
     },
     'TRADE_UNIT_PURCHASE': {
         "notice_type": "trade_unit",
@@ -83,8 +91,8 @@ def _send_email(email_notification_config, context):
     email_subject = email_notification_config.get('email_subject')
     from src.common.tasks import send_email_notification_task
 
-    send_email_notification_task.delay(context, email_html_template, email_subject, to)
-    # send_email_notification_taskp(context, email_html_template, email_subject, to)
+    #send_email_notification_task.delay(context, email_html_template, email_subject, to)
+    send_email_notification_taskp(context, email_html_template, email_subject, to)
 
 
 def _send_firebase(notification_config, context):
