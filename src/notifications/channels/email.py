@@ -4,6 +4,7 @@ from django.template.loader import render_to_string
 import mailchimp_transactional as MailchimpTransactional
 from mailchimp_transactional.api_client import ApiClientError
 
+
 class EmailChannel:
     @staticmethod
     def send(context, html_template, subject, to):
