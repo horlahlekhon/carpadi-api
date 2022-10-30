@@ -7,7 +7,7 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 APP_ENV = os.getenv("APP_ENV", default="test")
-TESTING = APP_ENV.lower() == "test"
+TESTING = APP_ENV.lower() == "testsdf"
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # if not TESTING:
@@ -161,7 +161,7 @@ LOGIN_REDIRECT_URL = '/'
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-STATICFILES_DIRS = []
+STATICFILES_DIRS = [f"{BASE_DIR}/src/notifications/templates", ]
 STATIC_URL = '/static/'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
