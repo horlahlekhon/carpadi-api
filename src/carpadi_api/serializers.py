@@ -533,7 +533,6 @@ class BankAccountSerializer(serializers.ModelSerializer):
 
 
 class BankSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Banks
         fields = "__all__"
