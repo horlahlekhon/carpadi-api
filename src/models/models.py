@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 import uuid
 from decimal import Decimal
@@ -548,6 +549,19 @@ class Car(Base):
             LicensePlateValidator,
         ],
     )
+
+    def is_editable(self) -> bool:
+        """
+        figure out if this car should be editable
+        a car cannot be editable if it has a completed or inactive trade attached.
+        i.e a new car that has not be placed on trade
+        """
+        try:
+            trade = self.trade
+            disabled_states = TradeStates.Completed, TradeStates.Closed
+            return trade.trade_status not in disabled_states
+        except Exception:
+            return True
 
     def maintenance_cost_calc(self):
         return sum(i.cost() for i in self.maintenances.all()) or Decimal(0.00)

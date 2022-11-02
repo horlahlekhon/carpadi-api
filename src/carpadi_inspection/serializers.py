@@ -67,7 +67,9 @@ class InspectionSerializer(serializers.ModelSerializer):
         return inspection
 
     @atomic
-    def update(self, instance, validated_data):
+    def update(self, instance: Inspections, validated_data):
+        if not instance.car.is_editable():
+            raise serializers.ValidationError("This car is beyond the scope of modification")
         upd: Inspections = super(InspectionSerializer, self).update(instance, validated_data)
         upd.car.update_on_inspection_changes(upd)
         return upd

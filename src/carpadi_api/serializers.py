@@ -85,10 +85,6 @@ class UpdateTransactionPinSerializers(serializers.Serializer):
     old_pin = serializers.CharField(max_length=6, required=True)
     new_pin = serializers.CharField(max_length=6, required=True)
 
-    # def create(self, validated_data):
-    #     pin: TransactionPin = self.context["pin"]
-    #
-
     def create(self, validated_data):
         user: User = validated_data["user"]
         old_pin = validated_data["old_pin"]
@@ -537,6 +533,7 @@ class BankAccountSerializer(serializers.ModelSerializer):
 
 
 class BankSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Banks
         fields = "__all__"
