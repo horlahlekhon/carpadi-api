@@ -662,7 +662,6 @@ class TradeStates(models.TextChoices):
 class Trade(Base):
     car = models.OneToOneField(Car, on_delete=models.CASCADE, related_name="trade")
     slots_available = models.PositiveIntegerField(default=0)
-    # slots_purchased = models.PositiveIntegerField(default=0)
     return_on_trade = models.DecimalField(
         decimal_places=2,
         max_digits=10,

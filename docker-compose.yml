@@ -1,42 +1,19 @@
 version: '3'
 services:
 
-  web:
-    build:
-      context: .
-      args:
-        REQUIREMENTS_FILE: dev.txt
+  carpadi-api:
+    image: olalekanadebari/carpadi-api:latest
     restart: always
     ports:
       - "8000:8000"
-    env_file: carpadi.env
-    command: 'sh -c "cp pre-commit.example .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit && ./manage.py migrate && ./manage.py runserver 0.0.0.0:8000"'
+    env_file: .env-new
     volumes:
-      - ./:/app
+      - /app/static:/app/src/staticfiles
 
-  queue:
-    build:
-      context: .
-      args:
-        REQUIREMENTS_FILE: dev.txt
-    restart: unless-stopped
-    env_file: carpadi.env
-    command: sh /entrypoint-queue.sh
-    volumes:
-      - ./:/app
+  redis:
+    image: redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_PASSWORD=passersby
 
-  beat:
-    build:
-      context: .
-      args:
-        REQUIREMENTS_FILE: dev.txt
-    restart: unless-stopped
-    env_file: carpadi.env
-    command: sh /entrypoint-beat.sh
-    volumes:
-      - ./:/app
-
-
-volumes:
-  db-data:
 
