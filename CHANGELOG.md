@@ -1,3 +1,11 @@
+# [1.13.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.12.0...v1.13.0) (2022-11-02)
+
+
+### Features
+
+* fix cars update should not be allowed after trade completion ([6e3f7b3](https://github.com/horlahlekhon/carpadi-api/commit/6e3f7b31605270b6dcc3c3a130592c34c190ceea))
+* fix cars update should not be allowed after trade completion ([469cbe6](https://github.com/horlahlekhon/carpadi-api/commit/469cbe6a1c422aa40601b166162d9932d59d7f31))
+
 # [1.12.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.11.0...v1.12.0) (2022-10-31)
 
 
