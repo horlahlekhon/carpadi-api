@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from src.models.models import UserTypes
+from src.models.models import UserTypes, MerchantStatusChoices
 
 
 class IsUserOrReadOnly(permissions.BasePermission):
@@ -23,7 +23,7 @@ class IsCarMerchantAndAuthed(permissions.BasePermission):
 class IsApprovedMerchant(permissions.BasePermission):
     def has_permission(self, request, view):
         dd = request.user.is_merchant() and request.user.is_authenticated
-        return dd and request.user.merchant.is_approved
+        return dd and request.user.merchant.status == MerchantStatusChoices.Approved
 
 
 class IsAdmin(permissions.BasePermission):

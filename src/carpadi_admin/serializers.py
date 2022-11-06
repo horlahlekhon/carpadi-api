@@ -49,6 +49,7 @@ from src.models.models import (
     CarDocuments,
 )
 from src.models.serializers import UserSerializer, CarBrandSerializer
+from src.notifications.services import notify
 
 
 class SocialSerializer(serializers.Serializer):
@@ -1028,6 +1029,14 @@ class CarMerchantAdminSerializer(serializers.ModelSerializer):
     def get_user(self, merchant: CarMerchant):
         user_ser = UserSerializer(instance=merchant.user)
         return user_ser.data
+
+    def update(self, instance, validated_data):
+        stat = instance.status
+        merchant: CarMerchant = super(CarMerchantAdminSerializer, self).update(instance, validated_data)
+        if validated_data.get("status") and merchant.status != stat:
+            context = dict(status=validated_data.get("status"), username=merchant.user.username, email=merchant.user.email)
+            notify("MERCHANT_APPROVAL", **context)
+        return merchant
 
     class Meta:
         model = CarMerchant

@@ -160,7 +160,7 @@ class CarMerchantFilter(filters.FilterSet):
 
     class Meta:
         model = CarMerchant
-        fields = ("user", "created", "is_approved", 'email_verified', 'phone_verified')
+        fields = ("user", "created", "status", 'email_verified', 'phone_verified')
 
 
 class CarFilter(filters.FilterSet):

@@ -158,7 +158,7 @@ LOGIN_REDIRECT_URL = '/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATICFILES_DIRS = [
-    f"{BASE_DIR}/models/templates",
+    f"{BASE_DIR}/notifications/templates",
 ]
 STATIC_URL = '/static/'
 STATICFILES_FINDERS = (

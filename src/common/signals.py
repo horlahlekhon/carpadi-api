@@ -73,10 +73,8 @@ class DisableSignals(object):
 def complete_user_registeration(sender, **kwargs):
     user: User = kwargs.get("instance")
     if kwargs.get("created") and user.user_type == UserTypes.CarMerchant:
-        expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
-        ot = Otp.objects.create(otp="123456", expiry=expiry, user=user)
-        context = dict(username=user.username, otp=ot.otp, user=user.id)
-        notify(USER_PHONE_VERIFICATION, **context)
+        context = dict(username=user.get_full_name(), email=user.email)
+        notify("USER_WELCOME", **context)
 
 
 from django.urls import reverse
@@ -285,3 +283,19 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             notify('TRANSACTION_FAILED', **context)
         else:
             logger.info("Notification type is not implemented yet")
+
+
+def send_otp(sender, instance: Otp, created, **kwargs):
+    if created and instance:
+        user = instance.user
+        notice = "USER_EMAIL_VERIFICATION"
+        context = dict(otp=instance.otp)
+        if instance.user:
+            context["username"] = user.username
+            context["email"] = user.email
+        elif instance.phone:
+            context["phone"] = instance.phone
+            notice = USER_PHONE_VERIFICATION
+        else:
+            context["email"] = instance.email
+        notify(notice, **context)

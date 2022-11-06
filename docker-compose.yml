@@ -13,7 +13,7 @@ services:
   redis:
     image: redis:latest
     environment:
-      - ALLOW_EMPTY_PASSWORD=yes
+#      - ALLOW_EMPTY_PASSWORD=yes
       - REDIS_PASSWORD=passersby
 
 
