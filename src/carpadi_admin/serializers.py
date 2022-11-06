@@ -46,7 +46,7 @@ from src.models.models import (
     CarBrand,
     Settings,
     InspectionStatus,
-    CarDocuments,
+    CarDocuments, MerchantStatusChoices,
 )
 from src.models.serializers import UserSerializer, CarBrandSerializer
 from src.notifications.services import notify
@@ -724,7 +724,7 @@ class MerchantDashboardSerializer(serializers.Serializer):
         return TradeUnit.objects.filter(merchant__user__is_active=True).values('merchant').distinct().count()
 
     def get_unapproved_users(self, value):
-        return CarMerchant.objects.filter(is_approved=False).count()
+        return CarMerchant.objects.filter(status=MerchantStatusChoices.Pending).count()
 
     def get_inactive_users(self, value):
         """The total amount of inactive users in the system"""
@@ -1034,7 +1034,9 @@ class CarMerchantAdminSerializer(serializers.ModelSerializer):
         stat = instance.status
         merchant: CarMerchant = super(CarMerchantAdminSerializer, self).update(instance, validated_data)
         if validated_data.get("status") and merchant.status != stat:
-            context = dict(status=validated_data.get("status"), username=merchant.user.username, email=merchant.user.email)
+            context = dict(
+                status=validated_data.get("status"),
+                username=merchant.user.username, email=merchant.user.email)
             notify("MERCHANT_APPROVAL", **context)
         return merchant
 
