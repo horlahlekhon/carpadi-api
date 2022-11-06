@@ -1,3 +1,11 @@
+# [1.17.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.16.0...v1.17.0) (2022-11-06)
+
+
+### Features
+
+* changed registeration process ([0ec3a69](https://github.com/horlahlekhon/carpadi-api/commit/0ec3a6943df335a66076279a0e4c65c440a30d5d))
+* changed registeration process ([dd4f0f8](https://github.com/horlahlekhon/carpadi-api/commit/dd4f0f8d455d4a6704e40ad029718d76b59f5682))
+
 # [1.16.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.15.0...v1.16.0) (2022-11-06)
 
 
