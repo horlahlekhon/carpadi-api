@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.14.0...v1.15.0) (2022-11-04)
+
+
+### Features
+
+* deployment ([8520563](https://github.com/horlahlekhon/carpadi-api/commit/8520563c695781343be772a0e1bd1b04df238bc9))
+
 # [1.14.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.13.0...v1.14.0) (2022-11-04)
 
 
