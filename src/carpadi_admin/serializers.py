@@ -46,7 +46,8 @@ from src.models.models import (
     CarBrand,
     Settings,
     InspectionStatus,
-    CarDocuments, MerchantStatusChoices,
+    CarDocuments,
+    MerchantStatusChoices,
 )
 from src.models.serializers import UserSerializer, CarBrandSerializer
 from src.notifications.services import notify
@@ -1034,9 +1035,7 @@ class CarMerchantAdminSerializer(serializers.ModelSerializer):
         stat = instance.status
         merchant: CarMerchant = super(CarMerchantAdminSerializer, self).update(instance, validated_data)
         if validated_data.get("status") and merchant.status != stat:
-            context = dict(
-                status=validated_data.get("status"),
-                username=merchant.user.username, email=merchant.user.email)
+            context = dict(status=validated_data.get("status"), username=merchant.user.username, email=merchant.user.email)
             notify("MERCHANT_APPROVAL", **context)
         return merchant
 
