@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 import uuid
 from decimal import Decimal
@@ -117,13 +118,15 @@ class OtpStatus(models.TextChoices):
 class Otp(Base):
     otp = models.CharField(max_length=6, editable=False)
     expiry = models.DateTimeField(editable=False, default=timezone.now() + datetime.timedelta(minutes=OTP_EXPIRY))
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="otps")
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="otps", null=True, blank=True)
     status = models.CharField(
         choices=OtpStatus.choices,
         max_length=20,
         default=OtpStatus.Pending,
         help_text="Keep track of weather " "the otp was later verified or expired or failed",
     )
+    email = models.EmailField(null=True, blank=True, max_length=255)
+    phone = models.CharField(null=True, blank=True, max_length=20)
 
     class Meta:
         get_latest_by = 'created'
@@ -152,14 +155,36 @@ class UserStatusFilterChoices(models.TextChoices):
     NotActivelyTrading = "not_actively_trading", _("user is not actively trading")
 
 
+class MerchantStatusChoices(models.TextChoices):
+    Disapproved = "disapproved", _("User approval was declined")
+    Pending = "pending", _(" User is pending approval")
+    Approved = "approved", _("User has been approved")
+
+
 class CarMerchant(Base):
     user: User = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="merchant")
     bvn = models.CharField(max_length=14, null=True, blank=False, default=None)
     phone_verified = models.BooleanField(default=False, null=False, blank=False)
     email_verified = models.BooleanField(default=False, null=False, blank=False)
-    is_approved = models.BooleanField(default=False, null=False, blank=False)
+    status = models.CharField(
+        default=MerchantStatusChoices.Pending, null=False, blank=False, choices=MerchantStatusChoices.choices, max_length=30
+    )
 
-    # class Meta:
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.create_wallet()
+        self.phone_verified = True
+        super(CarMerchant, self).save(*args, **kwargs)
+
+    def create_wallet(self):
+        Wallet.objects.get_or_create(
+            merchant=self,
+            balance=Decimal(0),
+            trading_cash=Decimal(0),
+            withdrawable_cash=Decimal(0),
+            unsettled_cash=Decimal(0),
+            total_cash=Decimal(0),
+        )
 
 
 class TransactionTypes(models.TextChoices):
@@ -549,6 +574,19 @@ class Car(Base):
         ],
     )
 
+    def is_editable(self) -> bool:
+        """
+        figure out if this car should be editable
+        a car cannot be editable if it has a completed or inactive trade attached.
+        i.e a new car that has not be placed on trade
+        """
+        try:
+            trade = self.trade
+            disabled_states = TradeStates.Completed, TradeStates.Closed
+            return trade.trade_status not in disabled_states
+        except Exception:
+            return True
+
     def maintenance_cost_calc(self):
         return sum(i.cost() for i in self.maintenances.all()) or Decimal(0.00)
 
@@ -648,7 +686,6 @@ class TradeStates(models.TextChoices):
 class Trade(Base):
     car = models.OneToOneField(Car, on_delete=models.CASCADE, related_name="trade")
     slots_available = models.PositiveIntegerField(default=0)
-    # slots_purchased = models.PositiveIntegerField(default=0)
     return_on_trade = models.DecimalField(
         decimal_places=2,
         max_digits=10,

@@ -90,9 +90,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
             )
             validated_data["is_active"] = False
             if validated_data.get("user_type") == UserTypes.CarMerchant:
-                user = User.objects.create_user(**validated_data)
+                validated_data["is_active"] = True
+                user: User = User.objects.create_user(**validated_data)
                 user.eligible_for_reset()
-                merchant = CarMerchant.objects.create(user=user)
+                CarMerchant.objects.create(user=user)
             elif validated_data.get("user_type") == UserTypes.Admin:
                 user = User.objects.create_superuser(**validated_data)
             else:
@@ -312,36 +313,27 @@ class TokenObtainModSerializer(serializers.Serializer):
 
 
 class OtpSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
+    username = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
+    phone = serializers.CharField(validators=[is_valid_phone], required=False)
 
     def validate(self, attrs):
-        username = attrs["username"]
-        if username and re.search(r'[^@\s]+@[^@\s]+\.[^@\s]+', username):
-            kwargs = {'email': username}
-        elif username and re.search(r'\+?[\d]{3}[\d]{10}', username):
-            kwargs = {'phone': username}
-        else:
-            kwargs = {'username': username}
-        return kwargs
+        if attrs.get("username"):
+            return dict(username=attrs.get("username"))
+        if attrs.get("phone"):
+            return dict(phone=attrs.get("phone"))
+        return dict(email=attrs.get("email"))
 
     def create(self, validated_data):
-        users = User.objects.filter(**validated_data)
-        if len(users) > 0:
-            user = users[0]
-            expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
-            otp = "123456"
-            context = dict(username=user.username, otp=otp)
-            # notify(
-            #     USER_PHONE_VERIFICATION,
-            #     context=context,
-            #     email_to=[
-            #         user.email,
-            #     ],
-            # )
-            return Otp.objects.create(user=user, expiry=expiry, otp=otp)
-        else:
+        users = User.objects.filter(**validated_data).first() if validated_data.get("username") else None
+        if not users and validated_data.get("username"):
             key = list(validated_data.keys())[0]
             raise serializers.ValidationError(f"user with {key} {validated_data[key]} does not exist")
+        expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
+        otp = "123456"
+        return Otp.objects.create(
+            user=users, expiry=expiry, otp=otp, email=validated_data.get("email"), phone=validated_data.get("phone")
+        )
 
 
 class DisbursementSerializer(serializers.ModelSerializer):
@@ -424,3 +416,16 @@ class NotificationsSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return Notifications.objects.create(**validated_data)
+
+
+# class OtpSerializer(serializers.Serializer):
+#     username = serializers.CharField(required=False, min_length=1)
+#     email = serializers.EmailField(required=False)
+#     phone = serializers.CharField(validators=[is_valid_phone], required=False)
+#
+#     def validate(self, attrs):
+#         if attrs.get("username"):
+#             return dict(username=attrs.get("username"))
+#         if attrs.get("phone"):
+#             return dict(phone=attrs.get("phone"))
+#         return dict(email=attrs.get("email"))

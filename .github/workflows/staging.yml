@@ -48,6 +48,7 @@ jobs:
           
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           base64 -d <<< "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > carpadi-google-cred.json
+          base64 -d <<< "${{ secrets.ENVIRONMENT }}" > .env
           docker build --no-cache -t olalekanadebari/carpadi-api:$NEXT_VERSION .
           if [ ${{ github.ref }} == "refs/heads/master" ]; then
             docker image tag  olalekanadebari/carpadi-api:$NEXT_VERSION olalekanadebari/carpadi-api:latest
@@ -86,7 +87,7 @@ jobs:
       - name: Deploy icon to server
         uses: appleboy/ssh-action@master
         env:
-          IMAGE_NAME: "olalekanadebari/carpadi-api"
+          IMAGE_NAME: olalekanadebari/carpadi-api:latest
           IMAGE_TAG: ${NEXT_VERSION}
           CONTAINER_NAME: "carpadi-api"
         with:
@@ -96,10 +97,13 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           envs: IMAGE_NAME,IMAGE_TAG,CONTAINER_NAME
           script: |
-            docker container stop carpadi-api
-            docker container rm carpadi-api
-            docker image rm olalekanadebari/carpadi-api:latest -f
-            docker pull olalekanadebari/carpadi-api:latest
-            docker run -d -p 8000:8000 --name carpadi-api -v /app/static:/app/src/staticfiles --env-file ~/.env olalekanadebari/carpadi-api:latest
-            docker image prune -a --force
+              docker-compose down --rmi all
+              docker-compose up -d
+#            docker container stop carpadi-api
+#            docker container rm carpadi-api
+#            docker image rm olalekanadebari/carpadi-api:latest -f
+#            docker pull olalekanadebari/carpadi-api:latest
+#            docker run -d -p 8000:8000 --name carpadi-api -v /app/static:/app/src/staticfiles --env-file ~/.env olalekanadebari/carpadi-api:latest
+#            docker image prune -a --force
+
 #            ................

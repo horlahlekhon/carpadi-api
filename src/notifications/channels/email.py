@@ -27,7 +27,7 @@ class EmailChannel:
     def send_mail_mailchimp(context, html_template, subject, to):
         email_html_message = render_to_string(html_template, context)
         message = {
-            "from_email": "no-reply@bloverse.com",
+            "from_email": settings.MAILCHIMP_FROM,
             "from_name": "Carpadi",
             "subject": subject,
             "html": email_html_message,
@@ -35,7 +35,7 @@ class EmailChannel:
         }
 
         try:
-            mailchimp = MailchimpTransactional.Client("dpq9KENAxMS7UqJMfk8BlQ")
+            mailchimp = MailchimpTransactional.Client(settings.MAILCHIMP_API_KEY)
             response = mailchimp.messages.send({"message": message})
             print(response)
         except ApiClientError as error:

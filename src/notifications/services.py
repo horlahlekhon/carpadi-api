@@ -21,15 +21,15 @@ NOTIFICATIONS = {
     },
     USER_PHONE_VERIFICATION: {
         "notice_type": "new_user",
-        'email': {
+        'text_messages': {
             'email_subject': 'Verify phone',
-            'email_html_template': 'emails/verify_phone.html',
+            'email_html_template': 'text_messages/verify_phone.html',
         },
     },
     "USER_EMAIL_VERIFICATION": {
         "notice_type": "email_verification",
         'email': {
-            'email_subject': 'Verify email',
+            'email_subject': 'Email verification',
             'email_html_template': 'emails/verify_email.html',
         },
     },
@@ -84,21 +84,21 @@ NOTIFICATIONS = {
 }
 
 
-def     _send_email(email_notification_config, context):
-    to = User.objects.get(id=context.get("user_id")).email
+def _send_email(email_notification_config, context):
+    to = User.objects.get(id=context.get("user")).email
     email_html_template = email_notification_config.get('email_html_template')
-    email_subject = "Carpadi Email Notification System - " + email_notification_config.get('email_subject')
+    email_subject = email_notification_config.get('email_subject')
     from src.common.tasks import send_email_notification_task
 
-    #send_email_notification_task.delay(context, email_html_template, email_subject, to)
-    send_email_notification_taskp(context, email_html_template, email_subject, to)
+    send_email_notification_task.delay(context, email_html_template, email_subject, to)
+    # send_email_notification_taskp(context, email_html_template, email_subject, to)
 
 
 def _send_firebase(notification_config, context):
-    from src.common.tasks import send_push_notification_taskp
+    from src.common.tasks import send_push_notification_task
 
-    #send_push_notification_task.delay(context, context.get("user"))
-    send_push_notification_taskp(context, context.get("user"))
+    send_push_notification_task.delay(context, context.get("user"))
+    # send_push_notification_taskp(context, context.get("user"))
 
 
 def notify(verb, **kwargs):

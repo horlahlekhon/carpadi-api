@@ -81,19 +81,15 @@ WSGI_APPLICATION = 'src.wsgi.application'
 
 # Email
 
-EMAIL_HOST = "in-v3.mailjet.com"
+EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = 587
-EMAIL_FROM = "admin@carpadi.com"
-EMAIL_HOST_USER = "effd16db611dab2e8a9d7515e6caf7d9"
-EMAIL_HOST_PASSWORD = "1324403edf626ee9e5d9e0949d01d037"  # 44c3b9a23917b98d50913d884c940782
+EMAIL_FROM = os.getenv("EMAIL_FROM")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if TESTING else "django.core.mail.backends.smtp.EmailBackend"
+MAILCHIMP_FROM = os.getenv("MAILCHIMP_FROM")
+MAILCHIMP_API_KEY = os.getenv("MAILCHIMP_API_KEY")
 
-# EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-# EMAIL_HOST = os.getenv('EMAIL_HOST', default="in-v3.mailjet.com")
-# EMAIL_PORT = os.getenv('EMAIL_PORT', default=587)
-# EMAIL_FROM = os.getenv('EMAIL_FROM', default="horlahlekhon@gmail.com")
-# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', default="effd16db611dab2e8a9d7515e6caf7d9")
-# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', default="462488cdc685193b657ed4dafbf5633e")
 EMAIL_USE_TLS = True
 
 # Celery
@@ -162,7 +158,7 @@ LOGIN_REDIRECT_URL = '/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATICFILES_DIRS = [
-    f"{BASE_DIR}/src/notifications/templates",
+    f"{BASE_DIR}/notifications/templates",
 ]
 STATIC_URL = '/static/'
 STATICFILES_FINDERS = (

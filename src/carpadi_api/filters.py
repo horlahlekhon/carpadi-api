@@ -24,9 +24,11 @@ class TransactionsFilter(filters.FilterSet):
     transaction_date_lte = filters.DateTimeFilter(field_name="created", lookup_expr='day__lte')
     transaction_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')
     transaction_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
-    kind = filters.ChoiceFilter(field_name="transaction_kind", lookup_expr='iexact', choices=TransactionKinds.choices)
-    status = filters.ChoiceFilter(field_name="transaction_status", lookup_expr='iexact', choices=TransactionStatus.choices)
-    type = filters.ChoiceFilter(field_name="transaction_type", lookup_expr='iexact', choices=TransactionTypes.choices)
+    kind = filters.MultipleChoiceFilter(field_name="transaction_kind", lookup_expr='iexact', choices=TransactionKinds.choices)
+    status = filters.MultipleChoiceFilter(
+        field_name="transaction_status", lookup_expr='iexact', choices=TransactionStatus.choices
+    )
+    type = filters.MultipleChoiceFilter(field_name="transaction_type", lookup_expr='iexact', choices=TransactionTypes.choices)
     reference = filters.CharFilter(field_name="transaction_reference", lookup_expr='iexact')
 
     class Meta:
@@ -35,7 +37,7 @@ class TransactionsFilter(filters.FilterSet):
 
 
 class CarsFilter(filters.FilterSet):
-    status = filters.ChoiceFilter(field_name="status", lookup_expr="iexact")
+    status = filters.MultipleChoiceFilter(field_name="status", lookup_expr="iexact")
     brand__name = filters.CharFilter(lookup_expr="iexact")
 
     class Meta:
@@ -59,7 +61,7 @@ class ActivityFilter(filters.FilterSet):
     activity_date_lte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gt')
     activity_date_gte = filters.DateTimeFilter(field_name="created", lookup_expr='day__gte')
     activity_date_range = filters.DateTimeFromToRangeFilter(field_name="created")
-    type = filters.ChoiceFilter(field_name="activity_type", lookup_expr='iexact', choices=ActivityTypes.choices)
+    type = filters.MultipleChoiceFilter(field_name="activity_type", lookup_expr='iexact', choices=ActivityTypes.choices)
 
     class Meta:
         model = Activity
@@ -69,7 +71,7 @@ class ActivityFilter(filters.FilterSet):
 class TradeFilter(filters.FilterSet):
     make = filters.CharFilter(field_name="car__information__make", lookup_expr='iexact')
     search = filters.CharFilter(field_name="car", method="search_trade")
-    trade_status = filters.ChoiceFilter(field_name="trade_status", lookup_expr='iexact', choices=TradeStates.choices)
+    trade_status = filters.MultipleChoiceFilter(field_name="trade_status", lookup_expr='iexact', choices=TradeStates.choices)
 
     def search_trade(self, queryset, name, value):
         return queryset.filter(
@@ -93,7 +95,9 @@ class TradeFilter(filters.FilterSet):
 class TradeUnitFilter(filters.FilterSet):
     make = filters.CharFilter(field_name="trade__car__information__make", lookup_expr='iexact')
     trade = filters.CharFilter(field_name="trade__id", lookup_expr='iexact')
-    status = filters.ChoiceFilter(field_name="trade__trade_status", lookup_expr='iexact', choices=TradeStates.choices)
+    trade_status = filters.MultipleChoiceFilter(
+        field_name="trade__trade_status", lookup_expr='iexact', choices=TradeStates.choices
+    )
     slots_quantity_gte = filters.NumberFilter(field_name="slots_quantity", lookup_expr='slots_quantity__gte')
     slots_quantity_lte = filters.NumberFilter(field_name="slots_quantity", lookup_expr='slots_quantity__lte')
     merchant = filters.CharFilter(field_name="merchant__id", lookup_expr="iexact")

@@ -47,8 +47,10 @@ from src.models.models import (
     Settings,
     InspectionStatus,
     CarDocuments,
+    MerchantStatusChoices,
 )
 from src.models.serializers import UserSerializer, CarBrandSerializer
+from src.notifications.services import notify
 
 
 class SocialSerializer(serializers.Serializer):
@@ -201,6 +203,8 @@ class CarSerializer(serializers.ModelSerializer):
 
     @atomic()
     def update(self, instance: Car, validated_data):
+        if not instance.is_editable():
+            raise serializers.ValidationError("Updates cannot be applied to a car with completed or closed trade.")
         if validated_data.get("status") == CarStates.Available:
             validated_data["total_cost"] = instance.total_cost_calc()
             validated_data["maintenance_cost"] = instance.maintenance_cost_calc()
@@ -210,11 +214,9 @@ class CarSerializer(serializers.ModelSerializer):
             and instance.inspections.status == InspectionStatus.Completed
             and CarDocuments.documentation_completed(instance.id)
         ):
-            validated_data[
-                "status"
-            ] = (
-                CarStates.Available
-            )  # TODO add cron to periodically check for cars that have all requirement for available for tade and set status to available noqa
+            validated_data["status"] = CarStates.Available
+            # TODO add cron to periodically check for cars that have all
+            # requirement for available for tade and set status to available noqa
         images = validated_data.get("car_pictures") or []
         Assets.create_many(images=images, feature=instance, entity_type=AssetEntityType.Car)
         return super().update(instance, validated_data)
@@ -681,11 +683,13 @@ class InventoryDashboardSerializer(serializers.Serializer):
 
     def get_car_listing(self, value):
         """The total amount of cars in the system"""
-        return Car.objects.exclude(status=CarStates.Available).count()
+        return Car.objects.count()
 
     def get_under_inspection(self, value):
         """The total amount of cars under inspection"""
-        return Car.objects.filter(status=CarStates.OngoingInspection).count()
+        return Car.objects.filter(
+            status__in=(CarStates.OngoingInspection, CarStates.PendingInspection, CarStates.Inspected)
+        ).count()
 
     def get_passed_for_trade(self, value):
         """The total amount of cars passed for trade"""
@@ -694,7 +698,7 @@ class InventoryDashboardSerializer(serializers.Serializer):
     def get_ongoing_trade(self, value):
         """The total amount of cars in trade"""
         return Car.objects.filter(
-            trade__trade_status=TradeStates.Ongoing
+            status=CarStates.OngoingTrade
         ).count()  # Trade.objects.filter(trade_status=TradeStates.Ongoing).count()
 
     def get_sold(self, value):
@@ -721,7 +725,7 @@ class MerchantDashboardSerializer(serializers.Serializer):
         return TradeUnit.objects.filter(merchant__user__is_active=True).values('merchant').distinct().count()
 
     def get_unapproved_users(self, value):
-        return CarMerchant.objects.filter(is_approved=False).count()
+        return CarMerchant.objects.filter(status=MerchantStatusChoices.Pending).count()
 
     def get_inactive_users(self, value):
         """The total amount of inactive users in the system"""
@@ -1027,6 +1031,14 @@ class CarMerchantAdminSerializer(serializers.ModelSerializer):
         user_ser = UserSerializer(instance=merchant.user)
         return user_ser.data
 
+    def update(self, instance, validated_data):
+        stat = instance.status
+        merchant: CarMerchant = super(CarMerchantAdminSerializer, self).update(instance, validated_data)
+        if validated_data.get("status") and merchant.status != stat:
+            context = dict(status=validated_data.get("status"), username=merchant.user.username, email=merchant.user.email)
+            notify("MERCHANT_APPROVAL", **context)
+        return merchant
+
     class Meta:
         model = CarMerchant
         fields = "__all__"
@@ -1055,7 +1067,9 @@ class CarDocumentsSerializer(serializers.ModelSerializer):
         return doc
 
     @atomic()
-    def update(self, instance, validated_data):
+    def update(self, instance: CarDocuments, validated_data):
+        if not instance.car.is_editable():
+            raise serializers.ValidationError("Updates cannot be applied to a car with completed or closed trade.")
         url = validated_data.pop("asset") if validated_data.get("asset") else None
         doc = super(CarDocumentsSerializer, self).update(instance, validated_data)
         if url:

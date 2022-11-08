@@ -1,3 +1,56 @@
+# [1.17.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.16.0...v1.17.0) (2022-11-06)
+
+
+### Features
+
+* changed registeration process ([0ec3a69](https://github.com/horlahlekhon/carpadi-api/commit/0ec3a6943df335a66076279a0e4c65c440a30d5d))
+* changed registeration process ([dd4f0f8](https://github.com/horlahlekhon/carpadi-api/commit/dd4f0f8d455d4a6704e40ad029718d76b59f5682))
+
+# [1.16.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.15.0...v1.16.0) (2022-11-06)
+
+
+### Features
+
+* changed registeration process ([83542e7](https://github.com/horlahlekhon/carpadi-api/commit/83542e72c2693e563b8562bb00882533fef244f5))
+* changed registeration process ([f5f1495](https://github.com/horlahlekhon/carpadi-api/commit/f5f149599da4622ffb49030291280f736c5d92ac))
+
+# [1.15.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.14.0...v1.15.0) (2022-11-04)
+
+
+### Features
+
+* deployment ([8520563](https://github.com/horlahlekhon/carpadi-api/commit/8520563c695781343be772a0e1bd1b04df238bc9))
+
+# [1.14.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.13.0...v1.14.0) (2022-11-04)
+
+
+### Features
+
+* deployment ([e19ba0f](https://github.com/horlahlekhon/carpadi-api/commit/e19ba0fb329609805f7ff11e8a8199e2fe821b59))
+
+# [1.13.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.12.0...v1.13.0) (2022-11-02)
+
+
+### Features
+
+* fix cars update should not be allowed after trade completion ([6e3f7b3](https://github.com/horlahlekhon/carpadi-api/commit/6e3f7b31605270b6dcc3c3a130592c34c190ceea))
+* fix cars update should not be allowed after trade completion ([469cbe6](https://github.com/horlahlekhon/carpadi-api/commit/469cbe6a1c422aa40601b166162d9932d59d7f31))
+
+# [1.12.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.11.0...v1.12.0) (2022-10-31)
+
+
+### Features
+
+* fix ci ([cb3c7ec](https://github.com/horlahlekhon/carpadi-api/commit/cb3c7eca1ce34f5fb5aed333b12518cb9c671ef2))
+
+# [1.11.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.19...v1.11.0) (2022-10-30)
+
+
+### Features
+
+* added mailchimp ([be8179f](https://github.com/horlahlekhon/carpadi-api/commit/be8179f9d5438ef9fa763e9577eafd823ff28702))
+* fix ci ([b8f3a44](https://github.com/horlahlekhon/carpadi-api/commit/b8f3a445eadb1ddc122fe8d541fcaaa416ca226d))
+
 ## [1.10.19](https://github.com/horlahlekhon/carpadi-api/compare/v1.10.18...v1.10.19) (2022-10-24)
 
 
