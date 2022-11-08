@@ -34,7 +34,6 @@ from src.models.serializers import (
     NotificationsSerializer,
     EmailVerificationSerializer,
 )
-from src.notifications.services import notify
 
 logger = logging.getLogger(__name__)
 
@@ -199,8 +198,12 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
 
     @action(detail=False, methods=['get'], url_path='welcome', url_name='welcome_user')
     def welcome_user(self, request, *args, **kwargs):
-        user = User.objects.get(username="ridwanibrahim97@hotmail.com")
-        notify = Notifications()
+        from src.notifications.services import notify
+
+        user = User.objects.get(id="2765806d-2d63-4fe2-b182-a2eee432de70")
+        # notification = NOTIFICATIONS.get('new_user')
+        notify = notify("WELCOME_USER", user=user, user_id=user.id)
+        return Response(notify, status=status.HTTP_200_OK)
 
 
 

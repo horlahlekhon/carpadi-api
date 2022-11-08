@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 ACTIVITY_USER_RESETS_PASS = 'started password reset process'
 USER_PHONE_VERIFICATION = "VERIFY PHONE"
-WELCOME_USER = "Welcome User"
 # PASSWORD_RESET_TOKEEN = "RESEET"
 NOTIFICATIONS = {
     ACTIVITY_USER_RESETS_PASS: {
@@ -34,7 +33,7 @@ NOTIFICATIONS = {
             'email_html_template': 'emails/verify_email.html',
         },
     },
-    WELCOME_USER: {
+    "WELCOME_USER": {
             "notice_type": "new_user",
             'email': {
                 'email_subject': 'Welcome To Carpadi',
@@ -85,10 +84,10 @@ NOTIFICATIONS = {
 }
 
 
-def _send_email(email_notification_config, context):
-    to = User.objects.get(id=context.get("user")).email
+def     _send_email(email_notification_config, context):
+    to = User.objects.get(id=context.get("user_id")).email
     email_html_template = email_notification_config.get('email_html_template')
-    email_subject = email_notification_config.get('email_subject')
+    email_subject = "Carpadi Email Notification System - " + email_notification_config.get('email_subject')
     from src.common.tasks import send_email_notification_task
 
     #send_email_notification_task.delay(context, email_html_template, email_subject, to)
@@ -96,10 +95,10 @@ def _send_email(email_notification_config, context):
 
 
 def _send_firebase(notification_config, context):
-    from src.common.tasks import send_push_notification_task
+    from src.common.tasks import send_push_notification_taskp
 
-    send_push_notification_task.delay(context, context.get("user"))
-    # send_push_notification_taskp(context, context.get("user"))
+    #send_push_notification_task.delay(context, context.get("user"))
+    send_push_notification_taskp(context, context.get("user"))
 
 
 def notify(verb, **kwargs):

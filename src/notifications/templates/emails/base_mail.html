@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
+    {%  block extra_stylesheet %} {% endblock %}
+</head>
+<body>
+        <table width="100%" class="main-table">
+            <tr class="carpadi-logo">
+                <td>
+                    <a href="https://carpadi.com">
+                        <img src="{% static 'icon/main-image.svg' %}" alt="carpadi logo" title="carpadi logo"/>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {% block email_content %} {% endblock %}
+                </td>
+            </tr>
+            <tr class=" center">
+                <td>
+                    <table class="horizontal-line" width="100%">
+                        <tbody class="center ">
+                            <tr class="display-inline pd-left-8-rem">
+                                <td>
+                                    <a href="https://www.apple.com/us/search/carpadi?src=globalnav" class="appstore"></a>
+                                </td>
+                            </tr>
+
+                            <tr class="display-inline">
+                                <td>
+                                    <a href="https://play.google.com/store/search?q=carpadi&c=apps&hl=en&gl=US" class="playstore"></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+
+            <tr class="social-media center">
+                <td>
+                    <table class="center horizontal-line pd-bottom-15 pd-top-15" width="100%">
+                        <tbody class="center">
+                            <tr class="display-inline pd-left-16-rem mg-right-10">
+                                <td>
+                                    <a href="#" class="facebook"></a>
+                                </td>
+                            </tr>
+
+                             <tr class="display-inline mg-right-10">
+                                <td>
+                                    <a href="#" class="instagram"></a>
+                                </td>
+                            </tr>
+
+                             <tr class="display-inline mg-right-10">
+                                <td >
+                                    <a href="#" class="twitter">    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+
+            <tr class="foot-note center" >
+                <td>
+                    <table class="horizontal-line pd-bottom-15 pd-top-15" width="100%">
+                        <tbody>
+                            <tr class="copyright">
+                                 <td>
+                                      <p>
+                                        Copyright &copy {% now "Y" %} Carpadi Investements Limited. All rights reserved.
+                                    </p>
+                                 </td>
+                            </tr>
+
+                            <tr>
+                                 <td>
+                                     <p>
+                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sit nisl, viverra potenti sem vel nam eros neque. Nulla viverra sit feugiat
+                                        volutpat in eros diam quam sed. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sit nisl, viverra potenti sem vel nam eros neque.
+                                        Nulla viverra sit feugiat volutpat in eros diam quam sed.
+                                    </p>
+                                 </td>
+                            </tr>
+                                {{ content }}
+                             <tr class="display-inline">
+                                <td>
+                                    <table class="foot-links center">
+                                    <tr class="display-inline">
+                                        <td>
+                                            <a href="#">
+                                                <span>Privacy Policy</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="display-inline">
+                                        <td>
+                                            <a href="#">
+                                                <span>Terms of service</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="display-inline">
+                                        <td>
+                                            <a href="#">
+                                                <span>Help Center</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="display-inline">
+                                        <td>
+                                            <a href="#">
+                                                <span>Unsubscribe</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </table>
+</body>
+</html>
