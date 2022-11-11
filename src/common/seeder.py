@@ -35,6 +35,7 @@ from src.models.models import (
     Settings,
     CarProduct,
     CarDocumentsTypes,
+    CarTransmissionTypes,
 )
 
 PASSWORD = "pbkdf2_sha256$260000$dl1wNc1JopbXE6JndG5I51$qJCq6RPPESnd1pMEpLDuJJ00PVbKK4Nu2YLpiK3OliA="
@@ -81,20 +82,12 @@ class PadiSeeder:
             )
 
             id1 = self.seeder.execute()[CarMerchant][0]
+            wallet = Wallet.objects.get(merchant_id=id1)
+            wallet.balance = Decimal(1000000)
+            wallet.total_cash = Decimal(1000000)
+            wallet.withdrawable_cash = Decimal(1000000)
+            wallet.save(update_fields=["balance", "total_cash", "withdrawable_cash"])
             merch_ids.append(id1)
-            self.seeder.add_entity(
-                Wallet,
-                1,
-                {
-                    'merchant': lambda x: CarMerchant.objects.get(pk=id1),
-                    'balance': Decimal(10000000.0),
-                    'withdrawable_cash': Decimal(10000000.0),
-                    'trading_cash': Decimal(0.0),
-                    'total_cash': Decimal(0.0),
-                },
-            )
-
-            self.seeder.execute()
         merch_ids = CarMerchant.objects.filter(user__username__in=usernames)
         return merch_ids
 
@@ -298,7 +291,7 @@ class PadiSeeder:
                 "id": uuid.uuid4(),
                 "vin": lambda x: self.seeder.faker.random_number(digits=17),
                 "engine": "L4, 1.8L; DOHC; 16V",
-                "transmission": "STANDARD",
+                "transmission": CarTransmissionTypes.Automatic.value,
                 "car_type": vehicle["Category"],
                 "fuel_type": FuelTypes.Petrol,
                 "description": None,

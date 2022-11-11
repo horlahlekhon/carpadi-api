@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.http.response import Http404
 from django.utils import timezone
 from django_filters import rest_framework as filters
+from fcm_django.models import FCMDevice
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -34,6 +35,7 @@ from src.models.serializers import (
     NotificationsSerializer,
     EmailVerificationSerializer,
 )
+from src.notifications.channels.firebase import FirebaseChannel
 from src.notifications.services import notify
 
 logger = logging.getLogger(__name__)
@@ -197,6 +199,25 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], url_path='notify', url_name='notify')
+    def random_notify(self, request):
+        token = request.data.get("token")
+        fcm: FCMDevice = FCMDevice.objects.first()
+        fcm.registration_id = token
+        fcm.save(update_fields=["registration_id"])
+        user = fcm.user
+        unit = TradeUnit.objects.first()
+        context = dict()
+        context["entity"] = (str(unit.id),)
+        context["message"] = "this is a dummy message"
+        context["slot_quantity"] = unit.slots_quantity
+        context["car"] = unit.trade.car.name
+        context["total"] = unit.unit_value
+        context["email"] = user.email
+        context["user"] = str(user.id)
+        notify('TRADE_UNIT_PURCHASE', **context)
+        return Response(200)
 
 
 class TokenObtainPairViewMod(TokenViewBase):

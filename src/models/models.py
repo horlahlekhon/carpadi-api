@@ -48,8 +48,15 @@ class Base(UUIDModel, TimeStampedModel):
 
 
 class UserTypes(models.TextChoices):
-    Admin = "admin", "admin"
-    CarMerchant = "merchant", "merchant"
+    Admin = "admin", _(
+        "admin",
+    )
+    CarMerchant = "merchant", _(
+        "merchant",
+    )
+    CarSeller = "car_seller", _(
+        "Car seller",
+    )
 
 
 class User(AbstractUser, Base):
@@ -1410,3 +1417,51 @@ class CarDocuments(Base):
             CarDocuments.objects.filter(car__id=car, is_verified=True).filter(~Q(document_type=CarDocumentsTypes.Others)).count()
         )
         return len(CarDocumentsTypes.choices) - 1 == docs
+
+
+class CarConditionsTypes(models.TextChoices):
+    Good = "good", _(
+        "Car is in good condition",
+    )
+    Great = "great", _(
+        "Car is in great condition",
+    )
+    Fair = "fair", _(
+        "Car is fairly good",
+    )
+    poor = "poor", _("car is not in good condition")
+
+
+class ContactPreference(models.TextChoices):
+    Email = "email", _(
+        "Email",
+    )
+    Phone = "phone", _(
+        "Phone",
+    )
+    Whatsapp = "whatsapp", _(
+        "Whatsapp",
+    )
+
+
+class CarPurchaseOffer(Base):
+    """
+    This represents the details of the offer to sell a car to us
+    """
+
+    vehicle_info = models.ForeignKey(
+        VehicleInfo, on_delete=models.SET_NULL, null=True, blank=False, related_name="purchase_offers"
+    )
+    licence_plate = models.CharField(null=False, blank=False, validators=[LicensePlateValidator], max_length=15)
+    registeration_state = models.CharField(max_length=40, null=False, blank=False)
+    current_usage_timeframe_by_user = models.PositiveIntegerField(help_text="how long has this user used the car in months")
+    mileage = models.PositiveIntegerField(help_text="the current mileage of the car on the dashboard")
+    count_of_previous_users = models.PositiveIntegerField(help_text="how many people have previously used this car")
+    custom_papers_availability = models.BooleanField(default=False)
+    car_condition = models.CharField(choices=CarConditionsTypes.choices, max_length=20)
+    note = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=False, related_name="sellers")
+    price = models.DecimalField(decimal_places=2, default=Decimal(0.00), max_digits=10)
+    inspection_location = models.CharField(max_length=40, null=False, blank=False)
+    contact_preference = models.CharField(choices=ContactPreference.choices, max_length=100, null=False, blank=False)
+    is_negotiable = models.BooleanField()
