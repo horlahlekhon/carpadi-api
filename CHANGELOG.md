@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.17.0...v1.18.0) (2022-11-11)
+
+
+### Features
+
+* added purchases offer models ([ac1361f](https://github.com/horlahlekhon/carpadi-api/commit/ac1361f1a246c90ed685d6c9c1a64b58de20c6cd))
+
 # [1.17.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.16.0...v1.17.0) (2022-11-06)
 
 
