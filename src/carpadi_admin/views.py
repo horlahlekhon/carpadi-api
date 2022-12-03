@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import status
 
@@ -260,7 +260,8 @@ class CarProductViewSetAdmin(viewsets.ModelViewSet):
 
 
 class VehicleInfoViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAdminUser,)
+    # permission_classes = (IsAdminUser,)
+    permission_classes = (AllowAny,)
     serializer_class = VehicleInfoSerializer
     queryset = VehicleInfo.objects.all()
     filter_class = VehicleInfoFilter

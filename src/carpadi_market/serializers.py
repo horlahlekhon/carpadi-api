@@ -3,7 +3,21 @@ from typing import List, Dict
 from django.db.transaction import atomic
 from rest_framework import serializers
 
-from src.models.models import CarFeature, Assets, CarProduct, AssetEntityType, Trade, VehicleInfo, CarStates, Car
+from src.carpadi_admin.serializers import VehicleInfoSerializer
+from src.models.models import (
+    CarFeature,
+    Assets,
+    CarProduct,
+    AssetEntityType,
+    Trade,
+    VehicleInfo,
+    CarStates,
+    Car,
+    CarPurchaseOffer,
+    User,
+    UserTypes,
+)
+from src.models.validators import PhoneNumberValidator
 
 
 class CarSerializerField(serializers.RelatedField):
@@ -116,3 +130,54 @@ class CarProductSerializer(serializers.ModelSerializer):
         feat: CarProduct = super(CarProductSerializer, self).update(instance, validated_data)
         Assets.create_many(images=images, feature=feat, entity_type=AssetEntityType.CarProduct)
         return feat
+
+
+class PurchasesUserSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    phone = serializers.CharField(validators=[PhoneNumberValidator])
+    email = serializers.EmailField()
+
+    class Meta:
+        model = User
+        fields = (
+            'first_name',
+            "last_name",
+            "phone",
+            "email",
+        )
+
+    def create(self, validated_data):
+        if usr := User.objects.filter(phone=validated_data["phone"], email=validated_data["email"]).first():
+            return usr
+        validated_data["username"] = validated_data["email"]
+        validated_data["is_active"] = False
+        validated_data["user_type"] = UserTypes.CarSeller
+        return User.objects.create(**validated_data)
+
+
+class CarPurchaseOfferSerializer(serializers.ModelSerializer):
+    user = serializers.DictField(write_only=True)
+    seller = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CarPurchaseOffer
+        fields = "__all__"
+
+    def get_seller(self, obj: CarPurchaseOffer):
+        return PurchasesUserSerializer(instance=obj.user).data
+
+    def to_representation(self, instance):
+        data = super(CarPurchaseOfferSerializer, self).to_representation(instance)
+        vehicle = VehicleInfo.objects.filter(id=data["vehicle_info"]).first()
+        data["vehicle_info"] = VehicleInfoSerializer(instance=vehicle).data if vehicle else None
+        return data
+
+    @atomic
+    def create(self, validated_data):
+        user = validated_data.pop("user")
+        ser = PurchasesUserSerializer(data=user)
+        ser.is_valid(raise_exception=True)
+        usr = ser.save()
+        validated_data["user"] = usr
+        return CarPurchaseOffer.objects.create(**validated_data)

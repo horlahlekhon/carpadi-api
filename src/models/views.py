@@ -34,6 +34,7 @@ from src.models.serializers import (
     NotificationsSerializer,
     EmailVerificationSerializer,
 )
+from src.notifications.services import notify
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +197,25 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], url_path='notify', url_name='notify')
+    def random_notify(self, request):
+        token = request.data.get("token")
+        fcm: FCMDevice = FCMDevice.objects.first()
+        fcm.registration_id = token
+        fcm.save(update_fields=["registration_id"])
+        user = fcm.user
+        unit = TradeUnit.objects.first()
+        context = dict()
+        context["entity"] = (str(unit.id),)
+        context["message"] = "this is a dummy message"
+        context["slot_quantity"] = unit.slots_quantity
+        context["car"] = unit.trade.car.name
+        context["total"] = unit.unit_value
+        context["email"] = user.email
+        context["user"] = str(user.id)
+        notify('TRADE_UNIT_PURCHASE', **context)
+        return Response(200)
 
     @action(detail=False, methods=['get'], url_path='welcome', url_name='welcome_user')
     def welcome_user(self, request, *args, **kwargs):
