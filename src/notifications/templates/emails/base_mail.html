@@ -6,15 +6,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-    <link rel="stylesheet" href="{% static 'css/main.css' %}"/>
-    {%  block extra_stylesheet %} {% endblock %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/base_mail.css' %}"/>
 </head>
 <body>
         <table width="100%" class="main-table">
             <tr class="carpadi-logo">
                 <td>
                     <a href="https://carpadi.com">
-                        <img src="{% static 'icon/main-image.svg' %}" alt="carpadi logo" title="carpadi logo"/>
+                        <img src="{% static 'images/main-image.svg' %}" alt="carpadi"/>
                     </a>
                 </td>
             </tr>
@@ -29,13 +28,17 @@
                         <tbody class="center ">
                             <tr class="display-inline pd-left-8-rem">
                                 <td>
-                                    <a href="https://www.apple.com/us/search/carpadi?src=globalnav" class="appstore"></a>
+                                    <a href="https://www.apple.com/us/search/carpadi?src=globalnav" class="appstore">
+                                        <img src="{% static 'images/appstore.svg' %}" alt="appstore">
+                                    </a>
                                 </td>
                             </tr>
 
                             <tr class="display-inline">
                                 <td>
-                                    <a href="https://play.google.com/store/search?q=carpadi&c=apps&hl=en&gl=US" class="playstore"></a>
+                                    <a href="https://play.google.com/store/search?q=carpadi&c=apps&hl=en&gl=US" class="playstore">
+                                        <img src="{% static 'images/playstore.svg' %}" alt="playstore">
+                                    </a>
                                 </td>
                             </tr>
                         </tbody>
@@ -49,19 +52,25 @@
                         <tbody class="center">
                             <tr class="display-inline pd-left-16-rem mg-right-10">
                                 <td>
-                                    <a href="#" class="facebook"></a>
+                                    <a href="#" class="facebook">
+                                        <img src="{% static 'images/facebook.svg' %}" alt="facebook">
+                                    </a>
                                 </td>
                             </tr>
 
                              <tr class="display-inline mg-right-10">
                                 <td>
-                                    <a href="#" class="instagram"></a>
+                                    <a href="#" class="instagram">
+                                        <img src="{% static 'images/instagram.svg' %}" alt="instagram">
+                                    </a>
                                 </td>
                             </tr>
 
                              <tr class="display-inline mg-right-10">
                                 <td >
-                                    <a href="#" class="twitter">    </a>
+                                    <a href="#" class="twitter">
+                                        <img src="{% static 'images/twitter.svg' %}" alt="twitter">
+                                    </a>
                                 </td>
                             </tr>
                         </tbody>
@@ -90,7 +99,6 @@
                                     </p>
                                  </td>
                             </tr>
-                                {{ content }}
                              <tr class="display-inline">
                                 <td>
                                     <table class="foot-links center">

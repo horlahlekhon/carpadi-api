@@ -207,7 +207,6 @@ a:hover {
     margin: 0;
     height: 5rem;
     width: 10rem;
-    background: url("../icon/appstore.svg") 0 0 / 10rem 5rem no-repeat;
 }
 
 .playstore{
@@ -216,28 +215,24 @@ a:hover {
     margin: 0 2rem;
     height: 5rem;
     width: 10rem;
-    background: url("../icon/playstore.svg") 0 0 / 10rem 5rem no-repeat;
 }
 
 .facebook{
     display: inline-block;
     height: 25px;
     width: 25px;
-    background: url("../icon/facebook.svg") 0 0 / 25px 25px no-repeat;
 }
 
 .instagram{
     display: inline-block;
     height: 25px;
     width: 25px;
-    background: url("../icon/instagram.svg") 0 0 / 25px 25px no-repeat;
 }
 
 .twitter{
     display: inline-block;
     height: 25px;
     width: 25px;
-    background: url("../icon/twitter.svg") 0 0 / 25px 25px no-repeat;
 }
 
 .foot-note {

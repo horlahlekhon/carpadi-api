@@ -1,18 +1,18 @@
-{%  extends "./base_mail.html" %}
+{%  extends "emails/base_mail.html" %}
 
 {% block email_content %}
 <table>
     <tbody>
         <tr class="greeting">
             <td class="pd-top-10">
-                <h1> Hi, {{ user.firstname }} {{ user.last_name }} </h1>
+                <h1> Hi, {{ profile.firstname }} </h1>
                 <h2> Welcome to Carpadi</h2>
             </td>
         </tr>
 
         <tr>
             <td>
-                <table class="message" width="100%" >
+                <table class="message">
                     <tbody>
                         <tr class="mg-bottom-10">
                             <td>
@@ -23,22 +23,17 @@
                                         <tr>
                                             <td colspan="2">Full Name:</td>
                                             <td colspan="1"></td>
-                                            <td colspan="2">{{ user.firstname }} {{ user.last_name }}</td>
+                                            <td colspan="2">{{ profile.firstname }} {{ profile.lastname }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="2">Mobile:</td>
                                             <td colspan="1"></td>
-                                            <td colspan="2">{{ user.phone }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Address:</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2">2 acme road, ikeja lagos</td>
+                                            <td colspan="2">{{ profile.phone }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="2">Email:</td>
                                             <td colspan="1"></td>
-                                            <td colspan="2">{{ user.email }}</td>
+                                            <td colspan="2">{{ profile.email }}</td>
                                         </tr>
                                         </tbody>
                                     </table>
@@ -52,7 +47,7 @@
 
                         <tr>
                             <td>
-                                <a href="https:/caprpardi.com" class="more">Start Investing</a>
+                                <a href="{{ domain }}" class="more">Start Investing</a>
                             </td>
                         </tr>
                     </tbody>

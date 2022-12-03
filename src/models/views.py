@@ -201,9 +201,9 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
     def welcome_user(self, request, *args, **kwargs):
         from src.notifications.services import notify
 
-        user = User.objects.get(id="2765806d-2d63-4fe2-b182-a2eee432de70")
+        user = User.objects.get(id="76db7797-8142-43b4-9153-9432497273af")
         # notification = NOTIFICATIONS.get('new_user')
-        notify = notify("WELCOME_USER", user=user, user_id=user.id)
+        notify = notify("WELCOME_USER", user=user.id, profile=user)
         return Response(notify, status=status.HTTP_200_OK)
 
 
