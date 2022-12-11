@@ -1,4 +1,35 @@
-<p>Hi</p>
-<p>
-    Please use <strong>{{ otp }}</strong>. as your one time password for verifying your email
-</p>
+{%  extends "emails/base_mail.html" %}
+
+{% block email_content %}
+<table>
+    <tbody>
+        <tr class="greeting">
+            <td class="pd-top-10">
+                <h1> Hi, {{ username }} </h1>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <table class="message">
+                    <tbody>
+                        <tr class="mg-bottom-10">
+                            <td>
+                                <p>
+                                    Please use <strong>{{ otp }}</strong>. as your one time password for verifying your email
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <p>Please disregard this regard this email if you did not try to register on carpadi, and believe you received this email by error</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}
