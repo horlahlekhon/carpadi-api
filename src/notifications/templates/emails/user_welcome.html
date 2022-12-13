@@ -1,7 +1,7 @@
 {%  extends "emails/base_mail.html" %}
 
 {% block email_content %}
-<table>
+<table class="mg-bottom-15">
     <tbody>
         <tr class="greeting">
             <td class="pd-top-10">
@@ -18,7 +18,7 @@
                             <td>
                                 <p>
                                     Thank you for joining Carpadi Investments, your profile informations are:
-                                    <table  width="100%" class="mg-bottom-15">
+                                    <table class="mg-bottom-15">
                                         <tbody>
                                         <tr>
                                             <td colspan="2">Full Name:</td>
@@ -38,7 +38,7 @@
                                         </tbody>
                                     </table>
                                      <br><br>
-                                    <span style="color: black">Cheers,</span>
+                                    <span style="color: black">Best Regards,</span>
                                     <br><br>
                                     <span style="color: black">The Customer Success Team</span>
                                 </p>
@@ -46,7 +46,7 @@
                         </tr>
 
                         <tr>
-                            <td>
+                            <td class="mg-top-15 pd-top-15">
                                 <a href="{{ domain }}" class="more">Start Investing</a>
                             </td>
                         </tr>

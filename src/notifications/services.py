@@ -37,7 +37,7 @@ NOTIFICATIONS = {
             "notice_type": "new_user",
             'email': {
                 'email_subject': 'Welcome To Carpadi',
-                'email_html_template': 'emails/welcome_user.html',
+                'email_html_template': 'emails/user_welcome.html',
             },
     },
     'TRADE_UNIT_PURCHASE': {

@@ -59,7 +59,7 @@
         }
 
         .display-inline{
-            display: inline;
+            display: inline-block;
         }
 
         .horizontal-line{
@@ -76,6 +76,10 @@
 
         .mg-top-15{
             margin-top: 15px;
+        }
+
+         .mg-top-25{
+            margin-top: 25px;
         }
 
         .mg-bottom-5{
@@ -122,6 +126,10 @@
             padding-top: 15px;
         }
 
+        .pd-top-25{
+            padding-top: 25px;
+        }
+
         .pd-bottom-10{
             padding-bottom: 10px;
         }
@@ -134,12 +142,16 @@
             padding-bottom: 20px;
         }
 
-        /*.pd-left-10{*/
-        /*    margin-left: 10px;*/
-        /*}*/
+        .pd-left-10{
+          margin-left: 10px;
+        }
 
         .pd-left-15{
             margin-left: 15px;
+        }
+
+        .pd-left-25{
+            margin-left: 25px;
         }
 
         .pd-left-8-rem{
@@ -166,8 +178,7 @@
             width: 100%;
             max-width: 600px;
             border-spacing: 0;
-            /*border: 1px white;*/
-            border: 1px solid #000000;
+            border: 1px white;
             font-family: Roboto, Serif;
             color: #333333;
 
@@ -212,17 +223,15 @@
 
         .appstore{
             display: inline-block;
-            padding: 0;
+            padding: 25px 0;
             margin: 0;
-            height: 5rem;
             width: 10rem;
         }
 
         .playstore{
             display: inline-block;
-            padding: 0;
-            margin: 0 2rem;
-            height: 5rem;
+            padding: 25px 0;
+            margin-left: 2rem;
             width: 10rem;
         }
 
@@ -266,15 +275,15 @@
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="pd-bottom-15">
                     {% block email_content %} {% endblock %}
                 </td>
             </tr>
-            <tr class=" center">
-                <td>
-                    <table class="horizontal-line" width="100%">
-                        <tbody class="center ">
-                            <tr class="display-inline pd-left-8-rem">
+            <tr class="pd-top-25">
+                <td class="horizontal-line" >
+                    <table class="center" style="width: 70%">
+                        <tbody>
+                            <tr class="display-inline" style="padding-left: 2rem">
                                 <td>
                                     <a href="https://www.apple.com/us/search/carpadi?src=globalnav" class="appstore">
                                         <img src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/appstore.svg" alt="appstore">
@@ -282,7 +291,7 @@
                                 </td>
                             </tr>
 
-                            <tr class="display-inline">
+                             <tr class="display-inline">
                                 <td>
                                     <a href="https://play.google.com/store/search?q=carpadi&c=apps&hl=en&gl=US" class="playstore">
                                         <img src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/playstore.svg" alt="playstore">
@@ -294,11 +303,11 @@
                 </td>
             </tr>
 
-            <tr class="social-media center">
-                <td>
-                    <table class="center horizontal-line pd-bottom-15 pd-top-15" width="100%">
-                        <tbody class="center">
-                            <tr class="display-inline pd-left-16-rem mg-right-10">
+            <tr class="social-media">
+                <td class="horizontal-line pd-bottom-15 pd-top-15">
+                    <table class="center" style="width: 40%">
+                        <tbody>
+                             <tr class="display-inline mg-right-10" style="padding-left: 4.5rem">
                                 <td>
                                     <a href="#" class="facebook">
                                         <img src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/facebook.svg" alt="facebook">

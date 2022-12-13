@@ -68,5 +68,5 @@ urlpatterns = [
     url(r'^health/', include('health_check.urls')),
     # the 'api-root' from django rest-frameworks default router
     re_path(r'^$', RedirectView.as_view(url=reverse_lazy('api-root'), permanent=False)),
-    path('notify/', TemplateView.as_view(template_name='emails/reset_password.html'), name='notify'),
+    path('notify/', TemplateView.as_view(template_name='emails/user_welcome.html'), name='notify'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
