@@ -84,7 +84,7 @@ jobs:
 #          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }} 'docker run --name carpadi-api -p 8000:8000 -v /app/static:/app/src/staticfiles --env-file ~/.env -d olalekanadebari/carpadi-api:$(cat ~/version)'
 
 
-      - name: Deploy image to server
+      - name: Deploy icon to server
         uses: appleboy/ssh-action@master
         env:
           IMAGE_NAME: olalekanadebari/carpadi-api:latest

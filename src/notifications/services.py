@@ -33,6 +33,13 @@ NOTIFICATIONS = {
             'email_html_template': 'emails/verify_email.html',
         },
     },
+    "WELCOME_USER": {
+            "notice_type": "new_user",
+            'email': {
+                'email_subject': 'Welcome To Carpadi',
+                'email_html_template': 'emails/user_welcome.html',
+            },
+    },
     'TRADE_UNIT_PURCHASE': {
         "notice_type": "trade_unit",
         "in_app": {'message': 'You have successfully bought {} units from the car {}', "title": "New unit purchased"},
@@ -72,38 +79,26 @@ NOTIFICATIONS = {
             'email_subject': 'Transaction completed',
             'email_html_template': 'emails/transactions.html',
         },
-    },
-    "MERCHANT_APPROVAL": {
-        "notice_type": "merchant_approval",
-        "email": {"email_html_template": "emails/account_approval_status.html", "email_subject": "Approval status"},
-    },
-    "USER_WELCOME": {
-        "notice_type": "user_welcome",
-        "email": {"email_html_template": "emails/user_welcome.html", "email_subject": "Welcome!"},
     }
     # PASSWORD_RESET_TOKEN
 }
 
 
 def _send_email(email_notification_config, context):
-    to = context.get("email", context.get("user"))
+    to = User.objects.get(id=context.get("user")).email
     email_html_template = email_notification_config.get('email_html_template')
     email_subject = email_notification_config.get('email_subject')
     from src.common.tasks import send_email_notification_task
 
-    # send_email_notification_task.delay(context, email_html_template, email_subject, to)
+    #send_email_notification_task.delay(context, email_html_template, email_subject, to)
     send_email_notification_taskp(context, email_html_template, email_subject, to)
 
 
 def _send_firebase(notification_config, context):
     from src.common.tasks import send_push_notification_task
 
-    # send_push_notification_task.delay(context, context.get("user"))
-    send_push_notification_taskp(context, context.get("user"))
-
-
-def _send_text_message(notification_config, context):
-    print("sms notification sent")
+    send_push_notification_task.delay(context, context.get("user"))
+    # send_push_notification_taskp(context, context.get("user"))
 
 
 def notify(verb, **kwargs):
@@ -111,14 +106,12 @@ def notify(verb, **kwargs):
     if not settings.TESTING:
         if "email" in notification_config.keys():
             email_notification_config = notification_config.get('email')
-            email_to = kwargs.get('user', kwargs.get("email"))
+            email_to = kwargs.get('user', [])
             if not email_to:
                 logger.debug('Please provide list of emails (email_to argument).')
             _send_email(email_notification_config, kwargs)
         if "in_app" in notification_config.keys():
             _send_firebase(notification_config, kwargs)
-        if "text_messages" in notification_config.keys():
-            _send_text_message(notification_config, kwargs)
     return None
 
 

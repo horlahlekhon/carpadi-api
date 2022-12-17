@@ -1,10 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Welcome</title>
-</head>
-<body>
-    Hi {{ username }}, we are pleased to welcome you to carpadi. please wait for our reviewers to review your account. pending the approval please look around the app and get familiar.
-</body>
-</html>
+{%  extends "emails/base_mail.html" %}
+
+{% block email_content %}
+<table class="mg-bottom-15">
+    <tbody>
+        <tr class="greeting">
+            <td class="pd-top-10">
+                <h1> Hi, {{ username }} </h1>
+                <h2> Welcome to Carpadi</h2>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <table class="message">
+                    <tbody>
+                        <tr class="mg-bottom-10">
+                            <td>
+                                <p>
+                                    Thank you for joining Carpadi Investments, your profile informations are:
+                                    <table class="mg-bottom-15">
+                                        <tbody>
+                                        <tr>
+                                            <td colspan="2">Full Name:</td>
+                                            <td colspan="1"></td>
+                                            <td colspan="2">{{ profile.firstname }} {{ profile.lastname }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">Mobile:</td>
+                                            <td colspan="1"></td>
+                                            <td colspan="2">{{ profile.phone }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">Email:</td>
+                                            <td colspan="1"></td>
+                                            <td colspan="2">{{ profile.email }}</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                     <br><br>
+                                    <span style="color: black">Best Regards,</span>
+                                    <br><br>
+                                    <span style="color: black">The Customer Success Team</span>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="mg-top-15 pd-top-15">
+                                <a href="{{ domain }}" class="more">Start Investing</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}

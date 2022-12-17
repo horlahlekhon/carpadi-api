@@ -63,6 +63,7 @@ def exchange_token(request, backend):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        # http://www.django-rest-framework.org/api-guide/exceptions/#exception-handling-in-rest-framework-views
 
         if user:
             if user.is_active:

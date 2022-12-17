@@ -8,7 +8,6 @@ from django.db.models import Q
 from django.http.response import Http404
 from django.utils import timezone
 from django_filters import rest_framework as filters
-from fcm_django.models import FCMDevice
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -35,7 +34,6 @@ from src.models.serializers import (
     NotificationsSerializer,
     EmailVerificationSerializer,
 )
-from src.notifications.channels.firebase import FirebaseChannel
 from src.notifications.services import notify
 
 logger = logging.getLogger(__name__)
@@ -218,6 +216,17 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         context["user"] = str(user.id)
         notify('TRADE_UNIT_PURCHASE', **context)
         return Response(200)
+
+    @action(detail=False, methods=['get'], url_path='welcome', url_name='welcome_user')
+    def welcome_user(self, request, *args, **kwargs):
+        from src.notifications.services import notify
+
+        user = User.objects.get(id="76db7797-8142-43b4-9153-9432497273af")
+        # notification = NOTIFICATIONS.get('new_user')
+        notify = notify("WELCOME_USER", user=user.id, profile=user)
+        return Response(notify, status=status.HTTP_200_OK)
+
+
 
 
 class TokenObtainPairViewMod(TokenViewBase):

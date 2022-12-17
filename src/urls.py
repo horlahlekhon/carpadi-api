@@ -3,7 +3,7 @@ from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, re_path, include, reverse_lazy
-from django.views.generic.base import RedirectView
+from django.views.generic.base import RedirectView, TemplateView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework.routers import DefaultRouter
@@ -68,4 +68,5 @@ urlpatterns = [
     url(r'^health/', include('health_check.urls')),
     # the 'api-root' from django rest-frameworks default router
     re_path(r'^$', RedirectView.as_view(url=reverse_lazy('api-root'), permanent=False)),
+    path('notify/', TemplateView.as_view(template_name='emails/user_welcome.html'), name='notify'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
