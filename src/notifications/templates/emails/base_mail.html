@@ -20,6 +20,13 @@
             position: relative;
             padding: 2rem;
             gap: 32px;
+
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 24px;
+
         }
 
         img {
@@ -29,12 +36,17 @@
         ul {
             list-style: none;
         }
+
         table {
             border-spacing: 0;
-            /*border: 1px white;*/
+            width: 100%;
         }
 
         td {
+            padding: 0;
+        }
+
+        tr {
             padding: 0;
         }
 
@@ -44,26 +56,23 @@
         }
 
         a {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 24px;
+
             text-decoration: none;
             color: darkgrey;
         }
-
         a:hover {
             color: blue;
         }
 
         /*Generic class styles*/
 
-        .center {
-            margin: 0 auto;
-        }
-
-        .display-inline{
-            display: inline-block;
-        }
-
-        .horizontal-line{
-            border-top: 1px solid #D9D9D9;
+        .mg-top-0{
+            margin-top: 0;
         }
 
         .mg-top-5{
@@ -82,6 +91,10 @@
             margin-top: 25px;
         }
 
+        .mg-bottom-0{
+            margin-bottom: 0;
+        }
+
         .mg-bottom-5{
             margin-bottom: 5px;
         }
@@ -92,6 +105,14 @@
 
         .mg-bottom-15{
             margin-bottom: 15px;
+        }
+
+        .mg-left-0{
+            margin-left: 0;
+        }
+
+        .mg-left-5{
+            margin-left: 5px;
         }
 
         .mg-left-10{
@@ -106,6 +127,14 @@
             margin-left: 20px;
         }
 
+        .mg-right-0{
+            margin-right: 0;
+        }
+
+        .mg-right-5{
+            margin-right: 5px;
+        }
+
         .mg-right-10{
             margin-right: 10px;
         }
@@ -118,8 +147,16 @@
             margin-right: 15px;
         }
 
-        .pd-top-10{
-            padding-top: 20px;
+        .pd-top-0{
+            padding-top: 0;
+        }
+
+         .pd-top-5{
+            padding-top: 5px;
+        }
+
+          .pd-top-10{
+            padding-top: 10px;
         }
 
         .pd-top-15{
@@ -128,6 +165,14 @@
 
         .pd-top-25{
             padding-top: 25px;
+        }
+
+        .pd-bottom-0{
+            padding-bottom: 0;
+        }
+
+         .pd-bottom-5{
+            padding-bottom: 5px;
         }
 
         .pd-bottom-10{
@@ -140,6 +185,14 @@
 
         .pd-bottom-20{
             padding-bottom: 20px;
+        }
+
+        .pd-left-0{
+          margin-left: 0;
+        }
+
+        .pd-left-5{
+          margin-left: 5px;
         }
 
         .pd-left-10{
@@ -162,6 +215,40 @@
             padding-left: 16rem;
         }
 
+        .center-text {
+            text-align: center;
+        }
+         .center {
+            margin: auto;
+        }
+
+         .right-text{
+             text-align:right;
+         }
+
+         .right {
+             margin-right: 0;
+         }
+
+        .display-inline{
+            display: inline-block;
+        }
+
+        .horizontal-line{
+            border-top: 1px solid #D9D9D9;
+        }
+
+        .horizontal-line-bottom{
+            border-bottom: 1px solid #D9D9D9;
+        }
+
+        .separate-tr-10{
+            height: 10px;
+        }
+
+         .separate-tr-20{
+            height: 20px;
+        }
         /* class styles*/
         .wrapper {
             width: 100%;
@@ -177,21 +264,49 @@
             margin: 0 auto;
             width: 100%;
             max-width: 600px;
-            border-spacing: 0;
             border: 1px white;
-            font-family: Roboto, Serif;
             color: #333333;
 
             padding: 3rem 4rem;
         }
 
-        .greeting {
-            font-family: 'Roboto';
-            font-style: normal;
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 19px;
+        .document-title-font {
+             font-weight: 700;
+            font-size: 30px;
+            line-height: 48px;
         }
+
+        .document-head-font{
+            font-weight: 700;
+            font-size: 24px;
+            line-height: 24px;
+
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        .document-head-font-2{
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 24px;
+
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        .document-head-blue {
+            background-color: #243773;
+            color: white;
+        }
+
+        .document-head-green {
+            background-color: #27F386;
+        }
+
+        .document-head-faded-green {
+            background-color: #E7F4FB;;
+        }
+
         .message{
             margin-bottom: 5rem;
             padding-bottom: 2rem;
@@ -208,8 +323,6 @@
             border-radius: 50px;
 
             color: white;
-            font-family: 'Roboto';
-            font-style: normal;
             font-weight: 700;
             font-size: 14px;
             line-height: 22px;
