@@ -227,8 +227,6 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         return Response(notify, status=status.HTTP_200_OK)
 
 
-
-
 class TokenObtainPairViewMod(TokenViewBase):
     """
     Takes a set of user credentials and returns an access and refresh JSON web

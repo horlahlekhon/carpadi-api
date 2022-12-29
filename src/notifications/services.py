@@ -34,11 +34,11 @@ NOTIFICATIONS = {
         },
     },
     "WELCOME_USER": {
-            "notice_type": "new_user",
-            'email': {
-                'email_subject': 'Welcome To Carpadi',
-                'email_html_template': 'emails/user_welcome.html',
-            },
+        "notice_type": "new_user",
+        'email': {
+            'email_subject': 'Welcome To Carpadi',
+            'email_html_template': 'emails/user_welcome.html',
+        },
     },
     'TRADE_UNIT_PURCHASE': {
         "notice_type": "trade_unit",
@@ -90,7 +90,7 @@ def _send_email(email_notification_config, context):
     email_subject = email_notification_config.get('email_subject')
     from src.common.tasks import send_email_notification_task
 
-    #send_email_notification_task.delay(context, email_html_template, email_subject, to)
+    # send_email_notification_task.delay(context, email_html_template, email_subject, to)
     send_email_notification_taskp(context, email_html_template, email_subject, to)
 
 

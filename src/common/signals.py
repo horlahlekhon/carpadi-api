@@ -76,6 +76,7 @@ def complete_user_registeration(sender, **kwargs):
         context = dict(username=user.get_full_name(), email=user.email)
         notify("USER_WELCOME", **context)
 
+
 from django.urls import reverse
 
 
