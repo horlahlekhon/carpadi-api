@@ -1,3 +1,11 @@
+## [1.18.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.18.0...v1.18.1) (2022-12-29)
+
+
+### Bug Fixes
+
+* multichoice filter for car status ([3bafe09](https://github.com/horlahlekhon/carpadi-api/commit/3bafe09817d56305b3fa175158340595dfc02390))
+* multichoice filter for car status ([f2f697a](https://github.com/horlahlekhon/carpadi-api/commit/f2f697a155f42740158e2d1fe49dd564da9c4126))
+
 # [1.18.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.17.0...v1.18.0) (2022-11-11)
 
 
