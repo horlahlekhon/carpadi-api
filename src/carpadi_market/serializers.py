@@ -36,6 +36,10 @@ class CarSerializerField(serializers.RelatedField):
             make=value.information.brand.name,
             year=value.information.brand.year,
             fuel_type=value.information.fuel_type,
+            transmission=value.information.transmission,
+            engine=value.information.engine,
+            car_type=value.information.car_type,
+            colour=value.colour
         )
 
 
@@ -109,8 +113,9 @@ class CarProductSerializer(serializers.ModelSerializer):
     # def vehicle_details(self, vehicle: VehicleInfo):
     #     return dict()
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: Car):
         data = super(CarProductSerializer, self).to_representation(instance)
+
         return data
 
     @atomic()

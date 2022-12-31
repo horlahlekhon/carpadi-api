@@ -1187,6 +1187,15 @@ class VehicleInfo(Base):
     trim = models.CharField(max_length=50, null=True, blank=False)
     manufacturer = models.CharField(max_length=50)
     brand = models.ForeignKey(CarBrand, on_delete=models.SET_NULL, null=True, blank=True)
+    spec_country = models.CharField(max_length=20, null=True, blank=True)
+    drive_type = models.CharField(max_length=20, null=True, blank=True)
+    last_service_date = models.DateField(null=True, blank=True)
+    last_service_mileage = models.PositiveIntegerField(null=True, blank=True)
+    previous_owners = models.PositiveIntegerField(null=True, blank=True)
+    num_of_cylinders = models.PositiveIntegerField(null=True, blank=True)
+    engine_power = models.CharField(null=True, blank=True, max_length=20)
+    torque = models.CharField(null=True, blank=True, max_length=20)
+
 
 
 class CarProductStatus(models.TextChoices):
