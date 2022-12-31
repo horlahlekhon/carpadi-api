@@ -1197,7 +1197,6 @@ class VehicleInfo(Base):
     torque = models.CharField(null=True, blank=True, max_length=20)
 
 
-
 class CarProductStatus(models.TextChoices):
     Active = "active", _(
         "Car is still in the market",

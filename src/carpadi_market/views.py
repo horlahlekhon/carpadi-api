@@ -10,6 +10,7 @@ from src.carpadi_market.serializers import CarProductSerializer, CarPurchaseOffe
 from src.models.models import CarProduct, CarPurchaseOffer, VehicleInfo
 from src.models.permissions import IsAdmin
 
+
 class CarProductView(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
     serializer_class = CarProductSerializer
