@@ -1,3 +1,11 @@
+# [1.19.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.18.1...v1.19.0) (2022-12-31)
+
+
+### Features
+
+* modify carpadi market code to fit ui ([ed865e4](https://github.com/horlahlekhon/carpadi-api/commit/ed865e4b81de73561b736d5582f69bbe40cb857c))
+* modify carpadi market code to fit ui ([da59d02](https://github.com/horlahlekhon/carpadi-api/commit/da59d0268106cc661ef009a4246a86dcedffacfc))
+
 ## [1.18.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.18.0...v1.18.1) (2022-12-29)
 
 
