@@ -40,6 +40,7 @@ class CarSerializerField(serializers.RelatedField):
             engine=value.information.engine,
             car_type=value.information.car_type,
             colour=value.colour,
+            name=value.name,
         )
 
 

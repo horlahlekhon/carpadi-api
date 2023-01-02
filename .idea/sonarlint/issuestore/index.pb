@@ -11,8 +11,6 @@ C
 src/common/utils.py,b/c/bcf9d50b516ebc52e35f663ebc6cabe3ad335f89
 Q
 !src/notifications/channels/sms.py,2/8/28f272be6852948d66056ce33c520a0b2a464cb8
-M
-src/carpadi_market/filters.py,1/1/11bc6cb7a1147bfd69c05499a58bbb6e1fcacd79
 E
 requirements/prod.txt,3/b/3bdffe02694f5a4bc1ae5fcdcaef9111d65e4098
 D
