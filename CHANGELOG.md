@@ -1,3 +1,11 @@
+# [1.21.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.20.0...v1.21.0) (2023-01-03)
+
+
+### Features
+
+* integrate filters and searchbar ([4c84c2d](https://github.com/horlahlekhon/carpadi-api/commit/4c84c2d72fa6e64e2766f49038b3d5e636c6131b))
+* integrate filters and searchbar ([735b7a2](https://github.com/horlahlekhon/carpadi-api/commit/735b7a2e7cc5dfbe8b9edf71b88291551cfaa1b5))
+
 # [1.20.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.19.0...v1.20.0) (2023-01-02)
 
 
