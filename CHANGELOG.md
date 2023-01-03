@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.19.0...v1.20.0) (2023-01-02)
+
+
+### Features
+
+* added frotned fixes ([44e7b15](https://github.com/horlahlekhon/carpadi-api/commit/44e7b153823f36372fbc83b1d124f02295a9ed24))
+
 # [1.19.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.18.1...v1.19.0) (2022-12-31)
 
 
