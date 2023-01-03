@@ -5,7 +5,7 @@ from src.models.models import CarProduct, CarTransmissionTypes, FuelTypes, CarTy
 
 
 class CarProductFilter(filters.FilterSet):
-    selling_price = filters.NumberFilter(field_name="selling_price")
+    selling_price = filters.NumberFilter(field_name="selling_price", lookup_expr="lte")
     search = filters.CharFilter(field_name="car", method="search_field")
     year = filters.NumberFilter(field_name="car__information__brand__year")
     age = filters.NumericRangeFilter(field_name="car__age")
@@ -13,7 +13,8 @@ class CarProductFilter(filters.FilterSet):
         field_name="car__information__transmission", lookup_expr="iexact", choices=CarTransmissionTypes.choices
     )
     fuel_type = filters.ChoiceFilter(field_name="car__information__fuel_type", lookup_expr="iexact", choices=FuelTypes.choices)
-    car_type = filters.ChoiceFilter(field_name="car__information__car_type", lookup_expr="iexact", choices=CarTypes.choices)
+    car_type = filters.ChoiceFilter(field_name="car__information__car_type", lookup_expr="icontains", choices=CarTypes.choices)
+    make = filters.CharFilter(field_name="car__information__manufacturer", lookup_expr="icontains")
 
     def search_field(self, queryset, name, value):
 

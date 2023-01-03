@@ -1,13 +1,15 @@
 # Create your views here.
+from django.db.models import Max, Min
 from django_filters import rest_framework as filters
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
 
 from src.carpadi_admin.filters import VehicleInfoFilter
 from src.carpadi_admin.serializers import VehicleInfoSerializer
 from src.carpadi_market.filters import CarProductFilter
 from src.carpadi_market.serializers import CarProductSerializer, CarPurchaseOfferSerializer
-from src.models.models import CarProduct, CarPurchaseOffer, VehicleInfo, CarBrand, CarStates
+from src.models.models import CarProduct, CarPurchaseOffer, VehicleInfo, CarBrand, CarStates, Car
 from src.models.permissions import IsAdmin
 from src.models.serializers import CarBrandSerializer
 
@@ -47,7 +49,26 @@ class CarPurchasesView(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.
 #     filter_backends = (filters.DjangoFilterBackend,)
 
 
-class CarBrandsMarketView(viewsets.ReadOnlyModelViewSet):
+class CarMarketFiltersView(viewsets.ReadOnlyModelViewSet):
     serializer_class = CarBrandSerializer
     queryset = CarBrand.objects.filter(vehicleinfo__car__status=CarStates.Available)
     permission_classes = (AllowAny,)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        brands = self.get_serializer(instance=queryset, many=True).data
+        vehicle_infos = VehicleInfo.objects.filter(car__status=CarStates.Available)
+        transmissions = ['manual', 'automatic']
+        years = queryset.order_by("year").distinct("year").values_list("year", flat=True)
+        body_types = vehicle_infos.order_by("-car_type").distinct("car_type").values_list("car_type", flat=True)
+        max_price = CarProduct.objects.aggregate(sum=Max("selling_price"))["sum"]
+        min_price = CarProduct.objects.aggregate(sum=Min("selling_price"))["sum"]
+        return Response(
+            data=dict(
+                years=years,
+                transmissions=transmissions,
+                brands=brands,
+                body_types=body_types,
+                price=dict(max=max_price, min=min_price),
+            )
+        )
