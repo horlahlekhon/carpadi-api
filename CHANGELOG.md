@@ -1,3 +1,11 @@
+## [1.21.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.21.0...v1.21.1) (2023-01-05)
+
+
+### Bug Fixes
+
+* division by zero bug ([4f4551d](https://github.com/horlahlekhon/carpadi-api/commit/4f4551de7bb9ac45ff738d2b7ec3bc8f5409f1b4))
+* division by zero bug ([6e8b1e9](https://github.com/horlahlekhon/carpadi-api/commit/6e8b1e9f6de86e0424fef7eb20082e24adf57869))
+
 # [1.21.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.20.0...v1.21.0) (2023-01-03)
 
 
