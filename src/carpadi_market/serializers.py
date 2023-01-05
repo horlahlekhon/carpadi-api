@@ -49,8 +49,7 @@ class CarSerializerField(serializers.RelatedField):
             last_service_date=value.information.last_service_date,
             drive_type=value.information.drive_type,
             spec_country=value.information.spec_country,
-            mileage=value.information.mileage
-
+            mileage=value.information.mileage,
         )
 
 
