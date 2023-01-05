@@ -41,6 +41,16 @@ class CarSerializerField(serializers.RelatedField):
             car_type=value.information.car_type,
             colour=value.colour,
             name=value.name,
+            cylinders=value.information.num_of_cylinders,
+            previous_owners=value.information.previous_owners,
+            engine_power=value.information.engine_power,
+            torque=value.information.torque,
+            last_service_mileage=value.information.last_service_mileage,
+            last_service_date=value.information.last_service_date,
+            drive_type=value.information.drive_type,
+            spec_country=value.information.spec_country,
+            mileage=value.information.mileage
+
         )
 
 
