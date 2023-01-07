@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.http.response import Http404
 from django.utils import timezone
 from django_filters import rest_framework as filters
+from fcm_django.models import FCMDevice
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -114,8 +115,10 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
 
     @action(detail=False, methods=['post'], url_path='generate-otp', url_name='generate_otp')
     def generate_otp(self, instance):
+        data = instance.data
+        print("generate otp: ", data)
         try:
-            ser = OtpSerializer(data=instance.data)
+            ser = OtpSerializer(data=data)
             ser.is_valid(raise_exception=True)
             ser.save()
             return Response(status=status.HTTP_200_OK)
@@ -128,6 +131,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
     def validate_otp(self, instance):
         try:
             data = instance.data
+            print(f"validating otp: {data}")
             if not data:
                 return Response(data={"error": "otp is a required field"}, status=status.HTTP_400_BAD_REQUEST)
             if data.get("email"):
