@@ -129,9 +129,9 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
 
     @action(detail=False, methods=['post'], url_path='validate-otp', url_name='validate_otp')
     def validate_otp(self, instance):
+        print(f"validating otp: {instance.data}")
         try:
             data = instance.data
-            print(f"validating otp: {data}")
             if not data:
                 return Response(data={"error": "otp is a required field"}, status=status.HTTP_400_BAD_REQUEST)
             if data.get("email"):
