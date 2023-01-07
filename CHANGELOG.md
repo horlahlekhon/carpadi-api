@@ -1,3 +1,10 @@
+## [1.21.5](https://github.com/horlahlekhon/carpadi-api/compare/v1.21.4...v1.21.5) (2023-01-07)
+
+
+### Bug Fixes
+
+* vehicle specifications ([3473505](https://github.com/horlahlekhon/carpadi-api/commit/347350517d36149004edff96d6e833c48930d0a3))
+
 ## [1.21.4](https://github.com/horlahlekhon/carpadi-api/compare/v1.21.3...v1.21.4) (2023-01-07)
 
 
