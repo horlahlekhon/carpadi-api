@@ -459,7 +459,9 @@ class CarTypes(models.TextChoices):
     PickUp = "pickup", _(
         "Pickup",
     )
-    Coupe = "coupe",  _("Coupe", )
+    Coupe = "coupe", _(
+        "Coupe",
+    )
 
     def seats(self):
         if self.value == "coupe":
@@ -476,8 +478,7 @@ class CarTypes(models.TextChoices):
             raise TypeError(f"Invalid enum value for cartype: {self.value}")
 
     def to_dict(self):
-        return dict(type=self.title(),
-                    **self.seats())
+        return dict(type=self.title(), **self.seats())
 
     @classmethod
     def to_array(cls):
@@ -485,8 +486,6 @@ class CarTypes(models.TextChoices):
 
     def __str__(self):
         return self.value
-
-
 
 
 class CarStates(models.TextChoices):

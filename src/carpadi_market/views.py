@@ -29,8 +29,7 @@ class CarProductView(viewsets.ReadOnlyModelViewSet):
         return data
 
 
-class CarPurchasesView(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
-                       mixins.ListModelMixin):
+class CarPurchasesView(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin):
     # permission_classes = (AllowAny,)
     serializer_class = CarPurchaseOfferSerializer
     queryset = CarPurchaseOffer.objects.all()
@@ -82,8 +81,7 @@ class CarMarketHomePageView(viewsets.ReadOnlyModelViewSet):
         model = self.request.query_params.get("model")
         make = self.request.query_params.get("make")
         if make:
-            count = CarProduct.objects.filter(
-                car__information__brand__name=make).count()
+            count = CarProduct.objects.filter(car__information__brand__name=make).count()
             return Response(data=dict(count=count))
         if model:
             count = CarProduct.objects.filter(car__information__brand__model=model).count()

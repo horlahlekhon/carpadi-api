@@ -102,6 +102,7 @@ def _send_firebase(notification_config, context):
     send_push_notification_task.delay(context, context.get("user"))
     # send_push_notification_taskp(context, context.get("user"))
 
+
 # fixme review the configuration of this function, especially how email recipient
 #  is beeing supplied. compose it, there is too much variants. probably consider
 #  passing a receipeint resolution function. that get the receipient given a notification action
