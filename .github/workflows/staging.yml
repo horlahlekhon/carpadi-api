@@ -28,7 +28,7 @@ jobs:
       - name: Setup Node.js Environment
         uses: actions/setup-node@v2
         with:
-          node-version: "16"
+          node-version: "18"
           cache: "yarn"
       - name: Get next version
         uses: nick-invision/retry@v2
@@ -70,18 +70,6 @@ jobs:
             cat ./artifacts/.VERSION
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-
-
-#      - name: Deploy container
-#        run: |
-#          echo "$(cat ./artifacts/.VERSION)"
-#          echo ${NEXT_VERSION} > version
-#          echo "${{ secrets.SSH_PEM }}" > private_key && chmod 600 private_key
-#          echo "${{ secrets.APP_ENVS }}" > .env
-#          scp -i private_key -o StrictHostKeyChecking=no version ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}:~/version
-#          scp -i private_key -o StrictHostKeyChecking=no .env ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }}:~/.env
-#          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }} 'docker rm -f carpadi-api'
-#          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_STAGING_HOST }} 'docker run --name carpadi-api -p 8000:8000 -v /app/static:/app/src/staticfiles --env-file ~/.env -d olalekanadebari/carpadi-api:$(cat ~/version)'
 
 
       - name: Deploy icon to server
