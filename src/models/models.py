@@ -1187,7 +1187,7 @@ class VehicleInfo(Base):
     trim = models.CharField(max_length=50, null=True, blank=False)
     manufacturer = models.CharField(max_length=50)
     brand = models.ForeignKey(CarBrand, on_delete=models.SET_NULL, null=True, blank=True)
-    spec_country = models.CharField(max_length=20, null=True, blank=True)
+    specifications = models.CharField(max_length=20, null=True, blank=True)
     drive_type = models.CharField(max_length=20, null=True, blank=True)
     last_service_date = models.DateField(null=True, blank=True)
     last_service_mileage = models.PositiveIntegerField(null=True, blank=True)
@@ -1208,7 +1208,7 @@ class CarProductStatus(models.TextChoices):
 class CarProduct(Base):
     car = models.OneToOneField(Car, on_delete=models.CASCADE, related_name="product")
     selling_price = models.DecimalField(decimal_places=2, max_digits=25)
-    highlight = models.CharField(max_length=100, help_text="A short description of the vehicle")
+    highlight = models.CharField(max_length=260, help_text="A short description of the vehicle")
     status = models.CharField(choices=CarProductStatus.choices, default=CarProductStatus.Active, max_length=10)
 
     def save(self, *args, **kwargs):
