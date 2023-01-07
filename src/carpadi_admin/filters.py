@@ -167,6 +167,7 @@ class CarFilter(filters.FilterSet):
     manufacturer = filters.CharFilter(field_name="information__brand__name", lookup_expr="iexact")
     available_for_sale = filters.BooleanFilter(method="available_for_sales_filter")
     search = filters.CharFilter(method="search_car")
+    status = filters.MultipleChoiceFilter(choices=CarStates.choices, field_name="status", lookup_expr="iexact")
 
     def search_car(self, queryset, name, value):
         return queryset.filter(

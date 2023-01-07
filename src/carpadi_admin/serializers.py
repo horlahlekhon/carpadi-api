@@ -993,7 +993,8 @@ class HomeDashboardSerializer(serializers.Serializer):
         total_cars = Car.objects.filter(
             created__date__year=datetime.now().year,
         ).count()
-
+        if not total_cars:
+            return dict(total_cars=0, available=0, trading=0, inspection=0, sold=0)
         inspected_cars = Car.objects.filter(created__date__year=datetime.now().year, status=CarStates.Inspected).count()
         inspected_cars_percent = (inspected_cars / total_cars) * 100 or Decimal(0)
         inspection = dict(count=inspected_cars, percentage=inspected_cars_percent)

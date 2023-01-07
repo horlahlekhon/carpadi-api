@@ -1,3 +1,42 @@
+## [1.21.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.21.0...v1.21.1) (2023-01-05)
+
+
+### Bug Fixes
+
+* division by zero bug ([4f4551d](https://github.com/horlahlekhon/carpadi-api/commit/4f4551de7bb9ac45ff738d2b7ec3bc8f5409f1b4))
+* division by zero bug ([6e8b1e9](https://github.com/horlahlekhon/carpadi-api/commit/6e8b1e9f6de86e0424fef7eb20082e24adf57869))
+
+# [1.21.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.20.0...v1.21.0) (2023-01-03)
+
+
+### Features
+
+* integrate filters and searchbar ([4c84c2d](https://github.com/horlahlekhon/carpadi-api/commit/4c84c2d72fa6e64e2766f49038b3d5e636c6131b))
+* integrate filters and searchbar ([735b7a2](https://github.com/horlahlekhon/carpadi-api/commit/735b7a2e7cc5dfbe8b9edf71b88291551cfaa1b5))
+
+# [1.20.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.19.0...v1.20.0) (2023-01-02)
+
+
+### Features
+
+* added frotned fixes ([44e7b15](https://github.com/horlahlekhon/carpadi-api/commit/44e7b153823f36372fbc83b1d124f02295a9ed24))
+
+# [1.19.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.18.1...v1.19.0) (2022-12-31)
+
+
+### Features
+
+* modify carpadi market code to fit ui ([ed865e4](https://github.com/horlahlekhon/carpadi-api/commit/ed865e4b81de73561b736d5582f69bbe40cb857c))
+* modify carpadi market code to fit ui ([da59d02](https://github.com/horlahlekhon/carpadi-api/commit/da59d0268106cc661ef009a4246a86dcedffacfc))
+
+## [1.18.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.18.0...v1.18.1) (2022-12-29)
+
+
+### Bug Fixes
+
+* multichoice filter for car status ([3bafe09](https://github.com/horlahlekhon/carpadi-api/commit/3bafe09817d56305b3fa175158340595dfc02390))
+* multichoice filter for car status ([f2f697a](https://github.com/horlahlekhon/carpadi-api/commit/f2f697a155f42740158e2d1fe49dd564da9c4126))
+
 # [1.18.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.17.0...v1.18.0) (2022-11-11)
 
 

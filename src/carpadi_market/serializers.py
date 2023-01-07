@@ -36,6 +36,20 @@ class CarSerializerField(serializers.RelatedField):
             make=value.information.brand.name,
             year=value.information.brand.year,
             fuel_type=value.information.fuel_type,
+            transmission=value.information.transmission,
+            engine=value.information.engine,
+            car_type=value.information.car_type,
+            colour=value.colour,
+            name=value.name,
+            cylinders=value.information.num_of_cylinders,
+            previous_owners=value.information.previous_owners,
+            engine_power=value.information.engine_power,
+            torque=value.information.torque,
+            last_service_mileage=value.information.last_service_mileage,
+            last_service_date=value.information.last_service_date,
+            drive_type=value.information.drive_type,
+            spec_country=value.information.spec_country,
+            mileage=value.information.mileage,
         )
 
 
@@ -109,8 +123,9 @@ class CarProductSerializer(serializers.ModelSerializer):
     # def vehicle_details(self, vehicle: VehicleInfo):
     #     return dict()
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: Car):
         data = super(CarProductSerializer, self).to_representation(instance)
+
         return data
 
     @atomic()

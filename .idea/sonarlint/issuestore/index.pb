@@ -12,10 +12,6 @@ C
 Q
 !src/notifications/channels/sms.py,2/8/28f272be6852948d66056ce33c520a0b2a464cb8
 E
-src/common/helpers.py,a/b/abd8679d374b6b70e0fd0152915a852a2a853b13
-M
-src/carpadi_market/filters.py,1/1/11bc6cb7a1147bfd69c05499a58bbb6e1fcacd79
-E
 requirements/prod.txt,3/b/3bdffe02694f5a4bc1ae5fcdcaef9111d65e4098
 D
 requirements/dev.txt,1/8/18a54bc76396d8520dedda512b306d4132cc48dd
@@ -27,21 +23,21 @@ U
 %src/carpadi_inspection/serializers.py,c/6/c6b886e37232c2a417284cf64a79a1d1d8733f7f
 6
 run.sh,3/2/324fcb49f1cf313ebdd7cbda6a71b73727ddd94d
-@
-supervisord.conf,8/8/883306a7b009d117f95b2b178b5a8538cca68ea1
 J
 src/carpadi_api/filters.py,e/2/e225e2c1941a8751e1d08bf2a76b8c94a296c139
 L
 .github/workflows/deploy.yml,f/1/f130ad0d1d16d0d70ec30d355f736ae3784b05cf
 M
 .github/workflows/staging.yml,b/a/bab4ab334918c0184ab96fefdcc131c729cba0aa
+M
+src/notifications/services.py,9/2/92df78e017b57344d6e7b2b23c1b6e8ac09b316b
+S
+#src/notifications/channels/email.py,b/6/b69ddeff434029e492447907a01b2d01bca99183
+E
+src/common/helpers.py,a/b/abd8679d374b6b70e0fd0152915a852a2a853b13
+4
+.env,3/c/3c84dcdc6bbe3d7817c49dcdc327b926fea1808a
+;
+.env.export,3/a/3aca93a0d6e9ee4b7978f0ce997a635066ab4493
 D
-src/models/models.py,d/d/dda6ed96a9d3fe133949353d68723723aa0cf63b
-J
-src/carpadi_admin/views.py,8/b/8b799b33bfbeb42f1fe123efc02d32b0d0a97f49
-Q
-!src/carpadi_market/serializers.py,9/8/9822be640977cec3cdda37ade2e3deca2ec12fb2
-K
-src/carpadi_market/views.py,f/d/fd4f5db853cdfcf52b37b8973ff85ecabaff02e7
-P
- src/carpadi_admin/serializers.py,5/4/54af4e559b3bbdf8631d45c5e02ed33455bf198d
+src/config/common.py,6/8/68899bfb818d703ad5db33ba3e4053b69597d2d0
