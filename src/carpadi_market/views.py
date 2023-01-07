@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from src.carpadi_admin.filters import VehicleInfoFilter
 from src.carpadi_admin.serializers import VehicleInfoSerializer
 from src.carpadi_market.filters import CarProductFilter
-from src.carpadi_market.serializers import CarProductSerializer, CarPurchaseOfferSerializer
+from src.carpadi_market.serializers import CarProductSerializer, CarPurchaseOfferSerializer, HomepageSerializer
 from src.models.models import CarProduct, CarPurchaseOffer, VehicleInfo, CarBrand, CarStates, Car
 from src.models.permissions import IsAdmin
 from src.models.serializers import CarBrandSerializer
@@ -26,11 +26,11 @@ class CarProductView(viewsets.ReadOnlyModelViewSet):
         data = super(CarProductView, self).get_queryset()
         if ordering:
             data = data.order_by(ordering)
-        print(data.query)
         return data
 
 
-class CarPurchasesView(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin):
+class CarPurchasesView(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
+                       mixins.ListModelMixin):
     # permission_classes = (AllowAny,)
     serializer_class = CarPurchaseOfferSerializer
     queryset = CarPurchaseOffer.objects.all()
@@ -72,3 +72,21 @@ class CarMarketFiltersView(viewsets.ReadOnlyModelViewSet):
                 price=dict(max=max_price, min=min_price),
             )
         )
+
+
+class CarMarketHomePageView(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (AllowAny,)
+    queryset = CarProduct.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        model = self.request.query_params.get("model")
+        make = self.request.query_params.get("make")
+        if make:
+            count = CarProduct.objects.filter(
+                car__information__brand__name=make).count()
+            return Response(data=dict(count=count))
+        if model:
+            count = CarProduct.objects.filter(car__information__brand__model=model).count()
+            return Response(data=dict(count=count))
+        data = HomepageSerializer(instance=None).to_representation(instance=None)
+        return Response(data=data)

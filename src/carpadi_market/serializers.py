@@ -15,7 +15,7 @@ from src.models.models import (
     Car,
     CarPurchaseOffer,
     User,
-    UserTypes,
+    UserTypes, CarTypes, CarBrand,
 )
 from src.models.validators import PhoneNumberValidator
 
@@ -196,3 +196,12 @@ class CarPurchaseOfferSerializer(serializers.ModelSerializer):
         usr = ser.save()
         validated_data["user"] = usr
         return CarPurchaseOffer.objects.create(**validated_data)
+
+
+class HomepageSerializer(serializers.Serializer):
+
+    def to_representation(self, instance):
+        car_types = CarTypes.to_array()
+        available_models = [dict(make=i.name, model=i.model) for i in CarBrand.objects.filter(vehicleinfo__car__status=CarStates.Available)] # noqa
+        return dict(car_types=car_types, brands=available_models)
+

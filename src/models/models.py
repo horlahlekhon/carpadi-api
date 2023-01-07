@@ -439,43 +439,54 @@ class CarBrand(Base):
 
 
 class CarTypes(models.TextChoices):
+
     SUV = "suv", _(
-        "suv",
+        "SUV",
     )
     SALOON = "saloon", _(
-        "saloon",
+        "Saloon",
     )
     MINIVAN = "minivan", _(
-        "minivan",
+        "Minivan",
     )
     Convertible = "convertible", _(
-        "convertible",
-    )
-    MicroCar = "microcar", _(
-        "microcar",
-    )
-    CityCar = "city_car", _(
-        "City car",
+        "Convertible",
     )
     Hatchback = "hatchback", _(
         "Hatchback",
     )
-    Sedan = "sedan", _(
-        "sedan",
-    )
-    FamilyCar = "family_car", _(
-        "Family car",
-    )
-    MuscleCar = "muscle_car", _("Muscle car")
-    Roadster = "roadstar", _(
-        "Roadstar",
-    )
+
     PickUp = "pickup", _(
-        "pickup",
+        "Pickup",
     )
-    Coupe = "coupe", _(
-        "coupe",
-    )
+    Coupe = "coupe",  _("Coupe", )
+
+    def seats(self):
+        if self.value == "coupe":
+            return dict(seats_min=2, seats_max=4)
+        elif self.value == "pickup":
+            return dict(seats_min=2, seats_max=5)
+        elif self.value in ("hatchback", "saloon"):
+            return dict(seats_min=4, seats_max=5)
+        elif self.value == "convertible":
+            return dict(seats_min=2, seats_max=5)
+        elif self.value in ("minivan", "suv"):
+            return dict(seats_min=5, seats_max=7)
+        else:
+            raise TypeError(f"Invalid enum value for cartype: {self.value}")
+
+    def to_dict(self):
+        return dict(type=self.title(),
+                    **self.seats())
+
+    @classmethod
+    def to_array(cls):
+        return [CarTypes(i[0]).to_dict() for i in CarTypes.choices]
+
+    def __str__(self):
+        return self.value
+
+
 
 
 class CarStates(models.TextChoices):

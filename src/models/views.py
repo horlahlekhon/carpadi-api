@@ -130,10 +130,17 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             data = instance.data
             if not data:
                 return Response(data={"error": "otp is a required field"}, status=status.HTTP_400_BAD_REQUEST)
-            user = User.objects.filter(username=data.get("username")).first()
-            otp = Otp.objects.filter(
-                otp=data.get("otp"), email=data.get("email"), phone=data.get("phone"), status=OtpStatus.Pending
-            ).latest()
+            if data.get("email"):
+                otp = Otp.objects.filter(
+                    otp=data.get("otp"),
+                    email=data.get("email"), status=OtpStatus.Pending.value).latest()
+            elif phone :=data.get("phone"):
+                otp = Otp.objects.filter(
+                    otp=data.get("otp"), phone=phone, status=OtpStatus.Pending).latest()
+            elif username := data.get("username"):
+                user = User.objects.filter(username=username).first()
+                otp = Otp.objects.filter(
+                    otp=data.get("otp"), user_id=user.id, status=OtpStatus.Pending).latest()
             if otp.expiry < timezone.now():
                 return Response(data={"error": "Otp has expired"}, status=status.HTTP_400_BAD_REQUEST)
             otp.status = OtpStatus.Verified
