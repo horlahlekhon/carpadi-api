@@ -15,8 +15,6 @@ E
 requirements/prod.txt,3/b/3bdffe02694f5a4bc1ae5fcdcaef9111d65e4098
 D
 requirements/dev.txt,1/8/18a54bc76396d8520dedda512b306d4132cc48dd
-K
-.github/workflows/tests.yml,6/b/6b8eb1151e11abd72b31ffb764de06790e5bda1e
 H
 src/models/validators.py,8/0/80370b05167e2512b44f0a78753e4be7ae0c5843
 U
@@ -25,10 +23,6 @@ U
 run.sh,3/2/324fcb49f1cf313ebdd7cbda6a71b73727ddd94d
 J
 src/carpadi_api/filters.py,e/2/e225e2c1941a8751e1d08bf2a76b8c94a296c139
-L
-.github/workflows/deploy.yml,f/1/f130ad0d1d16d0d70ec30d355f736ae3784b05cf
-M
-.github/workflows/staging.yml,b/a/bab4ab334918c0184ab96fefdcc131c729cba0aa
 M
 src/notifications/services.py,9/2/92df78e017b57344d6e7b2b23c1b6e8ac09b316b
 S
