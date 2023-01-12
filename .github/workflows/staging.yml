@@ -72,7 +72,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 
-      - name: Deploy icon to server
+      - name: Deploy image to server
         uses: appleboy/ssh-action@master
         env:
           IMAGE_NAME: olalekanadebari/carpadi-api:latest
