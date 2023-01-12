@@ -1,3 +1,11 @@
+## [1.21.6](https://github.com/horlahlekhon/carpadi-api/compare/v1.21.5...v1.21.6) (2023-01-12)
+
+
+### Bug Fixes
+
+* otp errors ([d6a2be8](https://github.com/horlahlekhon/carpadi-api/commit/d6a2be8f6f0e166b405057341011d98086691c37))
+* otp errors ([743fb84](https://github.com/horlahlekhon/carpadi-api/commit/743fb84d4720d88106c7286e277de036b93c63a0))
+
 ## [1.21.5](https://github.com/horlahlekhon/carpadi-api/compare/v1.21.4...v1.21.5) (2023-01-07)
 
 
