@@ -5,11 +5,13 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model, authenticate
 from django.db import transaction
+from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from fcm_django.models import FCMDevice
 from rest_framework import serializers, exceptions
+from rest_framework.exceptions import ErrorDetail
 from rest_framework_simplejwt.serializers import PasswordField
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -59,7 +61,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if picture := validated_data.get("profile_picture"):
-            picture = Assets.objects.create(asset=picture, content_object=instance, entity_type=AssetEntityType.Merchant)
+            picture = Assets.objects.create(asset=picture, content_object=instance,
+                                            entity_type=AssetEntityType.Merchant)
             validated_data["profile_picture"] = picture
         return super(UserSerializer, self).update(instance, validated_data)
 
@@ -86,7 +89,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
         # the password will be stored in plain text.
         try:
             validated_data['username'] = (
-                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get("email")
+                str(validated_data.get("username")).lower() if validated_data.get("username") else validated_data.get(
+                    "email")
             )
             validated_data["is_active"] = False
             if validated_data.get("user_type") == UserTypes.CarMerchant:
@@ -108,7 +112,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
             elif "phone" in reason.args[0]:
                 unique_violator = "phone"
             else:
-                raise exceptions.APIException("A fatal error occur, this will be reported, please try again later.") from reason
+                raise exceptions.APIException(
+                    "A fatal error occur, this will be reported, please try again later.") from reason
             raise exceptions.ValidationError(f"{unique_violator} already exists", 400) from reason
         return user
 
@@ -297,7 +302,8 @@ class TokenObtainModSerializer(serializers.Serializer):
                 self.error_messages['new_device_detected'],
                 'new_device_detected',
             )
-        self.validate_firebase_(attrs.get('firebase_token'), self.user, attrs.get('device_imei'), attrs.get('device_type'))
+        self.validate_firebase_(attrs.get('firebase_token'), self.user, attrs.get('device_imei'),
+                                attrs.get('device_type'))
         User.update_last_login(self.user, **dict(device_imei=attrs.get("device_imei")))
 
         refresh = self.get_token(self.user, attrs.get('device_imei'))
@@ -309,15 +315,40 @@ class TokenObtainModSerializer(serializers.Serializer):
         if token:
             device: FCMDevice = FCMDevice.objects.filter(registration_id=token, user=user).first()
             if not device:
-                FCMDevice.objects.create(device_id=imei, registration_id=token, name=user.first_name, type=device_type, user=user)
+                FCMDevice.objects.create(device_id=imei, registration_id=token, name=user.first_name, type=device_type,
+                                         user=user)
 
 
 class OtpSerializer(serializers.Serializer):
+    class UserSerializer(serializers.Serializer):
+        def update(self, instance, validated_data):
+            pass
+
+        def create(self, validated_data):
+            pass
+
+        username = serializers.CharField()
+        email = serializers.EmailField()
+        phone = serializers.CharField(validators=[is_valid_phone])
+
     username = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
     phone = serializers.CharField(validators=[is_valid_phone], required=False)
+    user = UserSerializer(required=False)
 
     def validate(self, attrs):
+        if user := attrs.get("user"):
+            # FIXME can we do better than going to the db three times for this ?
+            exists_dict = dict(username=User.objects.filter(username=user["username"]),
+                               phone=User.objects.filter(phone=user["phone"]),
+                               email=User.objects.filter(email=user["email"])
+                               )
+            resp = dict()
+            for key, value in exists_dict.items():
+                if len(value) > 0:
+                    resp[key] = [ErrorDetail(f"User with {key}: {user[key]} already exist!")]
+            if len(resp):
+                raise serializers.ValidationError(detail=dict(user=resp))
         if attrs.get("username"):
             return dict(username=attrs.get("username"))
         if attrs.get("phone"):
@@ -350,7 +381,8 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Activity
-        fields = ("created", "id", "activity_type", "object_id", "content_type", "description", 'activity_entity', "merchant")
+        fields = (
+        "created", "id", "activity_type", "object_id", "content_type", "description", 'activity_entity', "merchant")
         read_only_fields = ("created", "id", "activity_type", "object_id", "content_type", "description")
 
     def get_activity_entity(self, obj: Activity):
@@ -416,7 +448,6 @@ class NotificationsSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return Notifications.objects.create(**validated_data)
-
 
 # class OtpSerializer(serializers.Serializer):
 #     username = serializers.CharField(required=False, min_length=1)

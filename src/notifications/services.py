@@ -104,7 +104,7 @@ def _send_firebase(notification_config, context):
 
 
 # fixme review the configuration of this function, especially how email recipient
-#  is beeing supplied. compose it, there is too much variants. probably consider
+#  is being supplied. compose it, there is too much variants. probably consider
 #  passing a receipeint resolution function. that get the receipient given a notification action
 def notify(verb, **kwargs):
     notification_config = NOTIFICATIONS.get(verb)
