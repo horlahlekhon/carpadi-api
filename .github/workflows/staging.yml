@@ -81,8 +81,8 @@ jobs:
         with:
           host: ${{ secrets.SSH_STAGING_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-#          password: ${{ secrets.SSH_PASS }}
-          key: ${{secrets.SSH_PEM}}
+          password: ${{ secrets.SSH_PASS }}
+#          key: ${{secrets.SSH_PEM}}
           port: ${{ secrets.SSH_PORT }}
           envs: IMAGE_NAME,IMAGE_TAG,CONTAINER_NAME
           script: |
