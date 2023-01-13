@@ -75,16 +75,21 @@ class CarMarketFiltersView(viewsets.ReadOnlyModelViewSet):
 
 class CarMarketHomePageView(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
-    queryset = CarProduct.objects.all()
+    queryset = CarProduct.objects.filter(car__status=CarStates.Available)
 
     def list(self, request, *args, **kwargs):
         model = self.request.query_params.get("model")
         make = self.request.query_params.get("make")
-        if make:
-            count = CarProduct.objects.filter(car__information__brand__name=make).count()
+        if model and make:
+            count = self.get_queryset().filter(
+                car__information__brand__name=make,
+                car__information__brand__model=model).count()
             return Response(data=dict(count=count))
-        if model:
-            count = CarProduct.objects.filter(car__information__brand__model=model).count()
+        elif make:
+            count = self.get_queryset().filter(car__information__brand__name=make).count()
+            return Response(data=dict(count=count))
+        elif model:
+            count = self.get_queryset().filter(car__information__brand__model=model).count()
             return Response(data=dict(count=count))
         data = HomepageSerializer(instance=None).to_representation(instance=None)
         return Response(data=data)
