@@ -204,7 +204,6 @@ class HomepageSerializer(serializers.Serializer):
     def to_representation(self, instance):
         car_types = CarTypes.to_array()
         available_models = [
-            dict(make=i.name, model=i.model) for i in CarBrand.objects.filter(
-                vehicleinfo__car__status=CarStates.Available)
+            dict(make=i.name, model=i.model) for i in CarBrand.objects.filter(vehicleinfo__car__status=CarStates.Available)
         ]  # noqa
         return dict(car_types=car_types, brands=available_models)

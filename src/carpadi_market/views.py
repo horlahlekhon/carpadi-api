@@ -81,9 +81,7 @@ class CarMarketHomePageView(viewsets.ReadOnlyModelViewSet):
         model = self.request.query_params.get("model")
         make = self.request.query_params.get("make")
         if model and make:
-            count = self.get_queryset().filter(
-                car__information__brand__name=make,
-                car__information__brand__model=model).count()
+            count = self.get_queryset().filter(car__information__brand__name=make, car__information__brand__model=model).count()
             return Response(data=dict(count=count))
         elif make:
             count = self.get_queryset().filter(car__information__brand__name=make).count()
