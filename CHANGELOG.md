@@ -1,3 +1,11 @@
+# [1.23.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.22.0...v1.23.0) (2023-01-17)
+
+
+### Features
+
+* added get vehicle info by vin for the agora ([62c7117](https://github.com/horlahlekhon/carpadi-api/commit/62c711739b7bd0da1873c9502ad16ca6c4a6f80e))
+* added get vehicle info by vin for the agora ([402a642](https://github.com/horlahlekhon/carpadi-api/commit/402a64206c50a0a0ae2902e76b5cec13a3c8e106))
+
 # [1.22.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.21.9...v1.22.0) (2023-01-14)
 
 
