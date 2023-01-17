@@ -17,7 +17,7 @@ from src.models.models import (
     User,
     UserTypes,
     CarTypes,
-    CarBrand,
+    CarBrand, CarProductStatus,
 )
 from src.models.validators import PhoneNumberValidator
 
@@ -169,8 +169,9 @@ class PurchasesUserSerializer(serializers.ModelSerializer):
             return usr
         validated_data["username"] = validated_data["email"]
         validated_data["is_active"] = False
-        validated_data["user_type"] = UserTypes.CarSeller
-        return User.objects.create(**validated_data)
+        # validated_data["user_type"] = UserTypes.CarSeller
+        usr, created = User.objects.get_or_create(defaults=validated_data, email=validated_data["email"])
+        return usr
 
 
 class CarPurchaseOfferSerializer(serializers.ModelSerializer):
@@ -206,4 +207,5 @@ class HomepageSerializer(serializers.Serializer):
         available_models = [
             dict(make=i.name, model=i.model) for i in CarBrand.objects.filter(vehicleinfo__car__status=CarStates.Available)
         ]  # noqa
-        return dict(car_types=car_types, brands=available_models)
+        available_cars_count = CarProduct.objects.filter(status=CarProductStatus.Active).count()
+        return dict(car_types=car_types, brands=available_models, available_cars_count=available_cars_count)
