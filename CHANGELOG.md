@@ -1,3 +1,11 @@
+# [1.22.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.21.9...v1.22.0) (2023-01-14)
+
+
+### Features
+
+* adding homepage data ([8529ceb](https://github.com/horlahlekhon/carpadi-api/commit/8529ceb5935de083e5e66220ee39a314da1edde4))
+* ci ([8234b56](https://github.com/horlahlekhon/carpadi-api/commit/8234b5616f8ae2694fdb6ad469f84839e8bad5ae))
+
 ## [1.21.9](https://github.com/horlahlekhon/carpadi-api/compare/v1.21.8...v1.21.9) (2023-01-12)
 
 
