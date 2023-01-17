@@ -81,9 +81,11 @@ class CarMarketHomePageView(viewsets.ReadOnlyModelViewSet):
         model = self.request.query_params.get("model")
         make = self.request.query_params.get("make")
         if model and make:
-            count = self.get_queryset().filter(
-                car__information__brand__name__icontains=make,
-                car__information__brand__model__icontains=model).count()
+            count = (
+                self.get_queryset()
+                .filter(car__information__brand__name__icontains=make, car__information__brand__model__icontains=model)
+                .count()
+            )
             return Response(data=dict(count=count))
         elif make:
             count = self.get_queryset().filter(car__information__brand__name__icontains=make).count()
@@ -100,5 +102,3 @@ class VehicleInfoViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     permission_classes = (AllowAny,)
     serializer_class = VehicleInfoSerializer
     queryset = VehicleInfo.objects.all()
-
-

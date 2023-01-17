@@ -17,7 +17,8 @@ from src.models.models import (
     User,
     UserTypes,
     CarTypes,
-    CarBrand, CarProductStatus,
+    CarBrand,
+    CarProductStatus,
 )
 from src.models.validators import PhoneNumberValidator
 
