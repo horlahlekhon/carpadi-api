@@ -1,7 +1,7 @@
 from django.db.models import Q
 from django_filters import rest_framework as filters
 
-from src.models.models import CarProduct, CarTransmissionTypes, FuelTypes, CarTypes
+from src.models.models import CarProduct, CarTransmissionTypes, FuelTypes, CarTypes, CarPurchaseOffer
 
 
 class CarProductFilter(filters.FilterSet):
@@ -12,12 +12,12 @@ class CarProductFilter(filters.FilterSet):
     transmission = filters.ChoiceFilter(
         field_name="car__information__transmission", lookup_expr="iexact", choices=CarTransmissionTypes.choices
     )
-    fuel_type = filters.ChoiceFilter(field_name="car__information__fuel_type", lookup_expr="iexact", choices=FuelTypes.choices)
+    fuel_type = filters.ChoiceFilter(field_name="car__information__fuel_type", lookup_expr="iexact",
+                                     choices=FuelTypes.choices)
     car_type = filters.CharFilter(field_name="car__information__car_type", lookup_expr="icontains")
     make = filters.CharFilter(field_name="car__information__manufacturer", lookup_expr="icontains")
 
     def search_field(self, queryset, name, value):
-
         return queryset.filter(
             Q(car__information__brand__model__icontains=value)
             | Q(car__information__manufacturer__icontains=value)
@@ -31,3 +31,11 @@ class CarProductFilter(filters.FilterSet):
     class Meta:
         model = CarProduct
         fields = ["selling_price", "status", 'year', 'transmission', 'search', 'fuel_type', 'car_type', 'id']
+
+
+class CarPurchasesFilter(filters.FilterSet):
+    status = filters.CharFilter(field_name="status", lookup_expr="iexact")
+
+    class Meta:
+        model = CarPurchaseOffer
+        fields = ["status"]

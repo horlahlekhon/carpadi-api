@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from src.carpadi_admin.filters import VehicleInfoFilter
 from src.carpadi_admin.serializers import VehicleInfoSerializer
-from src.carpadi_market.filters import CarProductFilter
+from src.carpadi_market.filters import CarProductFilter, CarPurchasesFilter
 from src.carpadi_market.serializers import CarProductSerializer, CarPurchaseOfferSerializer, HomepageSerializer
 from src.models.models import CarProduct, CarPurchaseOffer, VehicleInfo, CarBrand, CarStates, Car
 from src.models.permissions import IsAdmin
@@ -29,11 +29,13 @@ class CarProductView(viewsets.ReadOnlyModelViewSet):
         return data
 
 
-class CarPurchasesView(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin):
+class CarPurchasesView(viewsets.ModelViewSet):
     # permission_classes = (AllowAny,)
     serializer_class = CarPurchaseOfferSerializer
     queryset = CarPurchaseOffer.objects.all()
-    permissions = {'default': (AllowAny,), 'get': (IsAdmin,)}
+    permissions = {'default': (AllowAny,), 'get': (IsAdmin,), 'patch': (IsAdmin,)}
+    filter_class = CarPurchasesFilter
+    filter_backends = (filters.DjangoFilterBackend,)
 
     def get_permissions(self):
         self.permission_classes = self.permissions.get(self.action, self.permissions['default'])

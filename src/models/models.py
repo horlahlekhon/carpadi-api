@@ -1462,6 +1462,13 @@ class ContactPreference(models.TextChoices):
     )
 
 
+class CarPurchasesStatus(models.TextChoices):
+
+    Accepted = "accepted", _("Car purchase offer was accepted")
+    Declined = "declined", _("Purchase offer declined based on some reason")
+    Pending = "pending", _("Yet to be processed")
+
+
 class CarPurchaseOffer(Base):
     """
     This represents the details of the offer to sell a car to us
@@ -1483,3 +1490,6 @@ class CarPurchaseOffer(Base):
     inspection_location = models.CharField(max_length=40, null=False, blank=False)
     contact_preference = models.CharField(choices=ContactPreference.choices, max_length=100, null=False, blank=False)
     is_negotiable = models.BooleanField()
+    status = models.CharField(
+        choices=CarPurchasesStatus.choices, default=CarPurchasesStatus.Pending, max_length=40)
+    decline_reason = models.TextField(default="")
