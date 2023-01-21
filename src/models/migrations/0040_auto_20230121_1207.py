@@ -20,7 +20,15 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='carpurchaseoffer',
             name='status',
-            field=models.CharField(choices=[('accepted', 'Car purchase offer was accepted'), ('declined', 'Purchase offer declined based on some reason'), ('pending', 'Yet to be processed')], default='pending', max_length=40),
+            field=models.CharField(
+                choices=[
+                    ('accepted', 'Car purchase offer was accepted'),
+                    ('declined', 'Purchase offer declined based on some reason'),
+                    ('pending', 'Yet to be processed'),
+                ],
+                default='pending',
+                max_length=40,
+            ),
         ),
         migrations.AlterField(
             model_name='otp',
@@ -30,6 +38,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='vehicleinfo',
             name='car_type',
-            field=models.CharField(blank=True, choices=[('suv', 'SUV'), ('saloon', 'Saloon'), ('minivan', 'Minivan'), ('convertible', 'Convertible'), ('hatchback', 'Hatchback'), ('pickup', 'Pickup'), ('coupe', 'Coupe')], max_length=30, null=True),
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ('suv', 'SUV'),
+                    ('saloon', 'Saloon'),
+                    ('minivan', 'Minivan'),
+                    ('convertible', 'Convertible'),
+                    ('hatchback', 'Hatchback'),
+                    ('pickup', 'Pickup'),
+                    ('coupe', 'Coupe'),
+                ],
+                max_length=30,
+                null=True,
+            ),
         ),
     ]

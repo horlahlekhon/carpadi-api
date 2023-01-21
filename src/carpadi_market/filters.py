@@ -12,8 +12,7 @@ class CarProductFilter(filters.FilterSet):
     transmission = filters.ChoiceFilter(
         field_name="car__information__transmission", lookup_expr="iexact", choices=CarTransmissionTypes.choices
     )
-    fuel_type = filters.ChoiceFilter(field_name="car__information__fuel_type", lookup_expr="iexact",
-                                     choices=FuelTypes.choices)
+    fuel_type = filters.ChoiceFilter(field_name="car__information__fuel_type", lookup_expr="iexact", choices=FuelTypes.choices)
     car_type = filters.CharFilter(field_name="car__information__car_type", lookup_expr="icontains")
     make = filters.CharFilter(field_name="car__information__manufacturer", lookup_expr="icontains")
 
