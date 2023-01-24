@@ -1,3 +1,11 @@
+# [1.24.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.23.0...v1.24.0) (2023-01-21)
+
+
+### Features
+
+* added filters and patch for purchase offer ([185a773](https://github.com/horlahlekhon/carpadi-api/commit/185a773c90367a5eaa0df924b8655192ee365906))
+* added filters and patch for purchase offer ([498fdc7](https://github.com/horlahlekhon/carpadi-api/commit/498fdc7cc14372f03664af9b3a03b7fc565ae654))
+
 # [1.23.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.22.0...v1.23.0) (2023-01-17)
 
 
