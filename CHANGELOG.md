@@ -1,3 +1,11 @@
+# [1.25.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.24.0...v1.25.0) (2023-01-24)
+
+
+### Features
+
+* change error structure ([4e6c6d0](https://github.com/horlahlekhon/carpadi-api/commit/4e6c6d09d5e69b552a920d5a45572fb6ddafc784))
+* change error structure ([af97349](https://github.com/horlahlekhon/carpadi-api/commit/af97349123bcfdde5551f3d62193764eb2c3b2d5))
+
 # [1.24.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.23.0...v1.24.0) (2023-01-21)
 
 
