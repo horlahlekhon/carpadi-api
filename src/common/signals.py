@@ -74,7 +74,7 @@ def complete_user_registeration(sender, **kwargs):
     user: User = kwargs.get("instance")
     if kwargs.get("created") and user.user_type == UserTypes.CarMerchant:
         context = dict(username=user.get_full_name(), email=user.email)
-        notify("USER_WELCOME", **context)
+        notify("WELCOME_USER", **context)
 
 
 from django.urls import reverse

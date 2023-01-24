@@ -99,7 +99,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             elif validated_data.get("user_type") == UserTypes.Admin:
                 user = User.objects.create_superuser(**validated_data)
             else:
-                raise exceptions.ValidationError("Invalid user type")
+                raise exceptions.ValidationError(detail=dict(user_type=[ErrorDetail("Invalid user type")]))
         except IntegrityError as reason:
             logger.error(f"An error occur : {reason}")
             unique_violator = None
@@ -111,7 +111,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
                 unique_violator = "phone"
             else:
                 raise exceptions.APIException("A fatal error occur, this will be reported, please try again later.") from reason
-            raise exceptions.ValidationError(f"{unique_violator} already exists", 400) from reason
+            raise exceptions.ValidationError(detail={unique_violator: [ErrorDetail(f"{unique_violator} already exists")]}) from reason
         return user
 
     # def update(self, instance, validated_data):
@@ -148,15 +148,19 @@ class PhoneVerificationSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = User.objects.filter(phone=attrs["phone"]).first()
         if not user:
-            raise serializers.ValidationError(f"User with the phone {attrs['phone']} does not exist")
+            raise serializers.ValidationError(
+                detail=dict(
+                    phone=[
+                        ErrorDetail(
+                            f"User with the phone {attrs['phone']} does not exist")]))
         attrs["user"] = user
         otp = user.otps.latest()
         if otp.expiry > now() and otp.otp == attrs["token"]:
             pass
         elif otp.expiry < now() and otp.otp == attrs["token"]:
-            raise serializers.ValidationError("Otp has expired", 400)
+            raise serializers.ValidationError(detail=dict(otp=[ErrorDetail("Otp has expired")]))
         else:
-            raise serializers.ValidationError("Invalid OTP", 400)
+            raise serializers.ValidationError(detail=dict(otp=[ErrorDetail("Invalid OTP")]))
         return attrs
 
     @transaction.atomic()
@@ -194,7 +198,7 @@ class EmailVerificationSerializer(serializers.Serializer):
                 attrs["merchant"] = user.merchant
                 return attrs
             elif otp.expiry < now() and otp.otp == attrs["token"]:
-                raise serializers.ValidationError("Otp has expired", 400)
+                raise serializers.ValidationError(detail=dict(token=[ErrorDetail("Otp has expired")]))
             else:
                 raise serializers.ValidationError("Invalid OTP", 400)
         logger.error(f"user not found, serializer context: {self.context}")

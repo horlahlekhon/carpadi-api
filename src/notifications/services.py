@@ -107,7 +107,7 @@ def _send_firebase(notification_config, context):
 #  is being supplied. compose it, there is too much variants. probably consider
 #  passing a receipeint resolution function. that get the receipient given a notification action
 def notify(verb, **kwargs):
-    notification_config = NOTIFICATIONS.get(verb)
+    notification_config = NOTIFICATIONS.get(verb) or {}
     if not settings.TESTING:
         if "email" in notification_config.keys():
             email_notification_config = notification_config.get('email')

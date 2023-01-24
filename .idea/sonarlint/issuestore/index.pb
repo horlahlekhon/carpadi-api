@@ -29,13 +29,13 @@ S
 #src/notifications/channels/email.py,b/6/b69ddeff434029e492447907a01b2d01bca99183
 C
 src/models/views.py,a/9/a9f9f0ba8a451254ed5267b04516f5170edbd8e9
-E
-src/common/signals.py,3/d/3d2c4889c54825fae708229e5241031bd29fb5a6
-M
-src/notifications/services.py,9/2/92df78e017b57344d6e7b2b23c1b6e8ac09b316b
 J
 .github/workflows/lint.yml,7/3/730337a19a5aa856e9a50d6596dfed88aab93f03
 L
 .github/workflows/deploy.yml,f/1/f130ad0d1d16d0d70ec30d355f736ae3784b05cf
-I
-src/models/serializers.py,f/8/f893328be3321887148910b126b61adf2b97cd7b
+J
+src/carpadi_market/urls.py,f/b/fbd63c9fae36a1548edb8ef477a86c9366de32c5
+;
+src/urls.py,e/1/e1c5f360ce3a30ef5e77508305900db8a7d9f775
+J
+src/carpadi_admin/views.py,8/b/8b799b33bfbeb42f1fe123efc02d32b0d0a97f49
