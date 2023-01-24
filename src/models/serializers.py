@@ -111,7 +111,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
                 unique_violator = "phone"
             else:
                 raise exceptions.APIException("A fatal error occur, this will be reported, please try again later.") from reason
-            raise exceptions.ValidationError(detail={unique_violator: [ErrorDetail(f"{unique_violator} already exists")]}) from reason
+            raise exceptions.ValidationError(
+                detail={unique_violator: [ErrorDetail(f"{unique_violator} already exists")]}
+            ) from reason
         return user
 
     # def update(self, instance, validated_data):
@@ -149,10 +151,8 @@ class PhoneVerificationSerializer(serializers.Serializer):
         user = User.objects.filter(phone=attrs["phone"]).first()
         if not user:
             raise serializers.ValidationError(
-                detail=dict(
-                    phone=[
-                        ErrorDetail(
-                            f"User with the phone {attrs['phone']} does not exist")]))
+                detail=dict(phone=[ErrorDetail(f"User with the phone {attrs['phone']} does not exist")])
+            )
         attrs["user"] = user
         otp = user.otps.latest()
         if otp.expiry > now() and otp.otp == attrs["token"]:
