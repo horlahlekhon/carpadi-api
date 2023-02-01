@@ -4,5 +4,5 @@ from src.carpadi_inspection.views import InspectionsViewSet, InspectionStagesVie
 
 router = DefaultRouter()
 router.register(r'inspections', InspectionsViewSet)
-router.register(r'stages', InspectionStagesViewSet)
+router.register(r'<uuid:pk>/stages', InspectionStagesViewSet)
 router.register(r'inspectors', InspectorsViewset)

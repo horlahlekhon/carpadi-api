@@ -544,7 +544,7 @@ class FuelTypes(models.TextChoices):
 
 
 class Car(Base):
-    information = models.OneToOneField("VehicleInfo", on_delete=models.SET_NULL, null=True)
+    information = models.ForeignKey("VehicleInfo", on_delete=models.PROTECT, null=True)
     status = models.CharField(choices=CarStates.choices, null=True, max_length=30, default=CarStates.New)
     vin = models.CharField(max_length=17)
     pictures = GenericRelation("Assets")
@@ -806,7 +806,8 @@ class Trade(Base):
 
     @property
     def return_on_trade_per_slot(self) -> Decimal:
-        return self.return_on_trade_calc() / self.slots_available
+        settings: Settings = Settings.objects.first()
+        return (self.return_on_trade_calc() / self.slots_available) * settings.carpadi_commision / 100
 
     def return_on_trade_per_slot_percent(self) -> Decimal:
         settings: Settings = Settings.objects.first()
@@ -1161,11 +1162,12 @@ class AssetEntityType(models.TextChoices):
     Car = "car", _("car picture")
     Merchant = "merchant", _("user profile picture")
     Trade = "trade", _("Trade pictures of a car")
-    InspectionStage = "car_inspection_stage", _("Picture taken for a particular stage during inspection")
+    InspectionPart = "car_inspection_stage", _("Picture taken for a particular stage during inspection")
     Features = "feature", _("Picture of a feature of a car")
     InspectionReport = "inspection_report", _("Pdf report of an inspected vehicle")
     CarSparePart = "spare_part", _("Images of spare parts")
     CarDocument = "car_docs", _("Credentials and documents attached to the car")
+    Inspection = "inspection_images", _("Inspection images that doesnt relate to any stage")
 
 
 class Assets(Base):
@@ -1288,6 +1290,20 @@ class InspectionVerdict(models.TextChoices):
     NA = "not_available", _("The default status for newly created inspection which is still pending.")
 
 
+class Stages(models.TextChoices):
+    Generic = "generic"
+    Exterior = "exterior"
+    Glass = "glass"
+    Wheels = "wheels"
+    UnderBody = "under_body"
+    UnderHood = "under_hood"
+    Interior = "interior"
+    ElectricalSystems = "electrical_systems"
+    RoadTest = "road_test"
+    Completed = "completed"
+    NotStarted = "not_started"
+
+
 class Inspections(Base):
     owners_name = models.CharField(max_length=100)
     inspection_date = models.DateTimeField()
@@ -1297,7 +1313,7 @@ class Inspections(Base):
             PhoneNumberValidator,
         ],
     )
-    owners_review = models.TextField()
+    owners_review = models.TextField(null=True, blank=True)
     address = models.TextField()
     status = models.CharField(choices=InspectionStatus.choices, max_length=20, default=InspectionStatus.Pending)
     inspection_verdict = models.CharField(
@@ -1324,6 +1340,11 @@ class Inspections(Base):
         help_text="The user who assigned this inspection to the inspector. should be set automatically",
     )
     car = models.OneToOneField(Car, on_delete=models.CASCADE)
+    inspection_score = models.DecimalField(
+        null=True, blank=True, decimal_places=2, max_digits=5, help_text="The score of the inspection after completion"
+    )
+    pictures = GenericRelation("Assets")
+    current_stage = models.CharField(choices=Stages.choices, max_length=20, default=Stages.NotStarted)
 
     def save(self, *args, **kwargs):
         if self._state.adding:
@@ -1339,24 +1360,13 @@ class Score(models.IntegerChoices):
     Poor = 0
 
 
-class Stages(models.TextChoices):
-    Generic = "generic"
-    Exterior = "exterior"
-    Glass = "glass"
-    Wheels = "wheels"
-    UnderBody = "under_body"
-    UnderHood = "under_hood"
-    Interior = "interior"
-    ElectricalSystems = "electrical_systems"
-    RoadTest = "road_test"
-
-
 class InspectionStage(Base):
     inspection = models.ForeignKey(Inspections, on_delete=models.CASCADE)
     score = models.PositiveIntegerField(choices=Score.choices)
     part_name = models.CharField(max_length=50)
     stage_name = models.CharField(choices=Stages.choices, max_length=40)
     review = models.TextField(null=True, blank=True)
+    picture = GenericRelation("Assets")
 
 
 class Settings(Base):

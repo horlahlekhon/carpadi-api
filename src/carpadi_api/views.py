@@ -166,6 +166,7 @@ class TransactionViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
             res["status"] = tx.transaction_status
             return render(request, "transactions/verify_transaction.html", res, status=200)
         elif request.method == 'GET':
+
             tx_ref = request.query_params.get('tx_ref')
             tx_status = request.query_params.get('status')
             transaction_id = request.query_params.get('transaction_id')

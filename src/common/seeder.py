@@ -358,3 +358,19 @@ class PadiSeeder:
         car_product_serializer = CarProductSerializer(data=products, many=True)
         car_product_serializer.is_valid(raise_exception=True)
         car_product_serializer.save()
+
+    # def seed_car_purchase(self, count=100):
+    #     for i in count:
+    #         vin = self.seed_vehicle_info()
+    #         license = f"KJA-{self.seeder.faker.random_number(digits=3)}AA"
+    #         data = dict(
+    #             vin=vin.id, licence_plate=license, registeration_state="Lagos",
+    #             current_usage_timeframe_by_user=self.seeder.faker.random_number(digits=2),
+    #             mileage=self.seeder.faker.random_number(digits=5),
+    #             count_of_previous_users=self.seeder.faker.random_number(digits=1),
+    #             custom_papers_availability=True, car_condition="good",
+    #             note="Good car", contact_preference="phone", inspection_location="Ikeja",
+    #             is_negotiable=True, price=abs(self.seeder.faker.random_number(digits=6)),
+    #             user=dict(first_name=self.seeder.faker.name(), last_name=self.seeder.faker.name(),
+    #                       email=self.seeder.faker.email(), phone=self.seeder.faker.phone())
+    #         )

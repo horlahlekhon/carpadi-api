@@ -6,8 +6,8 @@ import dotenv
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-APP_ENV = os.getenv("APP_ENV", default="test")
-TESTING = APP_ENV.lower() == "testsdf"
+APP_ENV = "test"  # os.getenv("APP_ENV", default="test")
+TESTING = APP_ENV.lower() == "test"
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # if not TESTING:
@@ -99,8 +99,21 @@ CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:63
 ADMINS = ()
 
 # Sentry
-sentry_sdk.init(dsn=os.getenv('SENTRY_DSN', ''), integrations=[DjangoIntegration()])
 
+
+sentry_sdk.init(
+    dsn=os.getenv('SENTRY_DSN', 'https://e4e04cc813214af98717bc911c638b85@o370326.ingest.sentry.io/4504595220660224'),
+    integrations=[
+        DjangoIntegration(),
+    ],
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0,
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True,
+)
 # CORS
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_METHODS = [
@@ -402,7 +415,7 @@ DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
 FLW_PUBLIC_KEY = os.getenv('FLUTTER_WAVE_PUBLIC_KEY', '')
 FLW_SECRET_KEY = os.getenv('FLUTTER_WAVE_SECRET_KEY', '')
 FLW_REDIRECT_URL = os.getenv(
-    'PAYMENT_REDIRECT_URL', 'https://a670-41-217-100-193.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
+    'PAYMENT_REDIRECT_URL', 'https://455d-154-120-97-198.ngrok.io/api/v1/merchants/transactions/verify-transaction/'
 )
 FLW_PAYMENT_URL = os.getenv('PAYMENT_URL', "https://api.flutterwave.com/v3/payments")
 FLW_PAYMENT_VERIFY_URL = "https://api.flutterwave.com/v3/transactions/{}/verify".format
@@ -459,3 +472,4 @@ BULK_SMS_API_KEY = "fwFidxGn1ATSvjvUoaEO85DYk1rKIpTQARfebvG4GNi7QvJyicRupmF6A44a
 BULK_SMS_API_BASE_URL = "https://www.bulksmsnigeria.com/api/v1/sms/create"
 MIN_SLOT_ALLOWED = 4
 MIN_CAR_PICTURES_FOR_TRADE = 5
+INSPECTION_PARTS_COUNT = 10

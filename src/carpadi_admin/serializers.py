@@ -185,13 +185,10 @@ class CarSerializer(serializers.ModelSerializer):
             return value
 
     def validate_vin(self, attr):
-        info = VehicleInfo.objects.filter(vin=attr).first()
-        with contextlib.suppress(ObjectDoesNotExist):
-            if info and info.car:
-                raise serializers.ValidationError(f"Car with the vin number {attr} exists before")
-            elif not info:
-                raise serializers.ValidationError("Please validate the vin before attempting to create a car with it")
-        return info
+        try:
+            return VehicleInfo.objects.get(vin=attr)
+        except ObjectDoesNotExist as e:
+            raise serializers.ValidationError("Please validate the vin before attempting to create a car with it") from e
 
     @atomic()
     def create(self, validated_data):
@@ -216,7 +213,7 @@ class CarSerializer(serializers.ModelSerializer):
         ):
             validated_data["status"] = CarStates.Available
             # TODO add cron to periodically check for cars that have all
-            # requirement for available for tade and set status to available noqa
+            # requirement for available for trade and set status to available noqa
         images = validated_data.get("car_pictures") or []
         Assets.create_many(images=images, feature=instance, entity_type=AssetEntityType.Car)
         return super().update(instance, validated_data)

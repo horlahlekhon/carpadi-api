@@ -1,14 +1,17 @@
 import datetime
 
+from django.conf import settings
+from django.db.models import Sum, Avg
 from django.db.transaction import atomic
 from django.utils import timezone
 from rest_framework import serializers
+from rest_framework.exceptions import ErrorDetail
 
-from src.models.models import InspectionStage, Inspections, User, CarStates, Assets, AssetEntityType
+from src.models.models import InspectionStage, Inspections, User, CarStates, Assets, AssetEntityType, Stages
 from src.models.serializers import AssetsSerializer
 
 
-class InspectionStageSerializer(serializers.ModelSerializer):
+class InspectionPartSerializer(serializers.ModelSerializer):
     pictures = serializers.ListField(child=serializers.URLField(), required=False, default=[], write_only=True)
     images = serializers.SerializerMethodField()
 
@@ -22,15 +25,24 @@ class InspectionStageSerializer(serializers.ModelSerializer):
     @atomic
     def create(self, validated_data):
         pictures = validated_data.pop("pictures")
-        stage = super(InspectionStageSerializer, self).create(validated_data)
-        Assets.create_many(images=pictures, feature=stage, entity_type=AssetEntityType.InspectionStage)
+        stage = super(InspectionPartSerializer, self).create(validated_data)
+        Assets.create_many(images=pictures, feature=stage, entity_type=AssetEntityType.InspectionPart)
         return stage
 
     @atomic
     def update(self, instance, validated_data):
         pictures = validated_data.pop("pictures")
-        stage = super(InspectionStageSerializer, self).update(instance, validated_data)
-        Assets.create_many(images=pictures, feature=stage, entity_type=AssetEntityType.InspectionStage)
+        stage: InspectionStage = super(InspectionPartSerializer, self).update(instance, validated_data)
+        Assets.create_many(images=pictures, feature=stage, entity_type=AssetEntityType.InspectionPart)
+        if validated_data.get("stage_name") == Stages.Completed:
+            inspection = stage.inspection
+            parts = InspectionStage.objects.filter(inspection=inspection)
+            if parts.count() < settings.INSPECTION_PARTS_COUNT:
+                raise serializers.ValidationError(
+                    detail=ErrorDetail("Inspection parts are not complete, please recheck"), code=400
+                )
+            inspection.inspection_score = (parts.aggregate(avg=Avg("score")).get("avg") or 0) / 100
+            inspection.save(update_fields=["inspection_score"])
         return stage
 
 
@@ -47,6 +59,7 @@ class InspectorSerializerField(serializers.RelatedField):
 
 class InspectionSerializer(serializers.ModelSerializer):
     inspector = InspectorSerializerField(required=True, queryset=User.objects.filter(is_staff=True, is_active=True))
+    pictures = serializers.ListField(child=serializers.URLField(), default=[], write_only=True)
 
     class Meta:
         model = Inspections
@@ -62,7 +75,9 @@ class InspectionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_logged_in = self.context.get("request").user
         validated_data["inspection_assignor"] = user_logged_in
+        pictures = validated_data.pop("pictures") or []
         inspection: Inspections = super(InspectionSerializer, self).create(validated_data)
+        Assets.create_many(images=pictures, feature=inspection, entity_type=AssetEntityType.Inspection)
         inspection.car.update_on_inspection_changes(inspection)
         return inspection
 
@@ -70,6 +85,8 @@ class InspectionSerializer(serializers.ModelSerializer):
     def update(self, instance: Inspections, validated_data):
         if not instance.car.is_editable():
             raise serializers.ValidationError("This car is beyond the scope of modification")
+        pictures = validated_data.pop("pictures") or []
+        Assets.create_many(images=pictures, feature=instance, entity_type=AssetEntityType.Inspection)
         upd: Inspections = super(InspectionSerializer, self).update(instance, validated_data)
         upd.car.update_on_inspection_changes(upd)
         return upd

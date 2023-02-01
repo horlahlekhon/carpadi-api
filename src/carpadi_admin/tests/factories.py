@@ -44,7 +44,7 @@ class VehicleFactory(factory.django.DjangoModelFactory):
     vin = factory.Faker('isbn13')
     engine = factory.Faker('text')
     transmission = CarTransmissionTypes.Automatic
-    car_type = CarTypes.MicroCar
+    car_type = CarTypes.MINIVAN
     fuel_type = FuelTypes.LPG
     mileage = factory.Faker('random_int')
     age = factory.Faker('random_int')

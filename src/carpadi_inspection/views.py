@@ -4,7 +4,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from src.carpadi_inspection.filters import InspectionsFilter, InspectionsStageFilter
-from src.carpadi_inspection.serializers import InspectionSerializer, InspectionStageSerializer
+from src.carpadi_inspection.serializers import InspectionSerializer, InspectionPartSerializer
 from src.models.models import Inspections, InspectionStage, User
 from src.models.serializers import UserSerializer
 
@@ -18,7 +18,7 @@ class InspectionsViewSet(viewsets.ModelViewSet):
 
 
 class InspectionStagesViewSet(viewsets.ModelViewSet):
-    serializer_class = InspectionStageSerializer
+    serializer_class = InspectionPartSerializer
     queryset = InspectionStage.objects.all()
     permission_classes = (IsAdminUser,)
     filter_backends = (filters.DjangoFilterBackend,)

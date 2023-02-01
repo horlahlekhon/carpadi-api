@@ -26,6 +26,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
 
 class CarMerchantFactory(factory.django.DjangoModelFactory):
+    id = factory.Faker('uuid4')
     user = factory.SubFactory(UserFactory, user_type=UserTypes.CarMerchant)
     bvn = factory.Sequence(lambda n: f"233489290029{n}")
 
@@ -34,8 +35,9 @@ class CarMerchantFactory(factory.django.DjangoModelFactory):
 
 
 class WalletFactory(factory.django.DjangoModelFactory):
+    id = factory.Faker('uuid4')
     balance = Decimal(1000000)
-    merchant = factory.SubFactory(CarMerchantFactory)
+    merchant = None  # factory.SubFactory(CarMerchantFactory)
     trading_cash = Decimal(0.00)
     withdrawable_cash = Decimal(1000000)
     unsettled_cash = Decimal(0.00)
