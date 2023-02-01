@@ -1,3 +1,12 @@
+## [1.25.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.25.0...v1.25.1) (2023-02-01)
+
+
+### Bug Fixes
+
+* trade calculations and cars foreign keys ([5fbeb3d](https://github.com/horlahlekhon/carpadi-api/commit/5fbeb3dbc269c66e69bc2619ef0143ed5778600d))
+* trade calculations and cars foreign keys ([1b61d76](https://github.com/horlahlekhon/carpadi-api/commit/1b61d76f5f6a1f0e939d694242a4adc1c0b2d3c4))
+* trade calculations and cars foreign keys ([df15fe1](https://github.com/horlahlekhon/carpadi-api/commit/df15fe12648c7ef40dc038089154be35c71145d3))
+
 # [1.25.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.24.0...v1.25.0) (2023-01-24)
 
 
