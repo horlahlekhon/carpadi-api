@@ -1,3 +1,10 @@
+# [1.26.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.25.1...v1.26.0) (2023-02-08)
+
+
+### Features
+
+* add inspection and car details to carpurchase ([82eeeae](https://github.com/horlahlekhon/carpadi-api/commit/82eeeae1bfe3694eb4bfdf0239ebf0d57665f7e3))
+
 ## [1.25.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.25.0...v1.25.1) (2023-02-01)
 
 
