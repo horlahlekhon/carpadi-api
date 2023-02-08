@@ -12,6 +12,13 @@ ACTIVITY_USER_RESETS_PASS = 'started password reset process'
 USER_PHONE_VERIFICATION = "VERIFY PHONE"
 # PASSWORD_RESET_TOKEEN = "RESEET"
 NOTIFICATIONS = {
+    "MERCHANT_APPROVAL": {
+        "notice_type": "user_approval",
+        "email": {
+            'email_subject': 'Password Reset',
+            'email_html_template': 'emails/account_approval_status.html',
+        },
+    },
     ACTIVITY_USER_RESETS_PASS: {
         "notice_type": "password_reset",
         'email': {

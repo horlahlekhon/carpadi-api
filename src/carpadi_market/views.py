@@ -1,15 +1,19 @@
 # Create your views here.
+import rest_framework.exceptions
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Max, Min
+from django.db.transaction import atomic
 from django_filters import rest_framework as filters
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, serializers
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from src.carpadi_admin.filters import VehicleInfoFilter
-from src.carpadi_admin.serializers import VehicleInfoSerializer
+from src.carpadi_admin.serializers import VehicleInfoSerializer, CarSerializer
 from src.carpadi_market.filters import CarProductFilter, CarPurchasesFilter
 from src.carpadi_market.serializers import CarProductSerializer, CarPurchaseOfferSerializer, HomepageSerializer
-from src.models.models import CarProduct, CarPurchaseOffer, VehicleInfo, CarBrand, CarStates, Car
+from src.models.models import CarProduct, CarPurchaseOffer, VehicleInfo, CarBrand, CarStates, Car, CarPurchasesStatus
 from src.models.permissions import IsAdmin
 from src.models.serializers import CarBrandSerializer
 
@@ -30,7 +34,6 @@ class CarProductView(viewsets.ReadOnlyModelViewSet):
 
 
 class CarPurchasesView(viewsets.ModelViewSet):
-    # permission_classes = (AllowAny,)
     serializer_class = CarPurchaseOfferSerializer
     queryset = CarPurchaseOffer.objects.all()
     permissions = {'default': (AllowAny,), 'get': (IsAdmin,), 'patch': (IsAdmin,)}
@@ -40,6 +43,32 @@ class CarPurchasesView(viewsets.ModelViewSet):
     def get_permissions(self):
         self.permission_classes = self.permissions.get(self.action, self.permissions['default'])
         return super().get_permissions()
+
+    @atomic
+    @action(detail=True, methods=['post'], url_path='approve', url_name='add_inspection')
+    def approve_purchase_offer(self, request, pk=None):
+        try:
+            purchase: CarPurchaseOffer = self.get_queryset().get(id=pk)
+            if purchase.car:
+                return Response(data={"client_error": "This offer have been previously approved"}, status=400)
+            colour = request.data.get("colour", "black")  # get default colour from settings
+            data = dict(vin=purchase.vehicle_info.vin, colour=colour)
+            ser = CarSerializer(data=data)
+            ser.is_valid(raise_exception=True)
+            instance = ser.save()
+            purchase.car = instance
+            purchase.status = CarPurchasesStatus.Accepted
+            purchase.save(update_fields=["car", "status"])
+            purchase_ser = self.get_serializer(instance=purchase).data
+            return Response(data=purchase_ser)
+        except ObjectDoesNotExist as e:
+            return Response(data={"client_error": "That Purchase offer was not found"}, status=404)
+        except ValueError as reason:
+            return Response(data={"client_error": reason.args}, status=400)
+        except serializers.ValidationError as reason:
+            return Response(data=reason.detail, status=reason.status_code)
+        except Exception as reason:
+            raise rest_framework.exceptions.APIException(detail={"server_error": reason.args}, code=500) from reason
 
 
 # class AgoraHomepageView(viewsets.GenericViewSet):

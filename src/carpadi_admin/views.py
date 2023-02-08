@@ -60,6 +60,9 @@ from src.models.models import (
     Settings,
     CarDocuments,
     User,
+    CarPurchaseOffer,
+    CarPurchasesStatus,
+    CarProductStatus,
 )
 from src.models.serializers import CarBrandSerializer, ActivitySerializer, UserSerializer
 
@@ -249,6 +252,19 @@ class DashboardViewSet(viewsets.GenericViewSet):
         if serializer.is_valid():
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_name="sell_dashboard", url_path="sell")
+    def sell(self, request):
+        pending = CarPurchaseOffer.objects.filter(status=CarPurchasesStatus.Pending).count()
+        approved = CarPurchaseOffer.objects.filter(status=CarPurchasesStatus.Accepted).count()
+        declined = CarPurchaseOffer.objects.filter(status=CarPurchasesStatus.Declined).count()
+        return Response(data=dict(declined=declined, accepted=approved, pending=pending))
+
+    @action(detail=False, url_path="car-products", url_name="car_product_dashboard", methods=["get"])
+    def car_product(self, request):
+        active = CarProduct.objects.filter(status=CarProductStatus.Active).count()
+        inactive = CarProduct.objects.filter(status=CarProductStatus.Inactive).count()
+        return Response(data=dict(active=active, inactive=inactive))
 
 
 class CarProductViewSetAdmin(viewsets.ModelViewSet):

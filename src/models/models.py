@@ -1487,6 +1487,7 @@ class CarPurchaseOffer(Base):
     vehicle_info = models.ForeignKey(
         VehicleInfo, on_delete=models.SET_NULL, null=True, blank=False, related_name="purchase_offers"
     )
+    car = models.OneToOneField(Car, null=True, on_delete=models.SET_NULL)
     licence_plate = models.CharField(null=False, blank=False, validators=[LicensePlateValidator], max_length=15)
     registeration_state = models.CharField(max_length=40, null=False, blank=False)
     current_usage_timeframe_by_user = models.PositiveIntegerField(help_text="how long has this user used the car in months")

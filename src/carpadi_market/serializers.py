@@ -1,9 +1,10 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from django.db.transaction import atomic
 from rest_framework import serializers
 
-from src.carpadi_admin.serializers import VehicleInfoSerializer
+from src.carpadi_admin.serializers import VehicleInfoSerializer, CarSerializer
+from src.carpadi_inspection.serializers import InspectionSerializer
 from src.models.models import (
     CarFeature,
     Assets,
@@ -175,9 +176,15 @@ class PurchasesUserSerializer(serializers.ModelSerializer):
         return usr
 
 
+class CarPurchasesCarSerializerField(serializers.RelatedField):
+    def to_representation(self, value):
+        return CarSerializer(instance=value).data
+
+
 class CarPurchaseOfferSerializer(serializers.ModelSerializer):
     user = serializers.DictField(write_only=True)
     seller = serializers.SerializerMethodField()
+    car = CarPurchasesCarSerializerField(read_only=True)
 
     class Meta:
         model = CarPurchaseOffer
@@ -185,12 +192,6 @@ class CarPurchaseOfferSerializer(serializers.ModelSerializer):
 
     def get_seller(self, obj: CarPurchaseOffer):
         return PurchasesUserSerializer(instance=obj.user).data
-
-    def to_representation(self, instance):
-        data = super(CarPurchaseOfferSerializer, self).to_representation(instance)
-        vehicle = VehicleInfo.objects.filter(id=data["vehicle_info"]).first()
-        data["vehicle_info"] = VehicleInfoSerializer(instance=vehicle).data if vehicle else None
-        return data
 
     @atomic
     def create(self, validated_data):

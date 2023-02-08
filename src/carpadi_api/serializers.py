@@ -84,6 +84,7 @@ class TransactionPinSerializers(serializers.ModelSerializer):
 class UpdateTransactionPinSerializers(serializers.Serializer):
     old_pin = serializers.CharField(max_length=6, required=True)
     new_pin = serializers.CharField(max_length=6, required=True)
+    device_id = serializers.CharField(required=True)
 
     def create(self, validated_data):
         user: User = validated_data["user"]
@@ -91,7 +92,7 @@ class UpdateTransactionPinSerializers(serializers.Serializer):
         new_pin = validated_data["new_pin"]
         try:
             device = validated_data["device"]
-            pin = user.transaction_pins.get(status=TransactionPinStatus.Active, pin=old_pin, device_serial_number=device)
+            pin = user.transaction_pins.get(status=TransactionPinStatus.Active, device_serial_number=device)
             # if not check_password(old_pin, pin.pin):
             #     raise serializers.ValidationError("Pin is not correct")
             # pin.pin = make_password(new_pin)
