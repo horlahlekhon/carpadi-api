@@ -105,7 +105,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
                 user = request.user
                 expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
                 ot = Otp.objects.create(otp="123456", expiry=expiry, user=user)
-                context = dict(username=user.username, otp=ot.otp, user=user.id)
+                context = dict(username=user.username, otp=ot.otp, user=user.id, users=[user])
                 notify("USER_EMAIL_VERIFICATION", **context)
                 return Response(data=dict(message="A Verification otp has been sent to the provided email."))
         except ValidationError as reason:
@@ -221,6 +221,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         context["total"] = unit.unit_value
         context["email"] = user.email
         context["user"] = str(user.id)
+        context["users"] = [user]
         notify('TRADE_UNIT_PURCHASE', **context)
         return Response(200)
 
@@ -230,7 +231,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
 
         user = User.objects.get(id="76db7797-8142-43b4-9153-9432497273af")
         # notification = NOTIFICATIONS.get('new_user')
-        notify = notify("WELCOME_USER", user=user.id, profile=user)
+        notify = notify("WELCOME_USER", user=user.id, profile=user, users=[user])
         return Response(notify, status=status.HTTP_200_OK)
 
 

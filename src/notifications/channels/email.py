@@ -31,9 +31,8 @@ class EmailChannel:
             "from_name": "Carpadi",
             "subject": subject,
             "html": email_html_message,
-            "to": [{"email": to, "type": "to"}],
+            "to": [{"email": i, "type": "to"} for i in to],
         }
-
         try:
             mailchimp = MailchimpTransactional.Client(settings.MAILCHIMP_API_KEY)
             response = mailchimp.messages.send({"message": message})

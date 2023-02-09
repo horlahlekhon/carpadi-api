@@ -24,6 +24,9 @@ from src.models.models import (
     NotificationTypes,
     Car,
     Wallet,
+    CarMerchant,
+    MerchantStatusChoices,
+    LoginSessions,
 )
 from src.notifications.channels.firebase import FirebaseChannel
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
@@ -73,7 +76,7 @@ class DisableSignals(object):
 def complete_user_registeration(sender, **kwargs):
     user: User = kwargs.get("instance")
     if kwargs.get("created") and user.user_type == UserTypes.CarMerchant:
-        context = dict(username=user.get_full_name(), email=user.email)
+        context = dict(username=user.get_full_name(), email=user.email, users=[user])
         notify("WELCOME_USER", **context)
 
 
@@ -107,7 +110,7 @@ def password_reset_token_created(sender, instance, reset_password_token: ResetPa
         'user': reset_password_token.user.id,
     }
 
-    notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
+    notify(ACTIVITY_USER_RESETS_PASS, context=context, users=[reset_password_token.user])
 
 
 def complete_transaction(sender, **kwargs):
@@ -246,7 +249,7 @@ def wallet_created(sender, instance: Wallet, created, **kwargs):
 
 
 def notifications(sender, instance: Notifications, created, **kwargs):
-    if created and instance.user:
+    if created:
         #  TODO add more specific context based on the notification,
         #   i.e disbursement will render a receipt, so data needs to be more than this
         context = dict(
@@ -255,19 +258,23 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             notice_id=str(instance.id),
             entity=str(instance.entity_id),
             message=instance.message,
-            user=str(instance.user.id),
+            users=[],
         )
         if instance.notice_type == NotificationTypes.TradeUnit:
             unit = TradeUnit.objects.get(id=instance.entity_id)
             context["slot_quantity"] = unit.slots_quantity
             context["car"] = unit.trade.car.name
             context["total"] = unit.unit_value
+            context["users"] = [instance.user]
             notify('TRADE_UNIT_PURCHASE', **context)
         elif instance.notice_type == NotificationTypes.NewTrade:
+            users = {i.user for i in LoginSessions.objects.order_by("device_imei").distinct("device_imei")}
+            context["users"] = users
             notify('NEW_TRADE', **context)
         elif instance.notice_type == NotificationTypes.Disbursement:
             disburse = Disbursement.objects.get(id=instance.entity_id)
             context["slot_quantity"] = disburse.trade_unit.slots_quantity
+            context["users"] = [instance.user]
             # context["rot"] = disburse
             notify('DISBURSEMENT', **context)
         elif instance.notice_type == NotificationTypes.TransactionCompleted:
@@ -278,8 +285,10 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             context["transaction_type"] = transaction.transaction_type
             context["transaction_description"] = transaction.transaction_description
             context["transaction_fees"] = transaction.transaction_fees
+            context["users"] = [instance.user]
             notify('TRANSACTION_COMPLETED', **context)
         elif instance.notice_type == NotificationTypes.TransactionFailed:
+            context["users"] = [instance.user]
             notify('TRANSACTION_FAILED', **context)
         else:
             logger.info("Notification type is not implemented yet")
@@ -289,7 +298,7 @@ def send_otp(sender, instance: Otp, created, **kwargs):
     if created and instance:
         user = instance.user
         notice = "USER_EMAIL_VERIFICATION"
-        context = dict(otp=instance.otp)
+        context = dict(otp=instance.otp, users=[user])
         if instance.user:
             context["username"] = user.username
             context["email"] = user.email

@@ -8,7 +8,7 @@ from firebase_admin.messaging import Message, Notification
 
 from src.common.utils import CustomJsonEncoder
 from src.config.common import APP_ENV
-from src.models.models import User
+from src.models.models import User, LoginSessions
 
 logger = logging.getLogger(__name__)
 from fcm_django.models import FCMDeviceQuerySet, FCMDevice
@@ -18,8 +18,12 @@ from firebase_admin.messaging import Notification, Message, SendResponse, Androi
 
 class FirebaseChannel:
     @staticmethod
-    def send(context, to: str):
-        devices: FCMDeviceQuerySet = FCMDevice.objects.filter(user_id=to).distinct("registration_id")
+    def send(context, to: list):
+        sessions = {LoginSessions.objects.filter(user=i).latest("created").device_imei for i in to}
+        devices = []
+        for sess in sessions:
+            if dev := FCMDevice.objects.filter(device_id=sess, active=True).order_by("date_created").first():
+                devices.append(dev)
         context["sender"] = "Emeka from Carpadi"
         body = {k: str(v) for k, v in context.items()}
         no = AndroidNotification(

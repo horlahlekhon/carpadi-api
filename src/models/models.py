@@ -45,6 +45,7 @@ class Base(UUIDModel, TimeStampedModel):
     class Meta:
         abstract = True
         ordering = ('-created',)
+        get_latest_by = "created"
 
 
 class UserTypes(models.TextChoices):

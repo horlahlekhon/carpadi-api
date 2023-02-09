@@ -35,7 +35,7 @@ def send_push_notification_task(context, to: str):
         logger.error(f"An exception occurred: {error}")
 
 
-def send_push_notification_taskp(context, to: str):
+def send_push_notification_taskp(context, to: list):
     try:
         return FirebaseChannel.send(context, to)
     except Exception as error:

@@ -92,9 +92,7 @@ NOTIFICATIONS = {
 
 
 def _send_email(email_notification_config, context):
-    to = context.get("email_to")
-    if not to:
-        raise Exception("Please provide email addresses to send email to")
+    to = [i.email for i in context.get("users", [])]
     email_html_template = email_notification_config.get('email_html_template')
     email_subject = email_notification_config.get('email_subject')
     from src.common.tasks import send_email_notification_task
@@ -106,8 +104,9 @@ def _send_email(email_notification_config, context):
 def _send_firebase(notification_config, context):
     from src.common.tasks import send_push_notification_task
 
-    send_push_notification_task.delay(context, context.get("user"))
-    # send_push_notification_taskp(context, context.get("user"))
+    to = context.pop("users")
+    # send_push_notification_task.delay(context, context.get("user"))
+    send_push_notification_taskp(context, to)
 
 
 # fixme review the configuration of this function, especially how email recipient
@@ -115,22 +114,12 @@ def _send_firebase(notification_config, context):
 #  passing a receipeint resolution function. that get the receipient given a notification action
 def notify(verb, **kwargs):
     notification_config = NOTIFICATIONS.get(verb) or {}
+    if not kwargs.get("users"):
+        logger.error("No user was supplied to notify, failing silently")
+        return None
     if not settings.TESTING:
         if "email" in notification_config.keys():
             email_notification_config = notification_config.get('email')
-            if usr := kwargs.get('user'):
-                email_to = User.objects.filter(id=usr).first().email
-                if not email_to:
-                    raise Exception(f"User with Id: {usr} does not exist")
-            elif email := kwargs.get('email'):
-                email_to = email
-            elif to := kwargs.get("email_to"):
-                email_to = to
-            else:
-                raise Exception("Could not determine who to send email to from. please contact the admin")
-            if not email_to:
-                logger.debug('Please provide list of emails (email_to argument).')
-            kwargs["email_to"] = email_to
             _send_email(email_notification_config, kwargs)
         if "in_app" in notification_config.keys():
             _send_firebase(notification_config, kwargs)

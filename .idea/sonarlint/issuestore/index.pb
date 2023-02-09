@@ -35,16 +35,12 @@ G
 supervisord.conf,8/8/883306a7b009d117f95b2b178b5a8538cca68ea1
 U
 %src/carpadi_inspection/serializers.py,c/6/c6b886e37232c2a417284cf64a79a1d1d8733f7f
-V
-&src/notifications/channels/firebase.py,3/1/314b689554bfdf68ea0abb9887a4928bb93be868
 O
 src/carpadi_inspection/views.py,b/1/b1714b2fd493c12ef7ebc97f5cc17887a21ec97e
 K
 src/carpadi_admin/models.py,f/4/f403453b900e43757d4499916b8828c647c560b1
 [
 +src/carpadi_admin/tests/test_serializers.py,8/5/85036f22569b08c564e0f9000f0f7ba7362addec
-D
-src/config/common.py,6/8/68899bfb818d703ad5db33ba3e4053b69597d2d0
 L
 src/models/test/factories.py,5/7/57d60949beeb936ffbbb0d7c1d74db774442bd17
 S
@@ -72,5 +68,3 @@ I
 src/models/serializers.py,f/8/f893328be3321887148910b126b61adf2b97cd7b
 o
 ?src/notifications/templates/emails/account_approval_status.html,9/b/9b71b6d2b10bfbd898cedce55722a3edd6b4104e
-S
-#src/notifications/channels/email.py,b/6/b69ddeff434029e492447907a01b2d01bca99183
