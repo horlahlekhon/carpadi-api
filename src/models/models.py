@@ -907,13 +907,37 @@ class Trade(Base):
         settings = Settings.objects.first()
         return (self.return_on_trade_calc() * settings.carpadi_commision) / 100
 
+    def notify_on_trade_close(self, disbursements: List["Disbursement"]):
+        for dis in disbursements:
+            Activity.objects.create(
+                activity_type=ActivityTypes.Disbursement,
+                activity=dis,
+                merchant=dis.trade_unit.merchant,
+                description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} "
+                            f"naira for {dis.trade_unit.slots_quantity} units \
+                        owned in {dis.trade_unit.trade.car.information.brand.name}"
+                            f" {dis.trade_unit.trade.car.information.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
+            )
+            Notifications.objects.create(
+                notice_type=NotificationTypes.Disbursement,
+                is_read=False,
+                message=f"Disbursed {dis.amount} naira for {dis.trade_unit.slots_quantity} units "
+                        f"owned in {dis.trade_unit.trade.car.name}"
+                        f" VIN: {dis.trade_unit.trade.car.vin}",
+                entity_id=dis.id,
+                user=dis.trade_unit.merchant.user
+            )
+
     @atomic()
     def close(self):
         units = self.units.all()
+        disbursements = []
         for unit in units:
             unit.disbursement.settle()
+            disbursements.append(unit.disbursement)
         self.trade_status = TradeStates.Closed
         self.save(update_fields=["trade_status"])
+        self.notify_on_trade_close(disbursements)
         return None
 
     @atomic()
@@ -924,6 +948,7 @@ class Trade(Base):
             self.estimated_return_on_trade = self.return_on_trade_calc()
         return super(Trade, self).save(*args, **kwargs)
 
+    @atomic()
     def check_updates(self):
         if self.trade_status == TradeStates.Completed:
             self.date_of_sale = timezone.now()
@@ -1060,9 +1085,7 @@ class TradeUnit(Base):
         deficit = Decimal(0)
         if self.trade.deficit_balance() > Decimal(0):
             deficit = (self.trade.deficit_balance() / self.trade.slots_available) * self.slots_quantity
-        base_rot_minus_carpadi_commission = self.trade.return_on_trade_per_slot * self.slots_quantity - (
-            self.trade.carpadi_commission_per_slot() * self.slots_quantity
-        )  # noqa
+        base_rot_minus_carpadi_commission = self.trade.return_on_trade_per_slot * self.slots_quantity  # noqa
         base_payout = (
             base_rot_minus_carpadi_commission
             + self.unit_value
@@ -1116,6 +1139,7 @@ class Disbursement(Base):
         tranx.transaction_status = TransactionStatus.RolledBack
         tranx.save(update_fields=['transaction_status'])
         wallet.update_balance(tranx)
+        self.delete() # FIXME should we ?
 
     def __str__(self):
         return f"Disbursement for {self.trade_unit.trade.id} - {self.trade_unit.merchant.user.username}"

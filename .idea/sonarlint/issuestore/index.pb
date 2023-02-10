@@ -1,10 +1,6 @@
 
 H
 src/config/testconfig.py,9/3/935ce4a66b7b0ae6700076406e8855602de5ae66
-C
-src/config/local.py,d/9/d9799f23aa122a0c57ce9d4de73a95205e81675e
-J
-src/carpadi_admin/utils.py,0/7/07331260c8fa91392f730bf050e8b8f0e7f28c17
 D
 src/config/celery.py,4/c/4c01c3644778777a0f14e011c6af396c48582e85
 Q
@@ -21,10 +17,6 @@ Q
 !src/models/migrations/__init__.py,6/5/65f940dbb3b6eb5c505cc193eb2f8ccd8a9a1267
 U
 %src/models/migrations/0001_initial.py,1/b/1be6db05a8e5bcdc0334f27c3841d832203b32c4
-D
-requirements/dev.txt,1/8/18a54bc76396d8520dedda512b306d4132cc48dd
-E
-requirements/prod.txt,3/b/3bdffe02694f5a4bc1ae5fcdcaef9111d65e4098
 I
 src/models/permissions.py,8/c/8c958df008eec386ee275a6949dc6b52e866d35d
 ;
@@ -33,12 +25,8 @@ G
 src/carpadi_api/urls.py,d/1/d189fb66cd2a7b266fd32fc1edf23ad1944b33a9
 @
 supervisord.conf,8/8/883306a7b009d117f95b2b178b5a8538cca68ea1
-U
-%src/carpadi_inspection/serializers.py,c/6/c6b886e37232c2a417284cf64a79a1d1d8733f7f
 O
 src/carpadi_inspection/views.py,b/1/b1714b2fd493c12ef7ebc97f5cc17887a21ec97e
-K
-src/carpadi_admin/models.py,f/4/f403453b900e43757d4499916b8828c647c560b1
 [
 +src/carpadi_admin/tests/test_serializers.py,8/5/85036f22569b08c564e0f9000f0f7ba7362addec
 L
@@ -64,7 +52,15 @@ M
 nginx.conf,e/d/ed8b45da44d73de79bd7c1c203a419d6ee7d6fde
 B
 src/models/apps.py,8/f/8f6f7b462f97ccb85a03c033cfeb575c4fcd8d9a
-I
-src/models/serializers.py,f/8/f893328be3321887148910b126b61adf2b97cd7b
 o
 ?src/notifications/templates/emails/account_approval_status.html,9/b/9b71b6d2b10bfbd898cedce55722a3edd6b4104e
+I
+src/carpadi_admin/urls.py,c/f/cfd1c21950f508821a9ed95c6cb47e6d5578d6ed
+K
+src/carpadi_market/views.py,f/d/fd4f5db853cdfcf52b37b8973ff85ecabaff02e7
+J
+.github/workflows/lint.yml,7/3/730337a19a5aa856e9a50d6596dfed88aab93f03
+Q
+!src/carpadi_market/serializers.py,9/8/9822be640977cec3cdda37ade2e3deca2ec12fb2
+H
+src/carpadi_api/views.py,d/4/d45bad2bbf172865cc4fff083c0a2bbf56d17be9

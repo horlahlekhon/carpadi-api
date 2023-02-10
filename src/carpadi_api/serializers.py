@@ -153,7 +153,7 @@ class WalletSerializer(serializers.ModelSerializer):
                 merchant=instance.merchant, trade__trade_status__in=[TradeStates.Ongoing, TradeStates.Completed]
             )
             .aggregate(total=Sum("estimated_rot"))
-            .get("total", Decimal(0))
+            .get("total") or Decimal(0)
         )
         data['estimated_total_rot'] = units_rots
         return data

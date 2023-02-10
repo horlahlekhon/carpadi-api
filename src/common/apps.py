@@ -27,7 +27,7 @@ class CommonConfig(AppConfig):
         post_save.connect(complete_transaction, sender=Transaction, dispatch_uid=uuid.uuid4())
         post_save.connect(send_otp, sender=Otp, dispatch_uid=uuid.uuid4())
         post_save.connect(trade_unit_completed, sender=TradeUnit, dispatch_uid=uuid.uuid4())
-        post_save.connect(disbursement_completed, sender=Disbursement, dispatch_uid=uuid.uuid4())
+        # post_save.connect(disbursement_completed, sender=Disbursement, dispatch_uid=uuid.uuid4())
         post_save.connect(trade_created, sender=Trade, dispatch_uid=uuid.uuid4())
         post_save.connect(car_created, sender=Car, dispatch_uid=uuid.uuid4())
         post_save.connect(wallet_created, sender=Wallet, dispatch_uid=uuid.uuid4())

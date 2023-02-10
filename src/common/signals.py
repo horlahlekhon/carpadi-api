@@ -1,6 +1,7 @@
 import datetime
 import logging
 from collections import defaultdict
+from typing import List
 
 from django.db.models import signals
 from django_rest_passwordreset.models import ResetPasswordToken
@@ -179,10 +180,9 @@ def trade_unit_completed(sender, instance: TradeUnit, created, **kwargs):
         # notify('TRADE_UNIT_PURCHASE', )
 
 
-def disbursement_completed(sender, instance, created, **kwargs):
-    dis: Disbursement = instance
-    if created:
-        activity = Activity.objects.create(
+def disbursement_completed(disbursements: List[Disbursement]):
+    for dis in disbursements:
+        Activity.objects.create(
             activity_type=ActivityTypes.Disbursement,
             activity=dis,
             merchant=dis.trade_unit.merchant,
@@ -191,14 +191,14 @@ def disbursement_completed(sender, instance, created, **kwargs):
                     owned in {dis.trade_unit.trade.car.information.brand.name}"
             f" {dis.trade_unit.trade.car.information.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
         )
-
         Notifications.objects.create(
             notice_type=NotificationTypes.Disbursement,
             is_read=False,
             message=f"Disbursed {dis.amount} naira for {dis.trade_unit.slots_quantity} units "
             f"owned in {dis.trade_unit.trade.car.name}"
             f" VIN: {dis.trade_unit.trade.car.vin}",
-            entity_id=dis.trade_unit.id,
+            entity_id=dis.id,
+            user=dis.trade_unit.merchant.user
         )
 
 

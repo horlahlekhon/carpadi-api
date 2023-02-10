@@ -109,9 +109,6 @@ def _send_firebase(notification_config, context):
     send_push_notification_taskp(context, to)
 
 
-# fixme review the configuration of this function, especially how email recipient
-#  is being supplied. compose it, there is too much variants. probably consider
-#  passing a receipeint resolution function. that get the receipient given a notification action
 def notify(verb, **kwargs):
     notification_config = NOTIFICATIONS.get(verb) or {}
     if not kwargs.get("users"):

@@ -52,3 +52,6 @@ click==8.0.1
 mailchimp-transactional==1.0.47
 django-celery-beat
 sentry-sdk
+
+
+sib-api-v3-sdk

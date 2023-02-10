@@ -75,7 +75,7 @@ class InspectionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_logged_in = self.context.get("request").user
         validated_data["inspection_assignor"] = user_logged_in
-        pictures = validated_data.pop("pictures") or []
+        pictures = validated_data.pop("pictures") if validated_data.get("pictures") else []
         inspection: Inspections = super(InspectionSerializer, self).create(validated_data)
         Assets.create_many(images=pictures, feature=inspection, entity_type=AssetEntityType.Inspection)
         inspection.car.update_on_inspection_changes(inspection)
@@ -85,7 +85,7 @@ class InspectionSerializer(serializers.ModelSerializer):
     def update(self, instance: Inspections, validated_data):
         if not instance.car.is_editable():
             raise serializers.ValidationError("This car is beyond the scope of modification")
-        pictures = validated_data.pop("pictures") or []
+        pictures = validated_data.pop("pictures") if validated_data.get("pictures") else []
         Assets.create_many(images=pictures, feature=instance, entity_type=AssetEntityType.Inspection)
         upd: Inspections = super(InspectionSerializer, self).update(instance, validated_data)
         upd.car.update_on_inspection_changes(upd)

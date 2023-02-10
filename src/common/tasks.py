@@ -22,7 +22,7 @@ logger = get_task_logger(__name__)
 @task(name='SendEmailNotification')
 def send_email_notification_task(context, html_template, subject, to):
     try:
-        return EmailChannel.send_mail_mailchimp(context, html_template, subject, to)
+        return EmailChannel.send_mail_sib(context, html_template, subject, to)
     except Exception as error:
         logger.error(f"An exception occurred: {error}")
 
@@ -45,7 +45,7 @@ def send_push_notification_taskp(context, to: list):
 
 def send_email_notification_taskp(context, html_template, subject, to):
     try:
-        EmailChannel.send_mail_mailchimp(context, html_template, subject, to)
+        EmailChannel.send_mail_sib(context, html_template, subject, to)
     except Exception as error:
         print(f"An exception occurred: {error}")
 
