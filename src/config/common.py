@@ -282,7 +282,8 @@ AUTHENTICATION_BACKENDS = (
     'src.models.backends.EmailOrUsernameOrPhoneModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
-for key in ['GOOGLE_OAUTH2_KEY', 'GOOGLE_OAUTH2_SECRET', 'FACEBOOK_KEY', 'FACEBOOK_SECRET', 'TWITTER_KEY', 'TWITTER_SECRET']:
+for key in ['GOOGLE_OAUTH2_KEY', 'GOOGLE_OAUTH2_SECRET', 'FACEBOOK_KEY', 'FACEBOOK_SECRET', 'TWITTER_KEY',
+            'TWITTER_SECRET']:
     exec("SOCIAL_AUTH_{key} = os.environ.get('{key}', '')".format(key=key))
 
 # FB
@@ -473,4 +474,4 @@ BULK_SMS_API_BASE_URL = "https://www.bulksmsnigeria.com/api/v1/sms/create"
 MIN_SLOT_ALLOWED = 4
 MIN_CAR_PICTURES_FOR_TRADE = 5
 INSPECTION_PARTS_COUNT = 10
-SIB_API_KEY="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"
+SIB_API_KEY = os.getenv("SIB_API_KEY")
