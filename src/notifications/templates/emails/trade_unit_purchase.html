@@ -3,57 +3,57 @@
 {% block email_content %}
 <table>
     <tbody>
-        <tr class="greeting">
-            <td class="pd-top-10">
-                <h1>Share Purchase receipt </h1>
+        <tr class="document-head-font">
+            <td class="center-text">
+                <h1>Slot Purchase Receipt</h1>
+            </td>
+        </tr>
+
+        <tr class="separate-tr-20"></tr>
+
+        <tr>
+            <td class="document-head-faded-green">
+                <h3 class="center-text document-head-font">N13,000{{ amount }}</h3>
+                <p class="center-text document-head-font-2">Purchase Amount</p>
             </td>
         </tr>
 
         <tr>
-            <td style="background-color: #E7F4FB">
-                <h3 class="center"><strong>N {{ purchase_amount }}</strong></h3>
-                <p class="center">purchase amount</p>
-            </td>
-        </tr>
-
-        <tr>
-            <td>
-                <table class="message">
+            <td class="pd-top-25">
+                 <table style="width: 100%">
                     <tbody>
-                        <tr class="mg-bottom-10">
-                            <td>
-                                <table  width="100%" class="mg-bottom-15">
-                                    <tbody>
-                                        <tr>
-                                            <td colspan="2">Purchase Amount</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{ amount }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Number of Slot(s) Bought</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{number_of_slot }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Purchase Date</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{ date }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Trading Vehicle</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{ vehicle }}</strong></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
+                        <tr>
+                            <td>Purchased Amount</td>
+                            <td class="right-text"><strong>50,000{{amount }}</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
                         </tr>
 
                         <tr>
-                            <td>
-                                <a href="{{ domain }}" class="more">Start Investing</a>
-                            </td>
+                            <td>Number of Purchased Slot</td>
+                            <td class="right-text"><strong>3{{number_of_slot }}</strong></td>
                         </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
+                        </tr>
+
+                         <tr>
+                            <td>Purchase Date</td>
+                            <td class="right-text"><strong>25-12-2022{{ trade_start_date }}</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
+                        </tr>
+
+                        <tr>
+                            <td>Trading Vehicle</td>
+                            <td class="right-text"><strong>{{ vehicle }}BMW X7</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
                     </tbody>
                 </table>
             </td>

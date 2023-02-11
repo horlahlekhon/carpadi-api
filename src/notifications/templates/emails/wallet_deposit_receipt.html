@@ -3,46 +3,48 @@
 {% block email_content %}
 <table>
     <tbody>
-        <tr class="greeting">
-            <td class="pd-top-10">
-                <h1>Wallet Deposit Receipt </h1>
+        <tr class="document-head-font">
+            <td class="center-text">
+                <h1>Wallet Deposit Receipt</h1>
+            </td>
+        </tr>
+
+        <tr class="separate-tr-20"></tr>
+
+        <tr>
+            <td class="document-head-faded-green">
+                <h3 class="center-text document-head-font">N13,000{{ amount }}</h3>
+                <p class="center-text document-head-font-2">Deposited Amount</p>
             </td>
         </tr>
 
         <tr>
-            <td style="background-color: #E7F4FB">
-                <h3 class="center"><strong>N {{ amount }}</strong></h3>
-                <p class="center">deposited amount</p>
-            </td>
-        </tr>
-
-        <tr>
-            <td>
-                <table class="message">
+            <td class="pd-top-25">
+                 <table style="width: 100%">
                     <tbody>
-                        <tr class="mg-bottom-10">
-                            <td>
-                                <table  width="100%" class="mg-bottom-15">
-                                    <tbody>
-                                        <tr>
-                                            <td colspan="2">Deposit Type</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{deposit_type }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Deposit Date</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{ date }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Ref. number</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{ reference_number }}</strong></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
+                        <tr>
+                            <td>Deposit Type</td>
+                            <td class="right-text"><strong>Debit Card{{ deposit_type }}</strong></td>
                         </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
+                        </tr>
+
+                         <tr>
+                            <td>Deposit Date</td>
+                            <td class="right-text"><strong>25-12-2022{{ deposit_date }}</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
+                        </tr>
+
+                        <tr>
+                            <td>Ref Number</td>
+                            <td class="right-text"><strong>{{ ref_num }}POI0992920N99XM</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
                     </tbody>
                 </table>
             </td>
