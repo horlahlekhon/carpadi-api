@@ -1,3 +1,10 @@
+## [1.26.4](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.3...v1.26.4) (2023-02-11)
+
+
+### Bug Fixes
+
+* Merge pull request [#22](https://github.com/horlahlekhon/carpadi-api/issues/22) from horlahlekhon/feature/implement-email-templates ([d25c91c](https://github.com/horlahlekhon/carpadi-api/commit/d25c91cd219d48f34423bdde14f72e2d4d5a2a8f))
+
 ## [1.26.3](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.2...v1.26.3) (2023-02-10)
 
 
