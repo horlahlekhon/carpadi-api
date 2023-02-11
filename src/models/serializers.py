@@ -5,6 +5,7 @@ import re
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth.models import AnonymousUser
 from django.db import transaction
 from django.db.models import Q
 from django.db.utils import IntegrityError
@@ -355,22 +356,25 @@ class OtpSerializer(serializers.Serializer):
                     resp[key] = [ErrorDetail(f"User with {key}: {user[key]} already exist!")]
             if len(resp):
                 raise serializers.ValidationError(detail=dict(user=resp))
-        if attrs.get("username"):
-            return dict(username=attrs.get("username"))
-        if attrs.get("phone"):
-            return dict(phone=attrs.get("phone"))
-        return dict(email=attrs.get("email"))
+        attrs.update(user)
+        return attrs
 
     def create(self, validated_data):
-        users = User.objects.filter(**validated_data).first() if validated_data.get("username") else None
-        if not users and validated_data.get("username"):
+        users: User = User.objects.filter(username=validated_data.get("username")).first() if validated_data.get("username") else None
+        otp = random.randint(100000, 999999)  # "123456"
+        expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
+        if user_details := validated_data.get("user"):
+            email = user_details.get("email")
+            return Otp.objects.create(
+                user=None, expiry=expiry, otp=otp, email=email, phone=validated_data.get("phone")
+            )
+        if not users:
             key = list(validated_data.keys())[0]
             raise serializers.ValidationError(f"user with {key} {validated_data[key]} does not exist")
-        expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
-        otp = random.randint(100000, 999999)  # "123456"
         return Otp.objects.create(
-            user=users, expiry=expiry, otp=otp, email=validated_data.get("email"), phone=validated_data.get("phone")
+            user=users, expiry=expiry, otp=otp, email=users.email, phone=validated_data.get("phone")
         )
+
 
 
 class DisbursementSerializer(serializers.ModelSerializer):

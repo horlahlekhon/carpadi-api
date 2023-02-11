@@ -9,7 +9,7 @@ from django.utils import timezone
 from rest_framework import serializers, exceptions
 
 from src.config import common
-from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes
+from src.models.models import TransactionKinds, TransactionStatus, TransactionTypes, Settings
 
 # from .models import Transaction
 from ..models.models import (
@@ -433,9 +433,10 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         data['estimated_vehicle_sale_date'] = instance.trade.created + datetime.timedelta(
             days=instance.trade.estimated_sales_duration
         )
+        settings = Settings.objects.first()
         data['description'] = instance.trade.car.description
         data['trade_status'] = instance.trade.trade_status
-        data['estimated_profit_percentage'] = instance.estimated_rot / instance.unit_value * 100
+        data['estimated_profit_percentage'] = settings.merchant_trade_rot_percentage # FIXME this might be wrong instance.estimated_rot / instance.unit_value * 100
         return data
 
     def validate(self, attrs):

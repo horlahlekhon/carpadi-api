@@ -116,7 +116,6 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
     @action(detail=False, methods=['post'], url_path='generate-otp', url_name='generate_otp')
     def generate_otp(self, instance):
         data = instance.data
-        print("generate otp: ", data)
         try:
             ser = OtpSerializer(data=data)
             ser.is_valid(raise_exception=True)

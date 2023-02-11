@@ -294,17 +294,27 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             logger.info("Notification type is not implemented yet")
 
 
+
+class Anonymous:
+
+    def __init__(self, email, phone=None, username=None):
+        self.email = email
+        self.username = username
+        self.phone = phone
+
+
 def send_otp(sender, instance: Otp, created, **kwargs):
     if created and instance:
         user = instance.user
         notice = "USER_EMAIL_VERIFICATION"
-        context = dict(otp=instance.otp, users=[user])
+        context = dict(otp=instance.otp, users=[user or Anonymous(email=instance.email, phone=instance.phone)])
         if instance.user:
             context["username"] = user.username
             context["email"] = user.email
-        elif instance.phone:
-            context["phone"] = instance.phone
-            notice = USER_PHONE_VERIFICATION
+        # TODO uncomment this when we impl sms
+        # elif instance.phone:
+        #     context["phone"] = instance.phone
+        #     notice = USER_PHONE_VERIFICATION
         else:
             context["email"] = instance.email
         notify(notice, **context)

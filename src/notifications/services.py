@@ -32,6 +32,10 @@ NOTIFICATIONS = {
             'email_subject': 'Verify phone',
             'email_html_template': 'text_messages/verify_phone.html',
         },
+        'email': {
+                'email_subject': 'Verify phone',
+                'email_html_template': 'text_messages/verify_phone.html',
+        },
     },
     "USER_EMAIL_VERIFICATION": {
         "notice_type": "email_verification",

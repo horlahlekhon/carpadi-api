@@ -59,6 +59,6 @@ class EmailChannel:
         try:
             # Send a transactional email
             api_response = api_instance.send_transac_email(send_smtp_email)
-            pprint(api_response)
+            print(api_response)
         except ApiException as e:
             print("Exception when calling TransactionalEmailsApi->send_transac_email: %s\n" % e)
