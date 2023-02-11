@@ -325,6 +325,7 @@ class TradeSerializer(serializers.ModelSerializer):
     return_on_trade_percentage = serializers.SerializerMethodField()
     # return_on_trade = serializers.SerializerMethodField()
     return_on_trade_per_unit = serializers.SerializerMethodField()
+    carpadi_commission_percentage = serializers.SerializerMethodField()
 
     class Meta:
         model = Trade
@@ -362,6 +363,10 @@ class TradeSerializer(serializers.ModelSerializer):
         fields.pop("min_sale_price")
         return fields
 
+    def get_carpadi_commission_percentage(self, instance: Trade):
+        settings = Settings.objects.first()
+        return settings.carpadi_commision
+    
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["car"] = self.serialize_car(instance.car)
@@ -437,6 +442,7 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         data['description'] = instance.trade.car.description
         data['trade_status'] = instance.trade.trade_status
         data['estimated_profit_percentage'] = settings.merchant_trade_rot_percentage # FIXME this might be wrong instance.estimated_rot / instance.unit_value * 100
+
         return data
 
     def validate(self, attrs):
