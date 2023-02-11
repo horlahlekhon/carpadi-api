@@ -67,6 +67,22 @@ NOTIFICATIONS = {
             'email_html_template': 'emails/new_trade.html',
         },
     },
+    'TRADE_COMPLETED': {
+        "notice_type": "trade_completed",
+        "in_app": {'message': 'The trade for {} has been completed', "title": "Trade completed"},
+        "email": {
+            'email_subject': 'Trade completed',
+            'email_html_template': 'emails/trade_completed.html',
+        },
+    },
+    'TRADE_CANCELLED': {
+        "notice_type": "trade_cancelled",
+        "in_app": {'message': 'The trade for  {} has been cancelled', "title": "Trade cancelled"},
+        "email": {
+            'email_subject': 'Trade cancelled',
+            'email_html_template': 'emails/trade_cancelled.html',
+        },
+    },
     'DISBURSEMENT': {
         "notice_type": "disbursement",
         "in_app": {'message': 'You have a new return on trade disbursement', "title": "ROT disbursement"},
@@ -87,7 +103,7 @@ NOTIFICATIONS = {
         "notice_type": "transaction",
         "in_app": {'message': 'Your Transaction have failed', "title": "Transaction failure"},
         "email": {
-            'email_subject': 'Transaction completed',
+            'email_subject': 'Transaction failed',
             'email_html_template': 'emails/transactions.html',
         },
     }

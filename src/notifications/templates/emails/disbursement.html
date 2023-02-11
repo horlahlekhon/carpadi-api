@@ -3,73 +3,91 @@
 {% block email_content %}
 <table>
     <tbody>
-        <tr class="greeting">
-            <td class="pd-top-10">
-                <h1>Trade Completion and Disbursement</h1>
+        <tr class="document-title-font">
+            <td class="center-text">
+                <h1>Disbursement</h1>
+            </td>
+        </tr>
+
+        <tr class="pd-bottom-20">
+            <td class="document-head-blue">
+                <h3 class="center-text document-head-font">{{ vehicle }}BMW X7</h3>
+                <p class="center-text document-head-font-2">Disbursement</p>
+            </td>
+        </tr>
+
+        <tr class="separate-tr-20"></tr>
+
+        <tr>
+            <td class="document-head-green">
+                <h3 class="center-text document-head-font">N13,000{{ amount }}</h3>
+                <p class="center-text document-head-font-2">Disbursed</p>
             </td>
         </tr>
 
         <tr>
-            <td style="background-color: #243773">
-                <h3 class="center"><strong>{{ vehicle }}</strong></h3>
-                <p class="center">Trade completed</p>
-            </td>
-        </tr>
-
-        <tr>
-            <td style="background-color: #27F386">
-                <h3 class="center"><strong>N {{ amount }}</strong></h3>
-                <p class="center">Return on Trade - ROT</p>
-            </td>
-        </tr>
-
-        <tr>
-            <td>
-                <table class="message">
+            <td class="pd-top-25">
+                 <table style="width: 100%">
                     <tbody>
-                        <tr class="mg-bottom-10">
-                            <td>
-                                <table  width="100%" class="mg-bottom-15">
-                                    <tbody>
-                                        <tr>
-                                            <td colspan="2">Traded Amount</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{amount }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Number of Traded Slot</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{number_of_slot }}</strong></td>
-                                        </tr>
-                                         <tr>
-                                            <td colspan="2">Trade start Date</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{ trade_start_date }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Trade completion Date</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{ trade_cancellation_date }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Trade Duration</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{duration }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Disbursed to</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{ disbursed_to }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Disbursement Date</td>
-                                            <td colspan="1"></td>
-                                            <td colspan="2"><strong>{{ disbursement_date }}</strong></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
+                        <tr>
+                            <td>Traded Amount</td>
+                            <td class="right-text"><strong>50,000{{amount }}</strong></td>
                         </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
+                        </tr>
+
+                        <tr>
+                            <td>Number of Traded Slot</td>
+                            <td class="right-text"><strong>3{{number_of_slot }}</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
+                        </tr>
+
+                         <tr>
+                            <td>Trade start Date</td>
+                            <td class="right-text"><strong>25-12-2022{{ trade_start_date }}</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
+                        </tr>
+
+                        <tr>
+                            <td>Trade completion Date</td>
+                            <td class="right-text"><strong>25-12-2022{{ trade_cancellation_date }}</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
+                        </tr>
+
+                        <tr>
+                            <td>Trade Duration</td>
+                            <td class="right-text"><strong>6 weeks{{duration }}</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
+                        </tr>
+
+                        <tr>
+                            <td>Disbursed to</td>
+                            <td class="right-text"><strong> Wallet{{ disbursed_to }}</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
+                        <tr class="separate-tr-20">
+                            <td class="horizontal-line"><td class="horizontal-line">
+                        </tr>
+
+                        <tr>
+                            <td>Disbursement Date</td>
+                            <td class="right-text"><strong>25-12-2022{{ disbursement_date }}</strong></td>
+                        </tr>
+                        <tr class="separate-tr-20"></tr>
                     </tbody>
                 </table>
             </td>

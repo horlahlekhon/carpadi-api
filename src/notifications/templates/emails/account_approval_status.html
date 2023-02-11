@@ -1,17 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Yo!</title>
-</head>
-<body>
-    {% if status == "approved" %}
-       Hi {{ username}} your request to be part of the carpadi family has been accepted.. you can now go on and trade
+{%  extends "emails/base_mail.html" %}
 
-    {% elif  status == "disapproved" %}
-        Hi {{ username}} your request to join carpadi has been declined, we wish you all the best.
-    {% endif %}
+{% block email_content %}
+<table>
+    <tbody>
+        <tr class="greeting">
+            <td class="pd-top-10">
+                <h1> Hi, {{ username }} </h1>
+            </td>
+        </tr>
 
-    Thanks.
-</body>
-</html>
+        <tr>
+            <td>
+                <table class="message">
+                    <tbody>
+                        <tr class="mg-bottom-10">
+                            <td>
+                                <p>
+                                    {% if status == "approved" %}
+                                       Your request to be part of the carpadi family has been accepted.. you can now go on and trade
+
+                                    {% elif  status == "disapproved" %}
+                                        Your request to join carpadi has been declined, we wish you all the best.
+                                    {% endif %}
+                                    <strong>*** Temp</strong>
+                                    Your request to be part of the carpadi family has been accepted.. you can now go on and trade.
+                                    <br><br>
+                                    Your request to join carpadi has been declined, we wish you all the best.
+
+                                </p>
+                            </td>
+                        </tr>
+
+                         <tr>
+                            <td class="mg-top-15 pd-top-15">
+                                <a href="{{ domain }}" class="more">Start Investing</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}
