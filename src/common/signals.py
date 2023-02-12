@@ -300,9 +300,9 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             context["transaction_date"] = transaction.created
             context["ref"] = transaction.transaction_reference
             context["users"] = [instance.user]
-            if transaction.transaction_kind == TransactionKinds.Deposit and transaction.transaction_status ==  TransactionStatus.Success:
+            if transaction.transaction_kind == TransactionKinds.Deposit and transaction.transaction_status ==  TransactionStatus.Success: # noqa
                 notify("WALLET_DEPOSIT", **context)
-            elif transaction.transaction_kind == TransactionKinds.Withdrawal and transaction.transaction_status ==  TransactionStatus.Success:
+            elif transaction.transaction_kind == TransactionKinds.Withdrawal and transaction.transaction_status ==  TransactionStatus.Success: # noqa
                 notify("WALLET_WITHDRAWAL", **context)
             elif transaction.transaction_status ==  TransactionStatus.Failed:
                 notify('TRANSACTION_FAILED', **context)

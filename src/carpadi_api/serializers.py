@@ -150,7 +150,8 @@ class WalletSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         units_rots = (
             TradeUnit.objects.filter(
-                merchant=instance.merchant, trade__trade_status__in=[TradeStates.Ongoing, TradeStates.Completed]
+                merchant=instance.merchant, trade__trade_status__in=[
+                    TradeStates.Ongoing, TradeStates.Completed, TradeStates.Purchased]
             )
             .aggregate(total=Sum("estimated_rot"))
             .get("total") or Decimal(0)
