@@ -1,3 +1,10 @@
+## [1.26.8](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.7...v1.26.8) (2023-02-12)
+
+
+### Bug Fixes
+
+* minor bugs ([5bb744d](https://github.com/horlahlekhon/carpadi-api/commit/5bb744dbc34ea1d6905b836001a9d1e7b1e2ac68))
+
 ## [1.26.7](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.6...v1.26.7) (2023-02-12)
 
 
