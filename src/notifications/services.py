@@ -15,7 +15,7 @@ NOTIFICATIONS = {
     "MERCHANT_APPROVAL": {
         "notice_type": "user_approval",
         "email": {
-            'email_subject': 'Password Reset',
+            'email_subject': 'Request to join carpadi',
             'email_html_template': 'emails/account_approval_status.html',
         },
     },
@@ -33,8 +33,8 @@ NOTIFICATIONS = {
             'email_html_template': 'text_messages/verify_phone.html',
         },
         'email': {
-                'email_subject': 'Verify phone',
-                'email_html_template': 'text_messages/verify_phone.html',
+            'email_subject': 'Verify phone',
+            'email_html_template': 'text_messages/verify_phone.html',
         },
     },
     "USER_EMAIL_VERIFICATION": {
@@ -105,6 +105,20 @@ NOTIFICATIONS = {
         "email": {
             'email_subject': 'Transaction failed',
             'email_html_template': 'emails/transactions.html',
+        },
+    },
+    "WALLET_DEPOSIT": {
+        "notice_type": "transaction",
+        "email": {
+            'email_subject': 'Wallet deposit',
+            'email_html_template': 'emails/wallet_deposit_receipt.html',
+        },
+    },
+    "WALLET_WITHDRAWAL": {
+        "notice_type": "transaction",
+        "email": {
+            'email_subject': 'Wallet withdrawal',
+            'email_html_template': 'emails/wallet_withdrawal_receipt.html',
         },
     }
     # PASSWORD_RESET_TOKEN

@@ -13,7 +13,7 @@
 
         <tr>
             <td class="document-head-faded-green">
-                <h3 class="center-text document-head-font">N13,000{{ amount }}</h3>
+                <h3 class="center-text document-head-font">N{{ transaction_amount }}</h3>
                 <p class="center-text document-head-font-2">Withdrawn Amount</p>
             </td>
         </tr>
@@ -24,7 +24,7 @@
                     <tbody>
                         <tr>
                             <td>Withdrawal Type</td>
-                            <td class="right-text"><strong>Bank Transfer{{ withdrawal_type }}</strong></td>
+                            <td class="right-text"><strong>Bank Transfer</strong></td>
                         </tr>
                         <tr class="separate-tr-20"></tr>
                         <tr class="separate-tr-20">
@@ -33,7 +33,7 @@
 
                          <tr>
                             <td>Withdrawal Date</td>
-                            <td class="right-text"><strong>25-12-2022{{ withdrawal_date }}</strong></td>
+                            <td class="right-text"><strong>{{ transaction_date }}</strong></td>
                         </tr>
                         <tr class="separate-tr-20"></tr>
                         <tr class="separate-tr-20">
@@ -41,8 +41,8 @@
                         </tr>
 
                         <tr>
-                            <td>Ref Number</td>
-                            <td class="right-text"><strong>{{ ref_num }}POI0992920N99XM</strong></td>
+                            <td>Reference</td>
+                            <td class="right-text"><strong>{{ ref }}</strong></td>
                         </tr>
                         <tr class="separate-tr-20"></tr>
                     </tbody>

@@ -27,7 +27,7 @@ from src.models.models import (
     Wallet,
     CarMerchant,
     MerchantStatusChoices,
-    LoginSessions,
+    LoginSessions, TransactionKinds,
 )
 from src.notifications.channels.firebase import FirebaseChannel
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
@@ -77,7 +77,11 @@ class DisableSignals(object):
 def complete_user_registeration(sender, **kwargs):
     user: User = kwargs.get("instance")
     if kwargs.get("created") and user.user_type == UserTypes.CarMerchant:
-        context = dict(username=user.get_full_name(), email=user.email, users=[user])
+        context = dict(
+            username=user.get_full_name(), email=user.email, users=[user],
+            firstname=user.first_name, lastname=user.last_name,
+            phone=user.phone
+        )
         notify("WELCOME_USER", **context)
 
 
@@ -220,7 +224,7 @@ def trade_created(sender, instance: Trade, created, **kwargs):
             notice_type=NotificationTypes.NewTrade,
             user=None,
             message=f" new trade for {instance.car.information.brand.name} {instance.car.information.brand.model}"
-            f" VIN: {instance.car.vin} with estimated ROT of {instance.estimated_return_on_trade}",
+            f" VIN: {instance.car.vin} with estimated ROT of {instance.return_on_trade_per_slot}",
             is_read=False,
             entity_id=instance.id,
         )
@@ -266,6 +270,7 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             context["car"] = unit.trade.car.name
             context["total"] = unit.unit_value
             context["users"] = [instance.user]
+            context["trade_start_date"] = unit.trade.created
             notify('TRADE_UNIT_PURCHASE', **context)
         elif instance.notice_type == NotificationTypes.NewTrade:
             users = {i.user for i in LoginSessions.objects.order_by("device_imei").distinct("device_imei")}
@@ -274,6 +279,13 @@ def notifications(sender, instance: Notifications, created, **kwargs):
         elif instance.notice_type == NotificationTypes.Disbursement:
             disburse = Disbursement.objects.get(id=instance.entity_id)
             context["slot_quantity"] = disburse.trade_unit.slots_quantity
+            context["amount"] = disburse.amount
+            context["trade_start_date"] = disburse.trade_unit.trade.created
+            context["trade_completion_date"] = disburse.created
+            duration = disburse.created - disburse.trade_unit.trade.created
+            context["duration"] = duration.days
+            context["disbursement_date"] = disburse.created
+            context["car"] = disburse.trade_unit.trade.car.name
             context["users"] = [instance.user]
             # context["rot"] = disburse
             notify('DISBURSEMENT', **context)
@@ -285,11 +297,17 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             context["transaction_type"] = transaction.transaction_type
             context["transaction_description"] = transaction.transaction_description
             context["transaction_fees"] = transaction.transaction_fees
+            context["transaction_date"] = transaction.created
+            context["ref"] = transaction.transaction_reference
             context["users"] = [instance.user]
-            notify('TRANSACTION_COMPLETED', **context)
-        elif instance.notice_type == NotificationTypes.TransactionFailed:
-            context["users"] = [instance.user]
-            notify('TRANSACTION_FAILED', **context)
+            if transaction.transaction_kind == TransactionKinds.Deposit and transaction.transaction_status ==  TransactionStatus.Success:
+                notify("WALLET_DEPOSIT", **context)
+            elif transaction.transaction_kind == TransactionKinds.Withdrawal and transaction.transaction_status ==  TransactionStatus.Success:
+                notify("WALLET_WITHDRAWAL", **context)
+            elif transaction.transaction_status ==  TransactionStatus.Failed:
+                notify('TRANSACTION_FAILED', **context)
+            else:
+                notify('TRANSACTION_COMPLETED', **context)
         else:
             logger.info("Notification type is not implemented yet")
 

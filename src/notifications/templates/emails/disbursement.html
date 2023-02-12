@@ -11,7 +11,7 @@
 
         <tr class="pd-bottom-20">
             <td class="document-head-blue">
-                <h3 class="center-text document-head-font">{{ vehicle }}BMW X7</h3>
+                <h3 class="center-text document-head-font">{{ car }}</h3>
                 <p class="center-text document-head-font-2">Disbursement</p>
             </td>
         </tr>
@@ -20,7 +20,7 @@
 
         <tr>
             <td class="document-head-green">
-                <h3 class="center-text document-head-font">N13,000{{ amount }}</h3>
+                <h3 class="center-text document-head-font">{{ amount }}</h3>
                 <p class="center-text document-head-font-2">Disbursed</p>
             </td>
         </tr>
@@ -31,7 +31,7 @@
                     <tbody>
                         <tr>
                             <td>Traded Amount</td>
-                            <td class="right-text"><strong>50,000{{amount }}</strong></td>
+                            <td class="right-text"><strong>{{amount }}</strong></td>
                         </tr>
                         <tr class="separate-tr-20"></tr>
                         <tr class="separate-tr-20">
@@ -40,7 +40,7 @@
 
                         <tr>
                             <td>Number of Traded Slot</td>
-                            <td class="right-text"><strong>3{{number_of_slot }}</strong></td>
+                            <td class="right-text"><strong>{{slot_quantity }}</strong></td>
                         </tr>
                         <tr class="separate-tr-20"></tr>
                         <tr class="separate-tr-20">
@@ -49,7 +49,7 @@
 
                          <tr>
                             <td>Trade start Date</td>
-                            <td class="right-text"><strong>25-12-2022{{ trade_start_date }}</strong></td>
+                            <td class="right-text"><strong>{{ trade_start_date }}</strong></td>
                         </tr>
                         <tr class="separate-tr-20"></tr>
                         <tr class="separate-tr-20">
@@ -58,7 +58,7 @@
 
                         <tr>
                             <td>Trade completion Date</td>
-                            <td class="right-text"><strong>25-12-2022{{ trade_cancellation_date }}</strong></td>
+                            <td class="right-text"><strong>{{ trade_completion_date }}</strong></td>
                         </tr>
                         <tr class="separate-tr-20"></tr>
                         <tr class="separate-tr-20">
@@ -67,7 +67,7 @@
 
                         <tr>
                             <td>Trade Duration</td>
-                            <td class="right-text"><strong>6 weeks{{duration }}</strong></td>
+                            <td class="right-text"><strong>{{duration }} days</strong></td>
                         </tr>
                         <tr class="separate-tr-20"></tr>
                         <tr class="separate-tr-20">
@@ -76,7 +76,7 @@
 
                         <tr>
                             <td>Disbursed to</td>
-                            <td class="right-text"><strong> Wallet{{ disbursed_to }}</strong></td>
+                            <td class="right-text"><strong> Wallet</strong></td>
                         </tr>
                         <tr class="separate-tr-20"></tr>
                         <tr class="separate-tr-20">
@@ -85,7 +85,7 @@
 
                         <tr>
                             <td>Disbursement Date</td>
-                            <td class="right-text"><strong>25-12-2022{{ disbursement_date }}</strong></td>
+                            <td class="right-text"><strong>{{ disbursement_date }}</strong></td>
                         </tr>
                         <tr class="separate-tr-20"></tr>
                     </tbody>

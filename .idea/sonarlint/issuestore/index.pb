@@ -50,8 +50,6 @@ V
 nginx.conf,e/d/ed8b45da44d73de79bd7c1c203a419d6ee7d6fde
 B
 src/models/apps.py,8/f/8f6f7b462f97ccb85a03c033cfeb575c4fcd8d9a
-o
-?src/notifications/templates/emails/account_approval_status.html,9/b/9b71b6d2b10bfbd898cedce55722a3edd6b4104e
 I
 src/carpadi_admin/urls.py,c/f/cfd1c21950f508821a9ed95c6cb47e6d5578d6ed
 K
@@ -62,18 +60,12 @@ Q
 !src/carpadi_market/serializers.py,9/8/9822be640977cec3cdda37ade2e3deca2ec12fb2
 H
 src/carpadi_api/views.py,d/4/d45bad2bbf172865cc4fff083c0a2bbf56d17be9
-V
-&src/notifications/channels/firebase.py,3/1/314b689554bfdf68ea0abb9887a4928bb93be868
-U
-%src/carpadi_inspection/serializers.py,c/6/c6b886e37232c2a417284cf64a79a1d1d8733f7f
 K
 src/carpadi_admin/models.py,f/4/f403453b900e43757d4499916b8828c647c560b1
 B
 src/common/apps.py,1/3/13008f0c2323524c05499a44771f1193774781b2
 J
 src/carpadi_admin/utils.py,0/7/07331260c8fa91392f730bf050e8b8f0e7f28c17
-P
- src/carpadi_admin/serializers.py,5/4/54af4e559b3bbdf8631d45c5e02ed33455bf198d
 J
 src/carpadi_admin/views.py,8/b/8b799b33bfbeb42f1fe123efc02d32b0d0a97f49
 D
@@ -82,5 +74,3 @@ E
 requirements/prod.txt,3/b/3bdffe02694f5a4bc1ae5fcdcaef9111d65e4098
 C
 src/config/local.py,d/9/d9799f23aa122a0c57ce9d4de73a95205e81675e
-C
-src/common/tasks.py,2/7/272629e4b57a4541aa290ce42f62685f7b99b0cf

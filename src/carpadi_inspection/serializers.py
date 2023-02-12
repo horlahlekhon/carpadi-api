@@ -75,7 +75,7 @@ class InspectionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_logged_in = self.context.get("request").user
         validated_data["inspection_assignor"] = user_logged_in
-        pictures = validated_data.pop("pictures") if validated_data.get("pictures") else []
+        pictures = validated_data.pop("pictures")
         inspection: Inspections = super(InspectionSerializer, self).create(validated_data)
         Assets.create_many(images=pictures, feature=inspection, entity_type=AssetEntityType.Inspection)
         inspection.car.update_on_inspection_changes(inspection)

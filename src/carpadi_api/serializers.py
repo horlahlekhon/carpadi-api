@@ -366,7 +366,7 @@ class TradeSerializer(serializers.ModelSerializer):
     def get_carpadi_commission_percentage(self, instance: Trade):
         settings = Settings.objects.first()
         return settings.carpadi_commision
-    
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["car"] = self.serialize_car(instance.car)
