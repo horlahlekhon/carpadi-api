@@ -1,3 +1,10 @@
+## [1.26.9](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.8...v1.26.9) (2023-02-20)
+
+
+### Bug Fixes
+
+* remove redundant fields in purchase ([88d7bf9](https://github.com/horlahlekhon/carpadi-api/commit/88d7bf97bd0577e05512df617d8358465b0fb7c7))
+
 ## [1.26.8](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.7...v1.26.8) (2023-02-12)
 
 
