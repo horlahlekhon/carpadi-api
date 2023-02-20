@@ -1,3 +1,10 @@
+## [1.26.10](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.9...v1.26.10) (2023-02-20)
+
+
+### Bug Fixes
+
+* email not sending for reset password ([ad8092e](https://github.com/horlahlekhon/carpadi-api/commit/ad8092eb7e09e0d2832d90e6e847ae8be4a6379c))
+
 ## [1.26.9](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.8...v1.26.9) (2023-02-20)
 
 
