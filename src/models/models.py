@@ -123,6 +123,11 @@ class OtpStatus(models.TextChoices):
     Pending = "pending", _("Otp is yet to expire or has expired and no one sent a verification request for it")
 
 
+class OtpTypes(models.TextChoices):
+    ConfirmUser = "conform_user"
+    PasswordReset = "password_reset"
+
+
 class Otp(Base):
     otp = models.CharField(max_length=6, editable=False)
     expiry = models.DateTimeField(editable=False, default=timezone.now() + datetime.timedelta(minutes=OTP_EXPIRY))
@@ -135,6 +140,7 @@ class Otp(Base):
     )
     email = models.EmailField(null=True, blank=True, max_length=255)
     phone = models.CharField(null=True, blank=True, max_length=20)
+    type = models.CharField(choices=OtpTypes.choices, default=OtpTypes.ConfirmUser, max_length=20)
 
     class Meta:
         get_latest_by = 'created'

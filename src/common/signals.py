@@ -1,5 +1,5 @@
 import datetime
-import logging
+import logging, random
 from collections import defaultdict
 from typing import List
 
@@ -29,6 +29,7 @@ from src.models.models import (
     MerchantStatusChoices,
     LoginSessions,
     TransactionKinds,
+    OtpTypes,
 )
 from src.notifications.channels.firebase import FirebaseChannel
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
@@ -97,29 +98,15 @@ def password_reset_token_created(sender, instance, reset_password_token: ResetPa
     Handles password reset tokens
     When a token is created, an e-mail needs to be sent to the user
     """
-    # otp = random.randrange(100000, 999999)
-    # reset_password_token.key = otp
-    # reset_password_token.save(update_fields=["key"])
-    # reset_password_token.refresh_from_db()
+    otp = random.randrange(100000, 999999)
+    reset_password_token.key = otp
+    reset_password_token.save(update_fields=["key"])
+    reset_password_token.refresh_from_db()
     reset_password_path = reverse('password_reset:reset-password-confirm')
-    ResetPasswordToken.objects.filter(key="123456").delete()  # TOdo remember to remove this code abeg.
-    # reset_password_token.key = "123456"  # TOdo remember to remove this coder abeg.
-    # reset_password_token.save(update_fields=["key"])
-    ResetPasswordToken.objects.create(  # TOdo remember to remove this coder abeg.
-        user=reset_password_token.user,
-        user_agent=reset_password_token.user_agent,
-        ip_address=reset_password_token.ip_address,
-        key="123456",
+    expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY)
+    Otp.objects.create(
+        otp=otp, expiry=expiry, email=reset_password_token.user.email, user=reset_password_token.user, type=OtpTypes.PasswordReset
     )
-    context = {
-        'username': reset_password_token.user.username,
-        'email': reset_password_token.user.email,
-        'reset_password_url': build_absolute_uri(f'{reset_password_path}?token={reset_password_token.key}'),
-        'token': "123456",  # reset_password_token.key,
-        'user': reset_password_token.user.id,
-    }
-
-    notify(ACTIVITY_USER_RESETS_PASS, context=context, users=[reset_password_token.user])
 
 
 def complete_transaction(sender, **kwargs):
@@ -332,7 +319,7 @@ class Anonymous:
 def send_otp(sender, instance: Otp, created, **kwargs):
     if created and instance:
         user = instance.user
-        notice = "USER_EMAIL_VERIFICATION"
+        notice = "USER_EMAIL_VERIFICATION" if instance.type == OtpTypes.ConfirmUser else ACTIVITY_USER_RESETS_PASS
         context = dict(otp=instance.otp, users=[user or Anonymous(email=instance.email, phone=instance.phone)])
         if instance.user:
             context["username"] = user.username
@@ -343,4 +330,5 @@ def send_otp(sender, instance: Otp, created, **kwargs):
         #     notice = USER_PHONE_VERIFICATION
         else:
             context["email"] = instance.email
+
         notify(notice, **context)

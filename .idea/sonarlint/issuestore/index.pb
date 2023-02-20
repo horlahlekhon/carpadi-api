@@ -97,10 +97,6 @@ d
 4src/notifications/templates/emails/user_welcome.html,6/3/636f4a56bfa79017b0145995650976f74e9dbb3c
 d
 4src/notifications/templates/emails/verify_email.html,5/0/502a22e8893863356192ec01a449fa7b66284e07
-C
-src/models/views.py,a/9/a9f9f0ba8a451254ed5267b04516f5170edbd8e9
-k
-;src/notifications/templates/emails/user_reset_password.html,0/7/07337c1bbf16f3dddd184fe798e21d31ddef9085
 o
 ?src/notifications/templates/emails/account_approval_status.html,9/b/9b71b6d2b10bfbd898cedce55722a3edd6b4104e
 N
@@ -117,3 +113,11 @@ H
 src/carpadi_api/views.py,d/4/d45bad2bbf172865cc4fff083c0a2bbf56d17be9
 O
 src/carpadi_inspection/views.py,b/1/b1714b2fd493c12ef7ebc97f5cc17887a21ec97e
+k
+;src/notifications/templates/emails/trade_unit_purchase.html,3/1/312098662846b5985cb3dd21a989c2ca4f1d9afa
+C
+src/common/tasks.py,2/7/272629e4b57a4541aa290ce42f62685f7b99b0cf
+P
+ src/carpadi_inspection/models.py,d/3/d30d03f183fb485e0efd07eb519a513c41a5df63
+U
+%src/carpadi_inspection/serializers.py,c/6/c6b886e37232c2a417284cf64a79a1d1d8733f7f
