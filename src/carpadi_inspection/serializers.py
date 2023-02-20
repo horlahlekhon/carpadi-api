@@ -22,6 +22,9 @@ class InspectionPartSerializer(serializers.ModelSerializer):
     def get_images(self, instance: InspectionStage):
         return Assets.objects.filter(object_id=instance.id).values_list("asset", flat=True)
 
+    def validate_part_name(self, attr):
+        print(attr)
+
     @atomic
     def create(self, validated_data):
         pictures = validated_data.pop("pictures")

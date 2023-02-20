@@ -440,7 +440,6 @@ class CarBrand(Base):
 
 
 class CarTypes(models.TextChoices):
-
     SUV = "suv", _(
         "SUV",
     )
@@ -914,18 +913,18 @@ class Trade(Base):
                 activity=dis,
                 merchant=dis.trade_unit.merchant,
                 description=f"Activity Type: Disbursement, Description: Disbursed {dis.amount} "
-                            f"naira for {dis.trade_unit.slots_quantity} units \
+                f"naira for {dis.trade_unit.slots_quantity} units \
                         owned in {dis.trade_unit.trade.car.information.brand.name}"
-                            f" {dis.trade_unit.trade.car.information.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
+                f" {dis.trade_unit.trade.car.information.brand.model} VIN: {dis.trade_unit.trade.car.vin}",
             )
             Notifications.objects.create(
                 notice_type=NotificationTypes.Disbursement,
                 is_read=False,
                 message=f"Disbursed {dis.amount} naira for {dis.trade_unit.slots_quantity} units "
-                        f"owned in {dis.trade_unit.trade.car.name}"
-                        f" VIN: {dis.trade_unit.trade.car.vin}",
+                f"owned in {dis.trade_unit.trade.car.name}"
+                f" VIN: {dis.trade_unit.trade.car.vin}",
                 entity_id=dis.id,
-                user=dis.trade_unit.merchant.user
+                user=dis.trade_unit.merchant.user,
             )
 
     @atomic()
@@ -1139,7 +1138,7 @@ class Disbursement(Base):
         tranx.transaction_status = TransactionStatus.RolledBack
         tranx.save(update_fields=['transaction_status'])
         wallet.update_balance(tranx)
-        self.delete() # FIXME should we ?
+        self.delete()  # FIXME should we ?
 
     def __str__(self):
         return f"Disbursement for {self.trade_unit.trade.id} - {self.trade_unit.merchant.user.username}"
@@ -1319,7 +1318,7 @@ class Stages(models.TextChoices):
     Generic = "generic"
     Exterior = "exterior"
     Glass = "glass"
-    Wheels = "wheels"
+    TyresAndWheels = "wheels"
     UnderBody = "under_body"
     UnderHood = "under_hood"
     Interior = "interior"
@@ -1498,10 +1497,25 @@ class ContactPreference(models.TextChoices):
 
 
 class CarPurchasesStatus(models.TextChoices):
-
     Accepted = "accepted", _("Car purchase offer was accepted")
     Declined = "declined", _("Purchase offer declined based on some reason")
     Pending = "pending", _("Yet to be processed")
+
+
+class DealPreferences(models.TextChoices):
+    Swap = "swap", _("A car for a car")
+    Outright = "outright", _("Outright buying of car")
+
+
+class CarSellers(Base):
+    name = models.CharField(max_length=50, null=False, blank=False)
+    email = models.EmailField(null=True, blank=True)
+    phone = models.CharField(
+        validators=[
+            PhoneNumberValidator,
+        ],
+        max_length=20,
+    )
 
 
 class CarPurchaseOffer(Base):
@@ -1517,14 +1531,8 @@ class CarPurchaseOffer(Base):
     registeration_state = models.CharField(max_length=40, null=False, blank=False)
     current_usage_timeframe_by_user = models.PositiveIntegerField(help_text="how long has this user used the car in months")
     mileage = models.PositiveIntegerField(help_text="the current mileage of the car on the dashboard")
-    count_of_previous_users = models.PositiveIntegerField(help_text="how many people have previously used this car")
-    custom_papers_availability = models.BooleanField(default=False)
-    car_condition = models.CharField(choices=CarConditionsTypes.choices, max_length=20)
-    note = models.TextField()
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=False, related_name="sellers")
-    price = models.DecimalField(decimal_places=2, default=Decimal(0.00), max_digits=10)
+    seller = models.ForeignKey(CarSellers, on_delete=models.SET_NULL, null=True, default=None)
     inspection_location = models.CharField(max_length=40, null=False, blank=False)
-    contact_preference = models.CharField(choices=ContactPreference.choices, max_length=100, null=False, blank=False)
-    is_negotiable = models.BooleanField()
     status = models.CharField(choices=CarPurchasesStatus.choices, default=CarPurchasesStatus.Pending, max_length=40)
     decline_reason = models.TextField(default="")
+    deal_preference = models.CharField(choices=DealPreferences.choices, max_length=20, default=DealPreferences.Outright)

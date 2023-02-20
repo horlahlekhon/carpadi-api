@@ -148,14 +148,10 @@ class WalletSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        units_rots = (
-            TradeUnit.objects.filter(
-                merchant=instance.merchant, trade__trade_status__in=[
-                    TradeStates.Ongoing, TradeStates.Completed, TradeStates.Purchased]
-            )
-            .aggregate(total=Sum("estimated_rot"))
-            .get("total") or Decimal(0)
-        )
+        units_rots = TradeUnit.objects.filter(
+            merchant=instance.merchant,
+            trade__trade_status__in=[TradeStates.Ongoing, TradeStates.Completed, TradeStates.Purchased],
+        ).aggregate(total=Sum("estimated_rot")).get("total") or Decimal(0)
         data['estimated_total_rot'] = units_rots
         return data
 
@@ -442,7 +438,9 @@ class TradeUnitSerializer(serializers.ModelSerializer):
         settings = Settings.objects.first()
         data['description'] = instance.trade.car.description
         data['trade_status'] = instance.trade.trade_status
-        data['estimated_profit_percentage'] = settings.merchant_trade_rot_percentage # FIXME this might be wrong instance.estimated_rot / instance.unit_value * 100
+        data[
+            'estimated_profit_percentage'
+        ] = settings.merchant_trade_rot_percentage  # FIXME this might be wrong instance.estimated_rot / instance.unit_value * 100
 
         return data
 

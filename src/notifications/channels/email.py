@@ -49,13 +49,11 @@ class EmailChannel:
     def send_mail_sib(context, html_template, subject, to):
         configuration = sib_api_v3_sdk.Configuration()
         email_html_message = render_to_string(html_template, context)
-        configuration.api_key[
-            'api-key'] = settings.SIB_API_KEY
+        configuration.api_key['api-key'] = settings.SIB_API_KEY
         api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
         sender = sib_api_v3_sdk.CreateSender(name="Carpadi", email="admin@carpadi.com")
         to = [sib_api_v3_sdk.SendSmtpEmailTo(email=i, name=i) for i in to]
-        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(to=to, html_content=email_html_message, subject=subject,
-                                                       sender=sender)
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(to=to, html_content=email_html_message, subject=subject, sender=sender)
         try:
             # Send a transactional email
             api_response = api_instance.send_transac_email(send_smtp_email)

@@ -27,7 +27,8 @@ from src.models.models import (
     Wallet,
     CarMerchant,
     MerchantStatusChoices,
-    LoginSessions, TransactionKinds,
+    LoginSessions,
+    TransactionKinds,
 )
 from src.notifications.channels.firebase import FirebaseChannel
 from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
@@ -78,9 +79,12 @@ def complete_user_registeration(sender, **kwargs):
     user: User = kwargs.get("instance")
     if kwargs.get("created") and user.user_type == UserTypes.CarMerchant:
         context = dict(
-            username=user.get_full_name(), email=user.email, users=[user],
-            firstname=user.first_name, lastname=user.last_name,
-            phone=user.phone
+            username=user.get_full_name(),
+            email=user.email,
+            users=[user],
+            firstname=user.first_name,
+            lastname=user.last_name,
+            phone=user.phone,
         )
         notify("WELCOME_USER", **context)
 
@@ -202,7 +206,7 @@ def disbursement_completed(disbursements: List[Disbursement]):
             f"owned in {dis.trade_unit.trade.car.name}"
             f" VIN: {dis.trade_unit.trade.car.vin}",
             entity_id=dis.id,
-            user=dis.trade_unit.merchant.user
+            user=dis.trade_unit.merchant.user,
         )
 
 
@@ -270,7 +274,7 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             context["car"] = unit.trade.car.name
             context["total"] = unit.unit_value
             context["users"] = [instance.user]
-            context["trade_start_date"] = unit.trade.created
+            context["trade_start_date"] = datetime.datetime.now()
             notify('TRADE_UNIT_PURCHASE', **context)
         elif instance.notice_type == NotificationTypes.NewTrade:
             users = {i.user for i in LoginSessions.objects.order_by("device_imei").distinct("device_imei")}
@@ -300,11 +304,17 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             context["transaction_date"] = transaction.created
             context["ref"] = transaction.transaction_reference
             context["users"] = [instance.user]
-            if transaction.transaction_kind == TransactionKinds.Deposit and transaction.transaction_status ==  TransactionStatus.Success: # noqa
+            if (
+                transaction.transaction_kind == TransactionKinds.Deposit
+                and transaction.transaction_status == TransactionStatus.Success
+            ):  # noqa
                 notify("WALLET_DEPOSIT", **context)
-            elif transaction.transaction_kind == TransactionKinds.Withdrawal and transaction.transaction_status ==  TransactionStatus.Success: # noqa
+            elif (
+                transaction.transaction_kind == TransactionKinds.Withdrawal
+                and transaction.transaction_status == TransactionStatus.Success
+            ):  # noqa
                 notify("WALLET_WITHDRAWAL", **context)
-            elif transaction.transaction_status ==  TransactionStatus.Failed:
+            elif transaction.transaction_status == TransactionStatus.Failed:
                 notify('TRANSACTION_FAILED', **context)
             else:
                 notify('TRANSACTION_COMPLETED', **context)
@@ -312,9 +322,7 @@ def notifications(sender, instance: Notifications, created, **kwargs):
             logger.info("Notification type is not implemented yet")
 
 
-
 class Anonymous:
-
     def __init__(self, email, phone=None, username=None):
         self.email = email
         self.username = username

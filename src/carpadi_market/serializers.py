@@ -20,6 +20,7 @@ from src.models.models import (
     CarTypes,
     CarBrand,
     CarProductStatus,
+    CarSellers,
 )
 from src.models.validators import PhoneNumberValidator
 
@@ -152,28 +153,22 @@ class CarProductSerializer(serializers.ModelSerializer):
 
 
 class PurchasesUserSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
+    name = serializers.CharField()
     phone = serializers.CharField(validators=[PhoneNumberValidator])
-    email = serializers.EmailField()
+    email = serializers.EmailField(required=False, allow_blank=True)
 
     class Meta:
-        model = User
+        model = CarSellers
         fields = (
-            'first_name',
-            "last_name",
+            "name",
             "phone",
             "email",
         )
 
     def create(self, validated_data):
-        if usr := User.objects.filter(phone=validated_data["phone"], email=validated_data["email"]).first():
-            return usr
-        validated_data["username"] = validated_data["email"]
-        validated_data["is_active"] = False
-        # validated_data["user_type"] = UserTypes.CarSeller
-        usr, created = User.objects.get_or_create(defaults=validated_data, email=validated_data["email"])
-        return usr
+        if car_seller := CarSellers.objects.filter(phone=validated_data["phone"], email=validated_data["email"]).first():
+            return car_seller
+        return super(PurchasesUserSerializer, self).create(validated_data=validated_data)
 
 
 class CarPurchasesCarSerializerField(serializers.RelatedField):
@@ -191,7 +186,7 @@ class CarPurchaseOfferSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_seller(self, obj: CarPurchaseOffer):
-        return PurchasesUserSerializer(instance=obj.user).data
+        return PurchasesUserSerializer(instance=obj.seller).data
 
     @atomic
     def create(self, validated_data):
@@ -199,7 +194,7 @@ class CarPurchaseOfferSerializer(serializers.ModelSerializer):
         ser = PurchasesUserSerializer(data=user)
         ser.is_valid(raise_exception=True)
         usr = ser.save()
-        validated_data["user"] = usr
+        validated_data["seller"] = usr
         return CarPurchaseOffer.objects.create(**validated_data)
 
 
