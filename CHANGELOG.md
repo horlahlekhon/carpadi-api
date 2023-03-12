@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.10...v1.27.0) (2023-03-12)
+
+
+### Features
+
+* add sentry profiling ([7fe9ba5](https://github.com/horlahlekhon/carpadi-api/commit/7fe9ba52aa908f93794993590bf8ca58c112bc47))
+
 ## [1.26.10](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.9...v1.26.10) (2023-02-20)
 
 
