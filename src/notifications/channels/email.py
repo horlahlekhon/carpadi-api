@@ -52,8 +52,9 @@ class EmailChannel:
         configuration.api_key['api-key'] = settings.SIB_API_KEY
         api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
         sender = sib_api_v3_sdk.CreateSender(name="Carpadi", email="admin@carpadi.com")
-        to = [sib_api_v3_sdk.SendSmtpEmailTo(email=i, name=i) for i in to]
-        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(to=to, html_content=email_html_message, subject=subject, sender=sender)
+        bcc = [sib_api_v3_sdk.SendSmtpEmailTo(email=i, name=i) for i in to]
+        to = [sib_api_v3_sdk.SendSmtpEmailTo(email="admin@carpadi.com", name="Admin")] if len(bcc) > 1 else bcc
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(to=to, bcc=bcc, html_content=email_html_message, subject=subject, sender=sender)
         try:
             # Send a transactional email
             api_response = api_instance.send_transac_email(send_smtp_email)

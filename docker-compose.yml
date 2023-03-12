@@ -2,7 +2,7 @@ version: '3'
 services:
 
   carpadi-api:
-    image: olalekanadebari/carpadi-api:latest
+    image: olalekanadebari/carpadi-api:1.26.10
     restart: always
     ports:
       - "8000:8000"
@@ -15,5 +15,3 @@ services:
     environment:
 #      - ALLOW_EMPTY_PASSWORD=yes
       - REDIS_PASSWORD=passersby
-
-
