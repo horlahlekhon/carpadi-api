@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.27.0...v1.28.0) (2023-03-18)
+
+
+### Features
+
+* added captcha verification ([500c3e0](https://github.com/horlahlekhon/carpadi-api/commit/500c3e0c037edf7a39288b343a3a9968e5f07369))
+
 # [1.27.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.26.10...v1.27.0) (2023-03-12)
 
 
