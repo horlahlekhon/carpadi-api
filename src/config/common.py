@@ -136,7 +136,7 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
     "sentry-trace",
-    "baggage"
+    "baggage",
 ]
 
 # CELERY
@@ -476,3 +476,7 @@ MIN_SLOT_ALLOWED = 4
 MIN_CAR_PICTURES_FOR_TRADE = 5
 INSPECTION_PARTS_COUNT = 10
 SIB_API_KEY = os.getenv("SIB_API_KEY")
+
+ADMIN_CAPTCHA_SITE_KEY = "6LcZ2v0kAAAAAIDgjw6dUUeXEcBtyveFEJqfrGhV"
+ADMIN_CAPTCHA_SHARED_SECRET = "6LcZ2v0kAAAAAISdmh5jvN-3BX9WZQ9M_YFcrq6G"
+CAPTCHA_SITE_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify?response={}&secret={}&remoteip={}".format

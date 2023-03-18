@@ -77,16 +77,12 @@ o
 ?src/notifications/templates/emails/account_approval_status.html,9/b/9b71b6d2b10bfbd898cedce55722a3edd6b4104e
 N
 src/carpadi_api/serializers.py,3/b/3b7530be179fcd99f7da37b2415f7aa678b30f0d
-J
-src/carpadi_admin/views.py,8/b/8b799b33bfbeb42f1fe123efc02d32b0d0a97f49
 P
  src/carpadi_admin/serializers.py,5/4/54af4e559b3bbdf8631d45c5e02ed33455bf198d
 O
 src/carpadi_inspection/tests.py,b/d/bd9a6ea6aeadbb065c7335e6dc6a51e0a56ab780
 N
 src/carpadi_inspection/urls.py,3/4/34226f58e78287e4e09ab33bb834d9089f29dc57
-H
-src/carpadi_api/views.py,d/4/d45bad2bbf172865cc4fff083c0a2bbf56d17be9
 O
 src/carpadi_inspection/views.py,b/1/b1714b2fd493c12ef7ebc97f5cc17887a21ec97e
 C
@@ -95,8 +91,6 @@ P
  src/carpadi_inspection/models.py,d/3/d30d03f183fb485e0efd07eb519a513c41a5df63
 U
 %src/carpadi_inspection/serializers.py,c/6/c6b886e37232c2a417284cf64a79a1d1d8733f7f
-C
-src/models/views.py,a/9/a9f9f0ba8a451254ed5267b04516f5170edbd8e9
 k
 ;src/notifications/templates/emails/user_reset_password.html,0/7/07337c1bbf16f3dddd184fe798e21d31ddef9085
 E
@@ -117,9 +111,22 @@ k
 ;src/notifications/templates/emails/trade_unit_purchase.html,3/1/312098662846b5985cb3dd21a989c2ca4f1d9afa
 M
 src/carpadi_market/filters.py,1/1/11bc6cb7a1147bfd69c05499a58bbb6e1fcacd79
-K
-src/carpadi_market/views.py,f/d/fd4f5db853cdfcf52b37b8973ff85ecabaff02e7
 Q
 !src/carpadi_market/serializers.py,9/8/9822be640977cec3cdda37ade2e3deca2ec12fb2
 S
 #src/notifications/channels/email.py,b/6/b69ddeff434029e492447907a01b2d01bca99183
+D
+src/models/models.py,d/d/dda6ed96a9d3fe133949353d68723723aa0cf63b
+?
+Dockerfile.prod,d/5/d56386d053ef5c8627235e5406af952a22c98ffc
+A
+Dockerfile-static,a/9/a9e14628a9abb974aed509b361e46a7bb5271b04
+:
+
+Dockerfile,6/6/6651ddff6eb82c840ced7c1dddee15c6e1913dd4
+6
+run.sh,3/2/324fcb49f1cf313ebdd7cbda6a71b73727ddd94d
+n
+>src/notifications/templates/emails/wallet_deposit_receipt.html,c/4/c4092ba94e0e4cd9594d193b3582c8aa9f47e321
+@
+supervisord.conf,8/8/883306a7b009d117f95b2b178b5a8538cca68ea1

@@ -2,6 +2,8 @@ import datetime
 import logging
 import threading
 
+import requests
+from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, send_mail
 from django.db import transaction
 from django.db.models import Q
@@ -9,6 +11,7 @@ from django.http.response import Http404
 from django.utils import timezone
 from django_filters import rest_framework as filters
 from fcm_django.models import FCMDevice
+from requests import status_codes
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -232,6 +235,25 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
         # notification = NOTIFICATIONS.get('new_user')
         notify = notify("WELCOME_USER", user=user.id, profile=user, users=[user])
         return Response(notify, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='captcha', url_name='captcha')
+    def check_captcha(self, request, *args, **kwargs):
+        response = request.data.get("response")
+        ip = request.data.get("ip")
+        if ip and response:
+            response = requests.post(url=settings.CAPTCHA_SITE_VERIFY_URL(response, settings.ADMIN_CAPTCHA_SHARED_SECRET, ip))
+            result = response.json()
+            if response.ok and result.get("status") is True:
+                return Response(status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data=dict(error=dict(data="We could not verify the captcha response", response=result)),
+                )
+        else:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST, data=dict(error="IP and the captcha response are " "required fields")
+            )
 
 
 class TokenObtainPairViewMod(TokenViewBase):
