@@ -55,3 +55,4 @@ sentry-sdk
 
 
 sib-api-v3-sdk
+pydantic

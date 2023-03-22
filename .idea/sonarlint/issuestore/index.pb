@@ -29,8 +29,6 @@ T
 $src/carpadi_admin/tests/factories.py,b/4/b477a12aa9b0a4c0d1b02ce22dfa3b455abb34e7
 J
 src/carpadi_market/urls.py,f/b/fbd63c9fae36a1548edb8ef477a86c9366de32c5
-E
-src/common/helpers.py,a/b/abd8679d374b6b70e0fd0152915a852a2a853b13
 V
 &src/carpadi_admin/tests/test_models.py,c/3/c3d29ed2b5f79094869db52cd95e9d1dac71d350
 :
@@ -46,10 +44,6 @@ B
 src/common/apps.py,1/3/13008f0c2323524c05499a44771f1193774781b2
 J
 src/carpadi_admin/utils.py,0/7/07331260c8fa91392f730bf050e8b8f0e7f28c17
-D
-requirements/dev.txt,1/8/18a54bc76396d8520dedda512b306d4132cc48dd
-E
-requirements/prod.txt,3/b/3bdffe02694f5a4bc1ae5fcdcaef9111d65e4098
 C
 src/config/local.py,d/9/d9799f23aa122a0c57ce9d4de73a95205e81675e
 :
@@ -77,8 +71,6 @@ o
 ?src/notifications/templates/emails/account_approval_status.html,9/b/9b71b6d2b10bfbd898cedce55722a3edd6b4104e
 N
 src/carpadi_api/serializers.py,3/b/3b7530be179fcd99f7da37b2415f7aa678b30f0d
-P
- src/carpadi_admin/serializers.py,5/4/54af4e559b3bbdf8631d45c5e02ed33455bf198d
 O
 src/carpadi_inspection/tests.py,b/d/bd9a6ea6aeadbb065c7335e6dc6a51e0a56ab780
 N
@@ -93,8 +85,6 @@ U
 %src/carpadi_inspection/serializers.py,c/6/c6b886e37232c2a417284cf64a79a1d1d8733f7f
 k
 ;src/notifications/templates/emails/user_reset_password.html,0/7/07337c1bbf16f3dddd184fe798e21d31ddef9085
-E
-src/common/signals.py,3/d/3d2c4889c54825fae708229e5241031bd29fb5a6
 a
 1src/notifications/templates/emails/base_mail.html,f/0/f02517a995fe00438c4b82ea8eed264e177215ca
 M
@@ -115,8 +105,6 @@ Q
 !src/carpadi_market/serializers.py,9/8/9822be640977cec3cdda37ade2e3deca2ec12fb2
 S
 #src/notifications/channels/email.py,b/6/b69ddeff434029e492447907a01b2d01bca99183
-D
-src/models/models.py,d/d/dda6ed96a9d3fe133949353d68723723aa0cf63b
 ?
 Dockerfile.prod,d/5/d56386d053ef5c8627235e5406af952a22c98ffc
 A

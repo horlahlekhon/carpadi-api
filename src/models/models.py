@@ -525,7 +525,7 @@ class CarTransmissionTypes(models.TextChoices):
     Automatic = "automatic", _(
         "Automatic",
     )
-    Standar = "standard", _("Who knows")
+    Standard = "standard", _("Who knows")
 
 
 class FuelTypes(models.TextChoices):
@@ -1221,8 +1221,8 @@ class VehicleInfo(Base):
     vin = models.CharField(max_length=17, unique=True)
     engine = models.TextField()
     transmission = models.CharField(max_length=15, choices=CarTransmissionTypes.choices)
-    car_type = models.CharField(choices=CarTypes.choices, max_length=30, null=True, blank=True)
-    fuel_type = models.CharField(choices=FuelTypes.choices, max_length=30, null=False, blank=False)
+    car_type = models.CharField(max_length=50, null=True, blank=True)
+    fuel_type = models.CharField(max_length=30, null=False, blank=False)
     mileage = models.PositiveIntegerField(null=True, blank=True)
     age = models.PositiveIntegerField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
@@ -1237,6 +1237,7 @@ class VehicleInfo(Base):
     num_of_cylinders = models.PositiveIntegerField(null=True, blank=True)
     engine_power = models.CharField(null=True, blank=True, max_length=20)
     torque = models.CharField(null=True, blank=True, max_length=20)
+    raw_data = models.JSONField(null=True, blank=True)
 
 
 class CarProductStatus(models.TextChoices):

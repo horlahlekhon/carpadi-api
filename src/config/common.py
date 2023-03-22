@@ -437,7 +437,7 @@ FLW_WITHDRAW_URL = os.getenv('FLW_WITHDRAW_URL', "https://api.flutterwave.com/v3
 
 CARMD_PARTNER_TOKEN = os.getenv('CARMD_PARTNER_TOKEN', '')
 CARMD_APIKEY = os.getenv('CARMD_APIKEY', '')
-CARMD_VIN_CHECK = "http://api.carmd.com/v3.0/decode?vin={}".format
+CARMD_VIN_CHECK = "http://api.carmd.com/v3.0/decode_more?vin={}".format
 
 from firebase_admin import initialize_app
 

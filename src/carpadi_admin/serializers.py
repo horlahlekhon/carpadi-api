@@ -79,8 +79,9 @@ class VehicleInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VehicleInfo
-        fields = "__all__"
+        # fields = "__all__"
         # read_only_fields = (,)
+        exclude = ('raw_data',)
 
     def get_brand(self, vehicle: VehicleInfo):
         return CarBrandSerializer(instance=vehicle.brand).data
@@ -90,8 +91,8 @@ class VehicleInfoSerializer(serializers.ModelSerializer):
         info: Optional[VehicleInfo] = VehicleInfo.objects.filter(vin=vin).first()
         if not info:
             if data := check_vin(vin):
-                validated_data.update(data)
-                brand = dict(model=validated_data.pop("model"), year=validated_data.pop("year"), name=validated_data.pop("make"))
+                validated_data.update(data.dict())
+                brand = dict(model=validated_data.pop("model"), year=validated_data.pop("year"), name=validated_data.pop("manufacturer"))
                 carbrand = CarBrandSerializer(data=brand)
                 carbrand.is_valid(raise_exception=True)
                 ins: CarBrand = carbrand.save()

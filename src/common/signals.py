@@ -1,13 +1,12 @@
 import datetime
-import logging, random
+import logging
+import random
 from collections import defaultdict
 from typing import List
 
 from django.db.models import signals
 from django_rest_passwordreset.models import ResetPasswordToken
 
-from src.carpadi_api.serializers import TransactionSerializer, TradeUnitSerializer
-from src.common.helpers import build_absolute_uri
 from src.config.common import OTP_EXPIRY
 from src.models.models import (
     Disbursement,
@@ -25,14 +24,11 @@ from src.models.models import (
     NotificationTypes,
     Car,
     Wallet,
-    CarMerchant,
-    MerchantStatusChoices,
     LoginSessions,
     TransactionKinds,
     OtpTypes,
 )
-from src.notifications.channels.firebase import FirebaseChannel
-from src.notifications.services import notify, USER_PHONE_VERIFICATION, ACTIVITY_USER_RESETS_PASS
+from src.notifications.services import notify, ACTIVITY_USER_RESETS_PASS
 
 logger = logging.getLogger(__name__)
 
