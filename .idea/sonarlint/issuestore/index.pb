@@ -81,12 +81,8 @@ C
 src/common/tasks.py,2/7/272629e4b57a4541aa290ce42f62685f7b99b0cf
 P
  src/carpadi_inspection/models.py,d/3/d30d03f183fb485e0efd07eb519a513c41a5df63
-U
-%src/carpadi_inspection/serializers.py,c/6/c6b886e37232c2a417284cf64a79a1d1d8733f7f
 k
 ;src/notifications/templates/emails/user_reset_password.html,0/7/07337c1bbf16f3dddd184fe798e21d31ddef9085
-a
-1src/notifications/templates/emails/base_mail.html,f/0/f02517a995fe00438c4b82ea8eed264e177215ca
 M
 src/notifications/services.py,9/2/92df78e017b57344d6e7b2b23c1b6e8ac09b316b
 d
@@ -112,9 +108,21 @@ A
 :
 
 Dockerfile,6/6/6651ddff6eb82c840ced7c1dddee15c6e1913dd4
-6
-run.sh,3/2/324fcb49f1cf313ebdd7cbda6a71b73727ddd94d
 n
 >src/notifications/templates/emails/wallet_deposit_receipt.html,c/4/c4092ba94e0e4cd9594d193b3582c8aa9f47e321
 @
 supervisord.conf,8/8/883306a7b009d117f95b2b178b5a8538cca68ea1
+H
+src/carpadi_api/views.py,d/4/d45bad2bbf172865cc4fff083c0a2bbf56d17be9
+J
+src/carpadi_admin/views.py,8/b/8b799b33bfbeb42f1fe123efc02d32b0d0a97f49
+E
+src/common/signals.py,3/d/3d2c4889c54825fae708229e5241031bd29fb5a6
+E
+src/common/helpers.py,a/b/abd8679d374b6b70e0fd0152915a852a2a853b13
+6
+run.sh,3/2/324fcb49f1cf313ebdd7cbda6a71b73727ddd94d
+M
+.github/workflows/staging.yml,b/a/bab4ab334918c0184ab96fefdcc131c729cba0aa
+a
+1src/notifications/templates/emails/base_mail.html,f/0/f02517a995fe00438c4b82ea8eed264e177215ca

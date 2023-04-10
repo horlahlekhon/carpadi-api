@@ -92,7 +92,9 @@ class VehicleInfoSerializer(serializers.ModelSerializer):
         if not info:
             if data := check_vin(vin):
                 validated_data.update(data.dict())
-                brand = dict(model=validated_data.pop("model"), year=validated_data.pop("year"), name=validated_data.pop("manufacturer"))
+                brand = dict(
+                    model=validated_data.pop("model"), year=validated_data.pop("year"), name=validated_data.pop("manufacturer")
+                )
                 carbrand = CarBrandSerializer(data=brand)
                 carbrand.is_valid(raise_exception=True)
                 ins: CarBrand = carbrand.save()
@@ -181,7 +183,7 @@ class CarSerializer(serializers.ModelSerializer):
                 TradeStates.Pending,
             ):  # noqa
                 raise serializers.ValidationError(
-                    "Resale price for a car that has a trade can only" "be set after trade have been purchased "
+                    "Resale price for a car that has a trade can only be set after trade have been purchased "
                 )
             return value
 
@@ -354,8 +356,8 @@ class TradeSerializerAdmin(serializers.ModelSerializer):
     def validate_trade_dependencies(self, validated_data):
         car: Car = validated_data.get("car")
         inspection = car.inspections
-        if inspection.status != InspectionStatus.Completed:
-            raise serializers.ValidationError("Inspection is not completed yet, trade cannot be created")
+        # if inspection.status != InspectionStatus.Completed:
+        #     raise serializers.ValidationError("Inspection is not completed yet, trade cannot be created")
         if not CarDocuments.documentation_completed(car.id):
             raise serializers.ValidationError(
                 "Some documents have either not being uploaded or not yet verified, please contact admin"

@@ -25,7 +25,8 @@ from rest_framework_simplejwt.views import TokenViewBase
 from src.common.seeder import PadiSeeder
 from src.config.common import OTP_EXPIRY
 from src.models.filters import NotificationsFilter
-from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant, NotificationTypes
+from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant, \
+    NotificationTypes, Waitlists
 from src.models.permissions import IsUserOrReadOnly, IsAdmin
 from src.models.serializers import (
     CreateUserSerializer,
@@ -254,6 +255,14 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             return Response(
                 status=status.HTTP_400_BAD_REQUEST, data=dict(error="IP and the captcha response are " "required fields")
             )
+
+    @action(detail=False, methods=['post'], url_path='join-waitlist', url_name='join_waitlist')
+    def join_waitlist(self, request, *args, **kwargs):
+        if waitlist := request.query_params.get("email"):
+            Waitlists.objects.create(email=waitlist)
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=dict(error="Email is required as query parametre"))
 
 
 class TokenObtainPairViewMod(TokenViewBase):
