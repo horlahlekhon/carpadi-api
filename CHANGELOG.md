@@ -1,3 +1,10 @@
+# [1.29.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.28.0...v1.29.0) (2023-03-22)
+
+
+### Features
+
+* connect vin decoder to the app ([41a6754](https://github.com/horlahlekhon/carpadi-api/commit/41a6754f183585216b3edb3f0dc0774a7cef0632))
+
 # [1.28.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.27.0...v1.28.0) (2023-03-18)
 
 
