@@ -1,3 +1,10 @@
+# [1.30.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.29.0...v1.30.0) (2023-04-10)
+
+
+### Features
+
+* added waitlist api and also remove inspection from required operations for trade creation. ([b2a04c5](https://github.com/horlahlekhon/carpadi-api/commit/b2a04c58b3439edae82f7dc2c679ed4a4e9d7d75))
+
 # [1.29.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.28.0...v1.29.0) (2023-03-22)
 
 
