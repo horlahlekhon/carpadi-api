@@ -258,11 +258,12 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
 
     @action(detail=False, methods=['post'], url_path='join-waitlist', url_name='join_waitlist')
     def join_waitlist(self, request, *args, **kwargs):
-        if waitlist := request.query_params.get("email"):
-            Waitlists.objects.create(email=waitlist)
+        if not (waitlist := request.query_params.get("email")):
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=dict(error="Email is required as query parametre"))
+        if exist := Waitlists.objects.filter(email=waitlist).first():
             return Response(status=status.HTTP_200_OK)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=dict(error="Email is required as query parametre"))
+            Waitlists.objects.create(email=waitlist)
 
 
 class TokenObtainPairViewMod(TokenViewBase):

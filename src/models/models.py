@@ -11,7 +11,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, EmailValidator
 from django.db import models
 from django.db.models import Sum, Q
 from django.db.transaction import atomic
@@ -870,7 +870,7 @@ class Trade(Base):
         2. if the trade is not yet sold
         """
         if self.trade_status in (
-        TradeStates.Completed, TradeStates.Closed) and self.car.bought_price and self.resale_price:
+                TradeStates.Completed, TradeStates.Closed) and self.car.bought_price and self.resale_price:
             settings: Settings = Settings.objects.first()
             if self.margin_calc() > self.return_on_trade_calc():
                 excess = self.carpadi_bonus_calc()
@@ -1567,5 +1567,4 @@ class CarPurchaseOffer(Base):
 
 
 class Waitlists(Base):
-    email = models.EmailField()
-
+    email = models.EmailField(unique=True, validators=[EmailValidator, ])
