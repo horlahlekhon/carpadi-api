@@ -264,6 +264,7 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Cre
             return Response(status=status.HTTP_200_OK)
         else:
             Waitlists.objects.create(email=waitlist)
+            return Response(status=status.HTTP_200_OK)
 
 
 class TokenObtainPairViewMod(TokenViewBase):
