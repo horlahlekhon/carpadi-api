@@ -1,3 +1,10 @@
+## [1.30.1](https://github.com/horlahlekhon/carpadi-api/compare/v1.30.0...v1.30.1) (2023-04-16)
+
+
+### Bug Fixes
+
+* waitlist api ([2eeeb46](https://github.com/horlahlekhon/carpadi-api/commit/2eeeb46d4ef0fcc1bcd117ed3b74e8fd362a9b98))
+
 # [1.30.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.29.0...v1.30.0) (2023-04-10)
 
 
