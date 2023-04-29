@@ -1,3 +1,10 @@
+## [1.30.3](https://github.com/horlahlekhon/carpadi-api/compare/v1.30.2...v1.30.3) (2023-04-29)
+
+
+### Bug Fixes
+
+* changed docker run command ([a823901](https://github.com/horlahlekhon/carpadi-api/commit/a8239017e839f72477336962a45bb0a9b236a79e))
+
 ## [1.30.2](https://github.com/horlahlekhon/carpadi-api/compare/v1.30.1...v1.30.2) (2023-04-16)
 
 
