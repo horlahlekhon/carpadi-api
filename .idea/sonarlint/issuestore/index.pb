@@ -59,16 +59,10 @@ I
 src/models/serializers.py,f/8/f893328be3321887148910b126b61adf2b97cd7b
 V
 &src/notifications/channels/firebase.py,3/1/314b689554bfdf68ea0abb9887a4928bb93be868
-q
-Asrc/notifications/templates/emails/wallet_withdrawal_receipt.html,c/2/c29a8e01b42bc79b263aec9f57a37ddc59b59539
 d
 4src/notifications/templates/emails/transactions.html,d/2/d24ad717ec8b32fcd7459aa042b8694999039a90
 d
-4src/notifications/templates/emails/user_welcome.html,6/3/636f4a56bfa79017b0145995650976f74e9dbb3c
-d
 4src/notifications/templates/emails/verify_email.html,5/0/502a22e8893863356192ec01a449fa7b66284e07
-o
-?src/notifications/templates/emails/account_approval_status.html,9/b/9b71b6d2b10bfbd898cedce55722a3edd6b4104e
 N
 src/carpadi_api/serializers.py,3/b/3b7530be179fcd99f7da37b2415f7aa678b30f0d
 O
@@ -77,20 +71,14 @@ N
 src/carpadi_inspection/urls.py,3/4/34226f58e78287e4e09ab33bb834d9089f29dc57
 O
 src/carpadi_inspection/views.py,b/1/b1714b2fd493c12ef7ebc97f5cc17887a21ec97e
-C
-src/common/tasks.py,2/7/272629e4b57a4541aa290ce42f62685f7b99b0cf
 P
  src/carpadi_inspection/models.py,d/3/d30d03f183fb485e0efd07eb519a513c41a5df63
 k
 ;src/notifications/templates/emails/user_reset_password.html,0/7/07337c1bbf16f3dddd184fe798e21d31ddef9085
-M
-src/notifications/services.py,9/2/92df78e017b57344d6e7b2b23c1b6e8ac09b316b
 d
 4src/notifications/templates/emails/disbursement.html,a/6/a6f681bf7bf5664a0bc299d3ca6afb0760068f7e
 a
 1src/notifications/templates/emails/new_trade.html,a/6/a613116b9d6d913dfde1109425d554c591fb9193
-g
-7src/notifications/templates/emails/trade_cancelled.html,e/1/e1edd2236be2ec17aabfdca8e9f2e862f080fbc0
 g
 7src/notifications/templates/emails/trade_completed.html,c/b/cb26a4a43324a8eabf1c056aa1114eab5b39a349
 k
@@ -99,8 +87,6 @@ M
 src/carpadi_market/filters.py,1/1/11bc6cb7a1147bfd69c05499a58bbb6e1fcacd79
 Q
 !src/carpadi_market/serializers.py,9/8/9822be640977cec3cdda37ade2e3deca2ec12fb2
-S
-#src/notifications/channels/email.py,b/6/b69ddeff434029e492447907a01b2d01bca99183
 ?
 Dockerfile.prod,d/5/d56386d053ef5c8627235e5406af952a22c98ffc
 A
@@ -124,5 +110,35 @@ E
 run.sh,3/2/324fcb49f1cf313ebdd7cbda6a71b73727ddd94d
 M
 .github/workflows/staging.yml,b/a/bab4ab334918c0184ab96fefdcc131c729cba0aa
+P
+ src/carpadi_admin/serializers.py,5/4/54af4e559b3bbdf8631d45c5e02ed33455bf198d
+E
+requirements/prod.txt,3/b/3bdffe02694f5a4bc1ae5fcdcaef9111d65e4098
+D
+requirements/dev.txt,1/8/18a54bc76396d8520dedda512b306d4132cc48dd
+D
+src/models/models.py,d/d/dda6ed96a9d3fe133949353d68723723aa0cf63b
+H
+src/models/validators.py,8/0/80370b05167e2512b44f0a78753e4be7ae0c5843
+U
+%src/carpadi_inspection/serializers.py,c/6/c6b886e37232c2a417284cf64a79a1d1d8733f7f
+C
+src/models/views.py,a/9/a9f9f0ba8a451254ed5267b04516f5170edbd8e9
 a
 1src/notifications/templates/emails/base_mail.html,f/0/f02517a995fe00438c4b82ea8eed264e177215ca
+D
+src/config/common.py,6/8/68899bfb818d703ad5db33ba3e4053b69597d2d0
+g
+7src/notifications/templates/emails/trade_cancelled.html,e/1/e1edd2236be2ec17aabfdca8e9f2e862f080fbc0
+o
+?src/notifications/templates/emails/account_approval_status.html,9/b/9b71b6d2b10bfbd898cedce55722a3edd6b4104e
+d
+4src/notifications/templates/emails/user_welcome.html,6/3/636f4a56bfa79017b0145995650976f74e9dbb3c
+q
+Asrc/notifications/templates/emails/wallet_withdrawal_receipt.html,c/2/c29a8e01b42bc79b263aec9f57a37ddc59b59539
+M
+src/notifications/services.py,9/2/92df78e017b57344d6e7b2b23c1b6e8ac09b316b
+C
+src/common/tasks.py,2/7/272629e4b57a4541aa290ce42f62685f7b99b0cf
+S
+#src/notifications/channels/email.py,b/6/b69ddeff434029e492447907a01b2d01bca99183
