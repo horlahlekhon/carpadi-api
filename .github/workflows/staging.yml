@@ -71,5 +71,6 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           envs: IMAGE_NAME,IMAGE_TAG,CONTAINER_NAME
           script: |
+              cd ~/
               docker-compose down --rmi all
               docker-compose up -d

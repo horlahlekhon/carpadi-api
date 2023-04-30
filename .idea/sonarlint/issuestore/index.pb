@@ -108,8 +108,6 @@ E
 src/common/helpers.py,a/b/abd8679d374b6b70e0fd0152915a852a2a853b13
 6
 run.sh,3/2/324fcb49f1cf313ebdd7cbda6a71b73727ddd94d
-M
-.github/workflows/staging.yml,b/a/bab4ab334918c0184ab96fefdcc131c729cba0aa
 P
  src/carpadi_admin/serializers.py,5/4/54af4e559b3bbdf8631d45c5e02ed33455bf198d
 E
@@ -124,16 +122,12 @@ U
 %src/carpadi_inspection/serializers.py,c/6/c6b886e37232c2a417284cf64a79a1d1d8733f7f
 C
 src/models/views.py,a/9/a9f9f0ba8a451254ed5267b04516f5170edbd8e9
-a
-1src/notifications/templates/emails/base_mail.html,f/0/f02517a995fe00438c4b82ea8eed264e177215ca
 D
 src/config/common.py,6/8/68899bfb818d703ad5db33ba3e4053b69597d2d0
 g
 7src/notifications/templates/emails/trade_cancelled.html,e/1/e1edd2236be2ec17aabfdca8e9f2e862f080fbc0
 o
 ?src/notifications/templates/emails/account_approval_status.html,9/b/9b71b6d2b10bfbd898cedce55722a3edd6b4104e
-d
-4src/notifications/templates/emails/user_welcome.html,6/3/636f4a56bfa79017b0145995650976f74e9dbb3c
 q
 Asrc/notifications/templates/emails/wallet_withdrawal_receipt.html,c/2/c29a8e01b42bc79b263aec9f57a37ddc59b59539
 M
