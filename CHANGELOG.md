@@ -1,3 +1,10 @@
+# [1.31.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.30.3...v1.31.0) (2023-04-30)
+
+
+### Features
+
+* Merge pull request [#23](https://github.com/horlahlekhon/carpadi-api/issues/23) from horlahlekhon/feature-branch-emailtemplate-changes ([f8338a7](https://github.com/horlahlekhon/carpadi-api/commit/f8338a79ab13f6c73e8d3c199e2be69534ed3def))
+
 ## [1.30.3](https://github.com/horlahlekhon/carpadi-api/compare/v1.30.2...v1.30.3) (2023-04-29)
 
 
