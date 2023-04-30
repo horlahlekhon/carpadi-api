@@ -50,8 +50,8 @@ rave-python==1.2.15
 cloudinary==1.29.0
 click==8.0.1
 mailchimp-transactional==1.0.47
-django-celery-beat
-sentry-sdk
+#django-celery-beat
+#sentry-sdk
 
 
 sib-api-v3-sdk

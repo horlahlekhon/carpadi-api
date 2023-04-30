@@ -8,7 +8,9 @@
 
 {#    <link rel="stylesheet" type="text/css" href="{% static 'css/base_mail.css' %}"/>#}
     <style type="text/css">
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;1,100&display=swap');
         body {
+
             margin: 0;
             box-sizing: border-box;
             -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
@@ -20,14 +22,17 @@
             position: relative;
             padding: 2rem;
             gap: 32px;
-
-            font-family: 'Poppins';
+            font-family: 'Poppins', sans-serif;
             font-style: normal;
             font-weight: 400;
             font-size: 16px;
             line-height: 24px;
 
         }
+
+        a, p, h1, h2, h3, h4, h5, h6, span {  
+       font-family: 'Poppins', sans-serif;  
+       } 
 
         img {
             border: 0;
@@ -53,6 +58,10 @@
         footer {
             align-content: center;
             margin: 0;
+        }
+
+        .stores{
+            display: flex;
         }
 
         a {
@@ -144,7 +153,11 @@
         }
 
         .mg-right-20{
-            margin-right: 15px;
+            margin-right: 20px;
+        }
+
+        .mg-right-30{
+            margin-right: 30px;
         }
 
         .pd-top-0{
@@ -308,7 +321,7 @@
         }
 
         .message{
-            margin-bottom: 5rem;
+            margin-bottom: 2rem;
             padding-bottom: 2rem;
         }
         .more {
@@ -317,11 +330,11 @@
             box-sizing: border-box;
 
             padding: 10px 40px;
-            background: #020072;
+            background: #243773;
             border: 1px solid;
-            border-color: #020072;
-            border-radius: 50px;
-
+            border-color: #243773;
+            border-radius: 14px;
+            font-family: 'Poppins', sans-serif;  
             color: white;
             font-weight: 700;
             font-size: 14px;
@@ -329,22 +342,22 @@
         }
 
         .more:hover{
-             color: #020072;
+            cursor: pointer;
+            color: #243773;
             background: white;
-            border-color: #020072;
+            border-color: #243773;
         }
 
         .appstore{
-            display: inline-block;
+            display: block;
             padding: 25px 0;
-            margin: 0;
+            margin: 0 2rem;
             width: 10rem;
         }
 
         .playstore{
-            display: inline-block;
+            display: block;
             padding: 25px 0;
-            margin-left: 2rem;
             width: 10rem;
         }
 
@@ -369,7 +382,6 @@
         .foot-note {
             font-size: 10px;
             line-height: 12px;
-            text-align: center;
         }
 
         .foot-links a {
@@ -392,11 +404,27 @@
                     {% block email_content %} {% endblock %}
                 </td>
             </tr>
+            <tr>
+                <td class="horizontal-line">
+                     <p>
+                        Download our car trading app!
+                        <br />
+                        Start earning with Carpadi, your first investment awaits you
+                   </p>
+                </td>
+           </tr>
             <tr class="pd-top-25">
-                <td class="horizontal-line" >
-                    <table class="center" style="width: 70%; padding-left: 4%;">
-                        <tbody>
-                            <tr class="display-inline mg-right-15">
+                <td>
+                    <table>
+                        <tbody class="stores">
+                            <tr>
+                                <td>
+                                    <a href="https://play.google.com/store/search?q=carpadi&c=apps&hl=en&gl=US" class="playstore">
+                                        <img src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/playstore.jpg" alt="playstore">
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
                                 <td>
                                     <a href="https://www.apple.com/us/search/carpadi?src=globalnav" class="appstore">
                                         <img src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/appstore.jpg" alt="appstore">
@@ -404,42 +432,36 @@
                                 </td>
                             </tr>
 
-                             <tr class="display-inline mg-right-15">
-                                <td>
-                                    <a href="https://play.google.com/store/search?q=carpadi&c=apps&hl=en&gl=US" class="playstore">
-                                        <img src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/playstore.jpg" alt="playstore">
-                                    </a>
-                                </td>
-                            </tr>
+                            
                         </tbody>
                     </table>
                 </td>
             </tr>
 
             <tr class="social-media">
-                <td class="horizontal-line pd-bottom-15 pd-top-15">
-                    <table class="center" style="width: 40%; padding-left: 10%;">
+                <td class="pd-bottom-15 pd-top-15">
+                    <table style="width: 40%; ">
                         <tbody>
-                             <tr class="display-inline mg-right-15">
+                             <tr class="display-inline mg-right-30">
                                 <td>
                                     <a href="#" class="facebook">
-                                        <img src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/facebook.jpg" alt="facebook">
+                                        <img style="width: 30px" src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/facebook.jpg" alt="facebook">
                                     </a>
                                 </td>
                             </tr>
 
-                             <tr class="display-inline mg-right-15">
+                             <tr class="display-inline mg-right-30">
                                 <td>
                                     <a href="#" class="instagram">
-                                        <img src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/instagram.jpg" alt="instagram">
+                                        <img style="width: 30px" src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/instagram.jpg" alt="instagram">
                                     </a>
                                 </td>
                             </tr>
 
-                             <tr class="display-inline mg-right-15">
+                             <tr class="display-inline mg-right-30">
                                 <td >
                                     <a href="#" class="twitter">
-                                        <img src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/twitter.jpg" alt="twitter">
+                                        <img style="width: 30px" src="https://d16encqm9nbktq.cloudfront.net/static_assets/images/twitter.jpg" alt="twitter">
                                     </a>
                                 </td>
                             </tr>
@@ -448,36 +470,19 @@
                 </td>
             </tr>
 
-            <tr class="foot-note center" >
+            <tr class="foot-note">
                 <td>
-                    <table class="horizontal-line pd-bottom-15 pd-top-15" width="100%">
+                    <table class="pd-bottom-15 pd-top-15" width="100%">
                         <tbody>
-                            <tr class="copyright">
-                                 <td>
-                                      <p>
-                                        Copyright &copy {% now "Y" %} Carpadi Investements Limited. All rights reserved.
-                                    </p>
-                                 </td>
-                            </tr>
+                           
 
-                            <tr>
-                                 <td>
-                                     <p>
-                                        A town hall different from bala blu, blue blu bulaba. broom broom broom brooooooooom.
-                                         Bala blu blue blu bulaba. The farmers will make more money.
-                                         Your lunch will not be imported, cassava garri ewa and ehhh ehhhhnn.
-                                         The farmer will make money, the dinner would be cassava, eba, ewa and everything.
-                                         A town hall different from bala blu, blue blu bulaba. broom broom broom brooooooooom. Bala blu blue blu bulaba.
-                                    </p>
-                                 </td>
-                            </tr>
                              <tr class="display-inline">
                                 <td>
-                                    <table class="foot-links center">
+                                    <table class="foot-links">
                                     <tr class="display-inline mg-right-15">
                                         <td>
                                             <a href="#">
-                                                <span>Privacy Policy</span>
+                                                <span style="color: #243773;">Privacy Policy</span>
                                             </a>
                                         </td>
                                     </tr>
@@ -485,7 +490,7 @@
                                     <tr class="display-inline mg-right-15">
                                         <td>
                                             <a href="#">
-                                                <span>Terms of service</span>
+                                                <span style="color: #243773;">Terms of service</span>
                                             </a>
                                         </td>
                                     </tr>
@@ -493,7 +498,7 @@
                                     <tr class="display-inline mg-right-15">
                                         <td>
                                             <a href="#">
-                                                <span>Help Center</span>
+                                                <span style="color: #243773;">Help Center</span>
                                             </a>
                                         </td>
                                     </tr>
@@ -501,7 +506,7 @@
                                     <tr class="display-inline mg-right-15">
                                         <td>
                                             <a href="#">
-                                                <span>Unsubscribe</span>
+                                                <span style="color: #243773;">Unsubscribe</span>
                                             </a>
                                         </td>
                                     </tr>
