@@ -1,3 +1,10 @@
+# [1.32.0](https://github.com/horlahlekhon/carpadi-api/compare/v1.31.2...v1.32.0) (2023-06-06)
+
+
+### Features
+
+* added endpoint for sending vehvile infor information when VIN is not returning data ([962c817](https://github.com/horlahlekhon/carpadi-api/commit/962c817cb03b9963b762a9506e525e32c3dec9e0))
+
 ## [1.31.2](https://github.com/horlahlekhon/carpadi-api/compare/v1.31.1...v1.31.2) (2023-04-30)
 
 
