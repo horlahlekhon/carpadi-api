@@ -203,7 +203,7 @@ class PadiSeeder:
             TradeStates.Closed,
             TradeStates.Purchased,
         ), "Invalid status when creating trade"
-        assert car.status == CarStates.Available, f"Invalid car status when creating trade: {car.status}"
+        assert car.status in (CarStates.Available, CarStates.Inspected), f"Invalid car status when creating trade: {car.status}"
         self.seeder.add_entity(
             Trade,
             1,

@@ -105,6 +105,22 @@ class VehicleInfoSerializer(serializers.ModelSerializer):
         return info
 
 
+class VehicleInfoCreateSerializer(serializers.ModelSerializer):
+    brand = serializers.DictField()
+
+    class Meta:
+        model = VehicleInfo
+        fields = '__all__'
+
+    def create(self, validated_data):
+        car_brand = validated_data.pop("brand")
+        brand_ser = CarBrandSerializer(data=car_brand)
+        brand_ser.is_valid(raise_exception=True)
+        brand = brand_ser.save()
+        validated_data["brand"] = brand
+        return VehicleInfo.objects.create(**validated_data)
+
+
 class CarSerializer(serializers.ModelSerializer):
     maintenance_cost = serializers.SerializerMethodField()
     total_cost = serializers.SerializerMethodField()

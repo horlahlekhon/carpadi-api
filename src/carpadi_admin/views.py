@@ -37,7 +37,7 @@ from src.carpadi_admin.serializers import (
     HomeDashboardSerializer,
     CarMerchantAdminSerializer,
     SettingsSerializerAdmin,
-    CarDocumentsSerializer,
+    CarDocumentsSerializer, VehicleInfoCreateSerializer,
 )
 from src.carpadi_api.filters import TradeUnitFilter
 from src.carpadi_market.filters import CarProductFilter
@@ -283,6 +283,14 @@ class VehicleInfoViewSet(viewsets.ModelViewSet):
     filter_class = VehicleInfoFilter
     filter_backends = (filters.DjangoFilterBackend,)
 
+    @action(methods=["POST"], detail=False, url_name="create_vehicle", url_path="create-vehicle")
+    def create_vehicle(self, request):
+        create_ser = VehicleInfoCreateSerializer(data=request.data)
+        create_ser.is_valid(raise_exception=True)
+        inst = create_ser.save()
+        ser = self.get_serializer(instance=inst)
+        return Response(status=status.HTTP_201_CREATED, data=ser.data)
+
 
 class TradeUnitReadOnlyView(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAdminUser,)
@@ -292,7 +300,8 @@ class TradeUnitReadOnlyView(viewsets.ReadOnlyModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
 
 
-class SettingsViewset(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin):
+class SettingsViewset(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+                      mixins.ListModelMixin):
     serializer_class = SettingsSerializerAdmin
     permission_classes = (IsAdminUser,)
     queryset = Settings.objects.all()
