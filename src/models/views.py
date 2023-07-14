@@ -40,6 +40,16 @@ from src.models.serializers import (
     EmailVerificationSerializer,
 )
 from src.notifications.services import notify
+from django.contrib.auth.views import LoginView
+from django.views.generic.base import TemplateView
+from django.views.generic import DeleteView
+from django.urls import reverse_lazy
+from django.contrib.auth import logout
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.forms import AuthenticationForm
+from django import forms
+from django.shortcuts import redirect
+
 
 logger = logging.getLogger(__name__)
 
@@ -345,3 +355,39 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class EmailAuthenticationForm(AuthenticationForm):
+    username = forms.EmailField(widget=forms.EmailInput(attrs={'autofocus': True}))
+
+class LoginUser(LoginView):
+    template_name = "login_user.html"
+    authentication_form = EmailAuthenticationForm
+    # fields = "__all__"
+    redirect_authenticated_user = True
+
+    def get_success_url(self):
+        return reverse_lazy('delete_acc')
+
+
+class DeleteAccountView(LoginRequiredMixin, TemplateView):
+    template_name = "delete_acc.html"
+
+
+
+class DeleteUserView(LoginRequiredMixin, DeleteView):
+    model = User 
+    template_name = "delete_acc.html"
+    success_url = reverse_lazy('delete_acc_login')
+
+    def get_object(self, queryset=None):
+       return self.request.user
+    
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        self.object.delete()
+        logout(request)
+        return redirect(success_url)
+    
