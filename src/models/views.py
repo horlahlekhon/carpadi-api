@@ -387,6 +387,13 @@ class DeleteUserView(LoginRequiredMixin, DeleteView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         success_url = self.get_success_url()
+
+        try:
+            car_merchant = CarMerchant.objects.get(user=self.object)
+            car_merchant.delete()
+        except CarMerchant.DoesNotExist:
+            pass
+        
         self.object.delete()
         logout(request)
         return redirect(success_url)
