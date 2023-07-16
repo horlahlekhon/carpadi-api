@@ -25,7 +25,7 @@ from rest_framework_simplejwt.views import TokenViewBase
 from src.common.seeder import PadiSeeder
 from src.config.common import OTP_EXPIRY
 from src.models.filters import NotificationsFilter
-from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant, \
+from src.models.models import User, UserTypes, Assets, Notifications, Otp, OtpStatus, TradeUnit, CarMerchant, MerchantStatusChoices, \
     NotificationTypes, Waitlists
 from src.models.permissions import IsUserOrReadOnly, IsAdmin
 from src.models.serializers import (
@@ -388,13 +388,10 @@ class DeleteUserView(LoginRequiredMixin, DeleteView):
         self.object = self.get_object()
         success_url = self.get_success_url()
 
-        try:
-            car_merchant = CarMerchant.objects.get(user=self.object)
-            car_merchant.delete()
-        except CarMerchant.DoesNotExist:
-            pass
-        
-        self.object.delete()
+        CarMerchant.objects.filter(user=self.object).update(status=MerchantStatusChoices.Deleted)
+
+        User.objects.filter(id=self.object.id).update(is_active=False)
+
         logout(request)
         return redirect(success_url)
     

@@ -174,6 +174,7 @@ class MerchantStatusChoices(models.TextChoices):
     Disapproved = "disapproved", _("User approval was declined")
     Pending = "pending", _(" User is pending approval")
     Approved = "approved", _("User has been approved")
+    Deleted = 'deleted', _("User has been deleted")
 
 
 class CarMerchant(Base):
