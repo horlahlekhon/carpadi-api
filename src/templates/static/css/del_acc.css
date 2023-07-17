@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,700;0,900;1,700&display=swap');
+
+
+body {
+    background: rgba(255, 255, 240, .1);
+      font: 100 14px sans-serif;
+      color: #000;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.1);
+      text-align: center;	
+  }
+
+  body::after {
+    content: "";
+    background-image: url('../images/blue-full.png');
+    opacity: 0.03;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    z-index: -1;   
+  }
+  ::-moz-selection {
+    background: rgba(0,0,0,0.1);
+  }
+  ::selection {
+    background: rgba(0,0,0,0.1);
+  }
+  h1 {
+    font-weight: 100;
+    font-size: 2.7em;
+  }
+  h3 {
+    color: #111222;
+    font-size: 1.6em;
+  }
+  a {
+    color: RoyalBlue;
+    font-weight: normal;
+    text-decoration: none;
+  }
+  a:hover {
+    color: CornflowerBlue;
+  }
+
+  .logout_btn{
+    display: flex;
+    margin: 20px;
+    justify-content: flex-end;
+    font-size: 16px;
+  }
+
+  .logout_btn span{
+    color: red;
+  }
+
+  .logout_btn a{
+     display: block;
+     margin-left: 5px;
+  }
+  
+
+  .logout_btn a:hover{
+    color: red;
+    text-decoration: underline;
+ }
+ 
+  /* Circle Avatar Styles */
+
+  .circle_ctn{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 100px;
+  }
+  
+  .circle {
+      line-height: 0;		/* remove line-height */ 
+      display: inline-block;	/* circle wraps image */
+      margin: 5px;
+    border: 4px solid rgba(200,200,200,0.4);
+      border-radius: 50%;	/* relative value */
+      /*box-shadow: 0px 0px 5px rgba(0,0,0,0.4);*/
+      transition: linear 0.25s;
+    height: 128px;
+    width: 128px;
+  }
+  .circle img {
+      border-radius: 50%;	/* relative value for
+                     adjustable image size */
+  }
+  .circle:hover {
+      transition: ease-out 0.2s;
+    border: 4px solid rgba(0,0,0,0.2);
+    -webkit-transition: ease-out 0.2s;
+  }
+  a.circle {
+    color: transparent;
+  } /* IE fix: removes blue border */	
+
+
+
+  .contact_details{
+    display: flex;
+    margin: 20px auto;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+
+
+  }
+
+  .contact_details .contact_detail{
+    margin: 0 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+
+  .contact_details .contact_detail span{
+    margin-left: 5px;
+  }
+  
+
+.btn {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: 1px solid #bdbdbd;
+    height: 48px;
+    padding: 0 24px 0 16px;
+    letter-spacing: 0.25px;
+    border-radius: 24px;
+    cursor: pointer;
+    margin: 40px 0;
+}
+.btn:focus {
+    outline: none;
+}
+.btn .mdi {
+    margin-right: 8px;
+}
+.btn-delete {
+    font-size: 16px;
+    color: red;
+}
+.btn-delete > .mdi-delete-empty {
+    display: none;
+}
+.btn-delete:hover {
+    background-color: #fff5f5;
+}
+
+.btn-delete:hover > .mdi-delete-empty {
+    display: block;
+}
+.btn-delete:hover > .mdi-delete {
+    display: none;
+}
+.btn-delete:focus {
+    box-shadow: 0 0 0 4px #fcc;
+}
+
+
+.modal_ctn{
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    background-color: rgba(28, 28, 28, 0.9);
+    transition: display ease-in-out 2s;
+    -webkit-transition: display ease-in-out 0.2s;
+}

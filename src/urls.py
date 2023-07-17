@@ -17,8 +17,9 @@ from src.carpadi_inspection.urls import router as inspection_router
 from src.carpadi_market.urls import router as market_router
 from src.files.urls import files_router
 from src.models.urls import model_router
-from src.models.views import TokenObtainPairViewMod
+from src.models.views import TokenObtainPairViewMod, LoginUser, DeleteAccountView, DeleteUserView
 from src.social.views import exchange_token, complete_twitter_login
+from django.contrib.auth.views import LogoutView
 
 schema_view = get_schema_view(
     openapi.Info(title="Carpadi API", default_version='v1'),
@@ -47,6 +48,11 @@ urlpatterns = [
     path('summernote/', include('django_summernote.urls')),
     # api
     path('api/v1/', include(generic_router.urls)),
+    path('api/v1/delete_account_login', LoginUser.as_view(), name="delete_acc_login"),
+    path('api/v1/delete_account', DeleteAccountView.as_view(), name="delete_acc"),
+    path('api/v1/delete_user', DeleteUserView.as_view(), name="delete_current_user"),
+    path('api/v1/logout', LogoutView.as_view(next_page='delete_acc_login'), name="logout"),
+    
     path('api/v1/merchants/', include(api_router_set.urls)),
     path('api/v1/admins/', include(admin_router_set.urls)),
     path('api/v1/market/', include(market_router.urls)),

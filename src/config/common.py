@@ -151,7 +151,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME', default="postgres"),
         'USER': os.getenv('DB_USER', default="postgres"),
-        'PASSWORD': os.getenv('DB_PASSWORD', default="password"),
+        'PASSWORD': os.getenv('DB_PASSWORD', default="postgres"),
         'HOST': os.getenv('DB_HOST', default="localhost"),
         'PORT': os.getenv('DB_PORT', default=5432),
     }
@@ -174,6 +174,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATICFILES_DIRS = [
     f"{BASE_DIR}/notifications/templates/static",
+    f"{BASE_DIR}/templates",
+    f"{BASE_DIR}/templates/static"
 ]
 STATIC_URL = '/static/'
 STATICFILES_FINDERS = (
