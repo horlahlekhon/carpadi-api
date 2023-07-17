@@ -1,47 +1,55 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,700;0,900;1,700&display=swap');
 
 
-*{
-    box-sizing: border-box;
-    font-family: 'Roboto', sans-serif;
+* {
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
 }
 
-html, body{
-    padding: 0;
-    margin: 0;
-    font-family: 'Roboto', sans-serif;
-    line-height: 1.6;
-    font-size: 18px;
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+  font-size: 18px;
 }
 
 
 @media only screen and (max-width: 992px) {
-    .container{
-      display: block;
-    }
+  .container {
+    display: block;
+  }
 
 
-    .img-bg{
-      display: none !important;
-    }
+  .img-bg {
+    display: none !important;
+  }
 
-    .form_container{
-      width: 100% !important;
-    }
-      
+  .card {
+    width: 80% !important;
+    height: 500px;
+  }
+
+  .form_container {
+    width: 100% !important;
+  }
+
+
+
 }
 
 
 
-.container{
-    width: 100%;
-    height: 100%;
-    background: #DEDEDE;
-    display: flex;
-    flex-direction: row;
+.container {
+  width: 100%;
+  height: 100vh;
+  background: #DEDEDE;
+  display: flex;
+  flex-direction: row;
 }
 
-.img-bg{
+.img-bg {
   width: 48%;
   height: 100%;
   background: white;
@@ -55,62 +63,62 @@ html, body{
 }
 
 
-.img-bg img{
-  height: 759px;
-  width: 441px;
+.img-bg img {
+  height: 100%;
+  /* width: 55%; */
   margin: auto;
 }
 
 
-.form_container{
-        width: 52%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        -webkit-box-pack: center;
-        justify-content: center;
-        -webkit-box-align: center;
-        align-items: center;
+.form_container {
+  width: 52%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  -webkit-box-pack: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  align-items: center;
 }
 
 
-.card{
-    display: block;
-    color: rgba(0, 0, 0, 0.87);
-    transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
-    border-radius: 12px !important;
-    background-color: #fff;
-        width: 437px;
-        height: 500px;
-        border-radius: 12px;
-        padding: 16px;
-        padding-bottom: 24px;
-        margin: 100px auto;
+.card {
+  display: block;
+  color: rgba(0, 0, 0, 0.87);
+  transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  border-radius: 12px !important;
+  background-color: #fff;
+  width: 50%;
+  height: 500px;
+  border-radius: 12px;
+  padding: 16px;
+  padding-bottom: 24px;
+  margin: 100px auto;
 }
 
 .centered {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* justify-content: center; */
-  }
-
-
-.card img{
-    width: 300px;
-    height: 114px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* justify-content: center; */
 }
 
-.form_container form{
+
+.card img {
+  width: 300px;
+  height: 114px;
+}
+
+.form_container form {
   padding: 0 24px;
   width: 100%;
 }
 
-.form_container form button{
+.form_container form button {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 372px;
+  width: 100%;
   height: 48px;
   margin-top: 50px;
   background-color: #243773;
@@ -122,9 +130,6 @@ html, body{
 }
 
 
-.mui-textfield input{
+.mui-textfield input {
   border-width: 1px !important;
 }
-
-
-  
